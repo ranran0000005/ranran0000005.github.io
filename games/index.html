@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏中心 - 好玩的</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .header {
+            width: 100%;
+            max-width: 1200px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            font-size: 1.5rem;
+            backdrop-filter: blur(5px);
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.1);
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .games-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        .game-card {
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .game-image {
+            height: 200px;
+            width: 100%;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .car-image {
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), 
+                        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23111"/><path d="M10,60 L90,60 L85,40 L70,40 L65,20 L35,20 L30,40 L15,40 Z" fill="%23ff5e62"/><circle cx="25" cy="70" r="10" fill="%23333"/><circle cx="75" cy="70" r="10" fill="%23333"/></svg>');
+        }
+        
+        .plane-image {
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), 
+                        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23111"/><path d="M10,50 L40,45 L50,20 L60,45 L90,50 L60,55 L50,80 L40,55 Z" fill="%234299e1"/></svg>');
+        }
+        
+        .gomoku-image {
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
+                        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23111"/><g stroke="%23cfa96b" stroke-width="2">%0A<line x1="20" y1="20" x2="180" y2="20"/><line x1="20" y1="50" x2="180" y2="50"/><line x1="20" y1="80" x2="180" y2="80"/><line x1="20" y1="110" x2="180" y2="110"/><line x1="20" y1="140" x2="180" y2="140"/><line x1="20" y1="170" x2="180" y2="170"/><line x1="20" y1="20" x2="20" y2="170"/><line x1="50" y1="20" x2="50" y2="170"/><line x1="80" y1="20" x2="80" y2="170"/><line x1="110" y1="20" x2="110" y2="170"/><line x1="140" y1="20" x2="140" y2="170"/><line x1="170" y1="20" x2="170" y2="170"/></g>%0A<circle cx="50" cy="50" r="8" fill="%23000"/><circle cx="80" cy="80" r="8" fill="%23fff"/><circle cx="110" cy="110" r="8" fill="%23000"/><circle cx="140" cy="80" r="8" fill="%23fff"/></svg>');
+        }
+        
+        .tank-image {
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
+                        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23111"/><g><rect x="40" y="80" width="60" height="40" fill="%234CAF50"/><rect x="60" y="90" width="20" height="20" fill="%23333"/><rect x="100" y="95" width="40" height="10" fill="%23ccc"/></g><g><rect x="110" y="40" width="60" height="40" fill="%232196F3"/><rect x="130" y="50" width="20" height="20" fill="%23333"/><rect x="120" y="80" width="10" height="40" fill="%23ccc"/></g></svg>');
+        }
+        
+        .game-content {
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .game-content h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        
+        .game-content p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .play-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 5px 15px rgba(255, 94, 98, 0.4);
+        }
+        
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(255, 94, 98, 0.6);
+        }
+        
+        .car-btn {
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+        }
+        
+        .plane-btn {
+            background: linear-gradient(to right, #36d1dc, #5b86e5);
+        }
+        
+        .gomoku-btn {
+            background: linear-gradient(to right, #4e54c8, #8f94fb);
+        }
+        
+        .tank-btn {
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .games-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .game-card {
+                width: 100%;
+                max-width: 400px;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .back-btn {
+                position: relative;
+                left: 10;
+                top: 0;
+                transform: none;
+                margin-bottom: 15px;
+            }
+            
+            .header {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="location.href='../'">返回</button>
+        <h1>休闲一下</h1>
+        <p>请选择您想玩的游戏</p>
+    </div>
+    
+    <div class="games-container">
+        <div class="game-card">
+            <div class="game-image car-image"></div>
+            <div class="game-content">
+                <h2>极速赛车</h2>
+                <p>在充满挑战的赛道上超越对手，成为赛道之王。</p>
+                <a href="car_game/index.php" class="play-btn car-btn">开始赛车</a>
+            </div>
+        </div>
+        
+        <div class="game-card">
+            <div class="game-image plane-image"></div>
+            <div class="game-content">
+                <h2>空中霸主</h2>
+                <p>驾驶最先进的战斗机，在广阔的天空中执行危险任务。</p>
+                <a href="plane_game/index.html" class="play-btn plane-btn">开始飞行</a>
+            </div>
+        </div>
+        
+        <div class="game-card">
+            <div class="game-image gomoku-image"></div>
+            <div class="game-content">
+                <h2>在线五子棋</h2>
+                <p>邀请好友一起在线下五子棋！创建房间并分享房间号，双方在浏览器中实时对战，一决高下。</p>
+                <a href="gomoku/index.php" class="play-btn gomoku-btn" target="_blank">开始对弈</a>
+            </div>
+        </div>
+        
+        <div class="game-card">
+            <div class="game-image tank-image"></div>
+            <div class="game-content">
+                <h2>坦克大战</h2>
+                <p>复刻街机风格的单人坦克闯关版，随时开战、重温像素童年。</p>
+                <a href="tank_battle/index.html" class="play-btn tank-btn" target="_blank">体验经典</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>&copy; 2025 | 仅供娱乐</p>
+    </div>
+
+</body>
+</html>

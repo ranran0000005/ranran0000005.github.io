@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歼20座舱空战</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            font-family: 'Microsoft YaHei', sans-serif;
+            overflow: hidden;
+            color: #0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            border: 1px solid #333;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            overflow: hidden;
+            cursor: none; /* 隐藏鼠标指针，在座舱内只显示自定义准星 */
+        }
+        
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .cockpit-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 50% 50%, transparent 60%, rgba(0, 20, 0, 0.7) 100%),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><path d="M0,0 L800,0 L800,600 L0,600 Z M50,50 L750,50 L750,550 L50,550 Z" fill="none" stroke="rgba(0,255,0,0.2)" stroke-width="2"/><circle cx="400" cy="300" r="100" fill="none" stroke="rgba(0,255,0,0.1)" stroke-width="1"/><line x1="400" y1="200" x2="400" y2="400" stroke="rgba(0,255,0,0.1)" stroke-width="1"/><line x1="300" y1="300" x2="500" y2="300" stroke="rgba(0,255,0,0.1)" stroke-width="1"/></svg>');
+            pointer-events: none;
+            z-index: 2;
+        }
+        
+        .hud {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            background: rgba(0, 20, 0, 0.7);
+            border-top: 2px solid #0f0;
+            z-index: 3;
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            text-shadow: 0 0 5px #0f0;
+        }
+        
+        .timer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            color: #0f0;
+            text-shadow: 0 0 5px #0f0;
+            z-index: 3;
+            background: rgba(0, 20, 0, 0.7);
+            padding: 5px 15px;
+            border: 2px solid #0f0;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .targeting-reticle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            border: 2px solid #f00;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .targeting-reticle::before, .targeting-reticle::after {
+            content: '';
+            position: absolute;
+            background: #f00;
+        }
+        
+        .targeting-reticle::before {
+            width: 20px;
+            height: 2px;
+            left: -20px;
+        }
+        
+        .targeting-reticle::after {
+            width: 2px;
+            height: 20px;
+            top: -20px;
+        }
+        
+        .game-menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        
+        .game-title {
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: #0f0;
+            text-shadow: 0 0 10px #0f0;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            margin: 10px;
+            background: rgba(0, 50, 0, 0.7);
+            border: 2px solid #0f0;
+            color: #0f0;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        
+        .btn:hover {
+            background: rgba(0, 100, 0, 0.7);
+            box-shadow: 0 0 15px #0f0;
+        }
+        
+        .instructions {
+            margin-top: 30px;
+            text-align: center;
+            max-width: 80%;
+            line-height: 1.6;
+        }
+        
+        .game-over {
+            display: none;
+        }
+        
+        .score-display {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .radar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            border: 2px solid #0f0;
+            border-radius: 50%;
+            background: rgba(0, 20, 0, 0.5);
+            z-index: 3;
+            overflow: hidden;
+        }
+        
+        .radar canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .radar-sweep {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: conic-gradient(transparent 70%, rgba(0, 255, 0, 0.3) 100%);
+            border-radius: 50%;
+            animation: radarSweep 3s linear infinite;
+        }
+        
+        @keyframes radarSweep {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .radar-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 6px;
+            height: 6px;
+            background: #0f0;
+            border-radius: 50%;
+        }
+        
+        .radar-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 50% 50%, transparent 0%, transparent 30%, rgba(0, 255, 0, 0.1) 30%, rgba(0, 255, 0, 0.1) 100%),
+                linear-gradient(0deg, transparent 49%, rgba(0, 255, 0, 0.1) 49%, rgba(0, 255, 0, 0.1) 51%, transparent 51%),
+                linear-gradient(90deg, transparent 49%, rgba(0, 255, 0, 0.1) 49%, rgba(0, 255, 0, 0.1) 51%, transparent 51%);
+            border-radius: 50%;
+            z-index: 2;
+        }
+        
+        .radar-sweep {
+            z-index: 3;
+        }
+        
+        .radar-center {
+            z-index: 4;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div class="cockpit-overlay"></div>
+        <div class="targeting-reticle"></div>
+        
+        <div class="timer" id="timer">30秒</div>
+        <div class="radar">
+            <canvas id="radarCanvas" width="150" height="150"></canvas>
+            <div class="radar-grid"></div>
+            <div class="radar-sweep"></div>
+            <div class="radar-center"></div>
+	</div>
+        
+        <div class="hud">
+            <div class="hud-item">高度: <span id="altitude">12000</span>米</div>
+            <div class="hud-item">速度: <span id="speed">850</span>节</div>
+            <div class="hud-item">目标锁定: <span id="locked">0</span></div>
+            <div class="hud-item">导弹: <span id="missiles">60</span></div>
+            <div class="hud-item">击落: <span id="kills">0</span></div>
+	</div>
+        
+        <div class="game-menu" id="startMenu">
+            <h1 class="game-title">歼20座舱空战</h1>
+            <button class="btn" id="startBtn">开始任务</button>
+        <div class="instructions">
+            <p>任务：在30秒内击落尽可能多的F-35战机</p>
+            <p>使用鼠标瞄准，点击左键从下方发射导弹</p>
+            <p>注意：导弹数量有限，请谨慎射击</p>
+            <p>雷达会显示敌机位置</p>
+            <p>时间结束后计算最终得分</p>
+	    <button class="btn" onclick="location.href='../'">退出</button>
+        </div>
+        </div>
+        
+        <div class="game-menu game-over" id="gameOverMenu">
+            <h1 class="game-title">任务完成</h1>
+            <div class="score-display">最终得分: <span id="finalKills">0</span>分</div>
+            <div class="score-display">击落敌机: <span id="finalKillsCount">0</span>架</div>
+            <button class="btn" id="restartBtn">再次出击</button>
+	    <button class="btn" onclick="location.href='../'">退出</button>
+        </div>
+    </div>
+
+    <script>
+        // 游戏主要变量
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const radarCanvas = document.getElementById('radarCanvas');
+        const radarCtx = radarCanvas.getContext('2d');
+        canvas.width = 800;
+        canvas.height = 600;
+        radarCanvas.width = 150;
+        radarCanvas.height = 150;
+        const radarRange = 1500;
+        const radarDisplayRadius = Math.min(radarCanvas.width, radarCanvas.height) * 0.45;
+
+        // 游戏状态
+        let gameState = {
+            altitude: 12000,
+            speed: 850,
+            locked: 0,
+            missiles: 60,
+            kills: 0,
+            gameOver: false,
+            gameStarted: false,
+            timeLeft: 30,
+            gameTimer: null
+        };
+
+        // 敌机数组
+        let enemies = [];
+        // 导弹数组
+        let missiles = [];
+        // 爆炸效果数组
+        let explosions = [];
+        // 雷达点数组
+        let radarPoints = [];
+
+        // 游戏元素图片
+        const images = {
+            enemy: null,
+            missile: null,
+            background: null
+        };
+
+        // 加载图片
+        function loadImages() {
+            images.enemy = createEnemyImage();
+            images.missile = createMissileImage();
+            images.background = createBackgroundImage();
+        }
+
+        // 创建敌机图像
+        function createEnemyImage() {
+            const imgCanvas = document.createElement('canvas');
+            imgCanvas.width = 80;
+            imgCanvas.height = 50;
+            const imgCtx = imgCanvas.getContext('2d');
+            
+            // 绘制F-35简化版
+            imgCtx.fillStyle = '#6d7cff';
+            imgCtx.beginPath();
+            imgCtx.moveTo(40, 25);
+            imgCtx.lineTo(70, 15);
+            imgCtx.lineTo(75, 25);
+            imgCtx.lineTo(70, 35);
+            imgCtx.lineTo(40, 25);
+            imgCtx.fill();
+            
+            imgCtx.fillStyle = '#a8b8ff';
+            imgCtx.beginPath();
+            imgCtx.moveTo(10, 25);
+            imgCtx.lineTo(40, 20);
+            imgCtx.lineTo(40, 30);
+            imgCtx.lineTo(10, 25);
+            imgCtx.fill();
+            
+            return imgCanvas;
+        }
+
+        // 创建导弹图像
+        function createMissileImage() {
+            const imgCanvas = document.createElement('canvas');
+            imgCanvas.width = 20;
+            imgCanvas.height = 5;
+            const imgCtx = imgCanvas.getContext('2d');
+            
+            imgCtx.fillStyle = '#f00';
+            imgCtx.beginPath();
+            imgCtx.moveTo(20, 2.5);  // 从尾部开始
+            imgCtx.lineTo(5, 0);
+            imgCtx.lineTo(0, 2.5);
+            imgCtx.lineTo(5, 5);
+            imgCtx.lineTo(20, 2.5);
+            imgCtx.fill();
+            
+            return imgCanvas;
+        }
+
+        // 创建背景图像
+        function createBackgroundImage() {
+            const imgCanvas = document.createElement('canvas');
+            imgCanvas.width = canvas.width;
+            imgCanvas.height = canvas.height;
+            const imgCtx = imgCanvas.getContext('2d');
+            
+            // 绘制天空背景
+            const gradient = imgCtx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#001122');
+            gradient.addColorStop(1, '#003344');
+            imgCtx.fillStyle = gradient;
+            imgCtx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制一些星星
+            imgCtx.fillStyle = '#fff';
+            for (let i = 0; i < 100; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const radius = Math.random() * 1.5;
+                imgCtx.beginPath();
+                imgCtx.arc(x, y, radius, 0, Math.PI * 2);
+                imgCtx.fill();
+            }
+            
+            // 添加一些云层
+            imgCtx.fillStyle = 'rgba(150, 150, 150, 0.1)';
+            for (let i = 0; i < 5; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const width = 100 + Math.random() * 200;
+                const height = 20 + Math.random() * 30;
+                imgCtx.beginPath();
+                imgCtx.ellipse(x, y, width/2, height/2, 0, 0, Math.PI * 2);
+                imgCtx.fill();
+            }
+            
+            return imgCanvas;
+        }
+
+        // 创建敌机
+        function createEnemy() {
+            // 敌机从远处飞来，由小变大
+            const distance = 500 + Math.random() * 1000;
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 2 + Math.random() * 2;
+            
+            // 计算初始位置（在屏幕外）
+            const x = canvas.width/2 + Math.cos(angle) * distance;
+            const y = canvas.height/2 + Math.sin(angle) * distance;
+            
+            // 计算朝向玩家的方向
+            const dx = canvas.width/2 - x;
+            const dy = canvas.height/2 - y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            enemies.push({
+                x: x,
+                y: y,
+                width: 80,
+                height: 50,
+                vx: (dx / dist) * speed,
+                vy: (dy / dist) * speed,
+                distance: distance,
+                maxDistance: distance,
+                locked: false,
+                lockProgress: 0
+            });
+            
+            // 添加雷达点
+            radarPoints.push({
+                x: x,
+                y: y,
+                distance: distance,
+                active: true
+            });
+        }
+
+        // 发射导弹
+        function fireMissile(targetX, targetY) {
+            if (gameState.missiles <= 0) return;
+            
+            const dx = targetX - canvas.width/2;
+            const dy = targetY - canvas.height;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const speed = 8;
+            
+            missiles.push({
+                x: canvas.width/2,
+                y: canvas.height,
+                width: 20,
+                height: 5,
+                vx: (dx / distance) * speed,
+                vy: (dy / distance) * speed,
+                targetX: targetX,
+                targetY: targetY
+            });
+            
+            gameState.missiles--;
+            updateHUD();
+        }
+
+        // 创建爆炸效果
+        function createExplosion(x, y) {
+            explosions.push({
+                x: x,
+                y: y,
+                radius: 5,
+                maxRadius: 30,
+                alpha: 1
+            });
+        }
+
+        // 更新游戏状态
+        function update() {
+            if (gameState.gameOver) return;
+            
+            // 随机生成敌机 - 减少敌机数量
+            if (Math.random() < 0.02 && enemies.length < 30) {
+                createEnemy();
+            }
+            
+            // 更新敌机位置
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                enemy.x += enemy.vx;
+                enemy.y += enemy.vy;
+                
+                // 更新距离
+                const dx = enemy.x - canvas.width/2;
+                const dy = enemy.y - canvas.height/2;
+                enemy.distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // 更新对应的雷达点
+                for (let j = 0; j < radarPoints.length; j++) {
+                    if (Math.abs(radarPoints[j].x - enemy.x) < 10 && 
+                        Math.abs(radarPoints[j].y - enemy.y) < 10) {
+                        radarPoints[j].x = enemy.x;
+                        radarPoints[j].y = enemy.y;
+                        radarPoints[j].distance = enemy.distance;
+                        break;
+                    }
+                }
+                
+                // 移除屏幕外的敌机
+                if (enemy.x < -500 || enemy.x > canvas.width + 500 || 
+                    enemy.y < -500 || enemy.y > canvas.height + 500) {
+                    enemies.splice(i, 1);
+                    
+                    // 同时移除对应的雷达点
+                    for (let j = radarPoints.length - 1; j >= 0; j--) {
+                        if (Math.abs(radarPoints[j].x - enemy.x) < 10 && 
+                            Math.abs(radarPoints[j].y - enemy.y) < 10) {
+                            radarPoints.splice(j, 1);
+                            break;
+                        }
+                    }
+                    continue;
+                }
+                
+                // 敌机靠近玩家时继续飞行，不会自动销毁
+                // 只有被导弹击中才会被摧毁
+                
+                // 检测锁定状态
+                const reticle = document.querySelector('.targeting-reticle');
+                const reticleRect = reticle.getBoundingClientRect();
+                const canvasRect = canvas.getBoundingClientRect();
+                
+                const reticleX = reticleRect.left - canvasRect.left + reticleRect.width/2;
+                const reticleY = reticleRect.top - canvasRect.top + reticleRect.height/2;
+                
+                const distToReticle = Math.sqrt(
+                    Math.pow(enemy.x - reticleX, 2) + 
+                    Math.pow(enemy.y - reticleY, 2)
+                );
+                
+                if (distToReticle < 50) {
+                    enemy.locked = true;
+                    enemy.lockProgress += 0.02;
+                    if (enemy.lockProgress > 1) enemy.lockProgress = 1;
+                } else {
+                    enemy.locked = false;
+                    enemy.lockProgress -= 0.01;
+                    if (enemy.lockProgress < 0) enemy.lockProgress = 0;
+                }
+            }
+            
+            // 更新导弹位置
+            for (let i = missiles.length - 1; i >= 0; i--) {
+                const missile = missiles[i];
+                missile.x += missile.vx;
+                missile.y += missile.vy;
+                
+                // 移除屏幕外的导弹（主要检查上方，因为导弹从下方发射）
+                if (missile.x < -50 || missile.x > canvas.width + 50 || 
+                    missile.y < -50) {
+                    missiles.splice(i, 1);
+                    continue;
+                }
+                
+                // 检测导弹与敌机碰撞
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    const enemy = enemies[j];
+                    const dx = missile.x - enemy.x;
+                    const dy = missile.y - enemy.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 70) {
+                        createExplosion(enemy.x, enemy.y);
+                        
+                        // 同步移除对应雷达点
+                        for (let k = radarPoints.length - 1; k >= 0; k--) {
+                            if (Math.abs(radarPoints[k].x - enemy.x) < 10 &&
+                                Math.abs(radarPoints[k].y - enemy.y) < 10) {
+                                radarPoints.splice(k, 1);
+                            }
+                        }
+                        
+                        missiles.splice(i, 1);
+                        enemies.splice(j, 1);
+                        gameState.kills++;
+                        updateHUD();
+                        break;
+                    }
+                }
+            }
+            
+            // 更新爆炸效果
+            for (let i = explosions.length - 1; i >= 0; i--) {
+                const explosion = explosions[i];
+                explosion.radius += 0.5;
+                explosion.alpha -= 0.02;
+                
+                if (explosion.alpha <= 0) {
+                    explosions.splice(i, 1);
+                }
+            }
+            
+            // 更新雷达点
+            for (let i = radarPoints.length - 1; i >= 0; i--) {
+                const point = radarPoints[i];
+                
+                // 移除过远的点
+                if (point.distance > 1500) {
+                    radarPoints.splice(i, 1);
+                }
+            }
+            
+            // 更新锁定目标计数
+            let lockedCount = 0;
+            for (const enemy of enemies) {
+                if (enemy.locked && enemy.lockProgress > 0.5) {
+                    lockedCount++;
+                }
+            }
+            gameState.locked = lockedCount;
+            updateHUD();
+        }
+
+        // 绘制游戏
+        function draw() {
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制背景
+            ctx.drawImage(images.background, 0, 0);
+            
+            // 绘制敌机
+            for (const enemy of enemies) {
+                ctx.save();
+                ctx.translate(enemy.x, enemy.y);
+                
+                // 根据距离调整大小
+                const scale = Math.max(0.3, 1 - enemy.distance / 1000);
+                ctx.scale(scale, scale);
+                
+                const angle = Math.atan2(enemy.vy, enemy.vx);
+                ctx.rotate(angle);
+                ctx.drawImage(images.enemy, -enemy.width/2, -enemy.height/2, enemy.width, enemy.height);
+                
+                // 绘制锁定指示器
+                if (enemy.locked) {
+                    ctx.restore();
+                    ctx.save();
+                    ctx.translate(enemy.x, enemy.y);
+                    
+                    // 锁定环
+                    ctx.strokeStyle = `rgba(255, 0, 0, ${enemy.lockProgress})`;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 30, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // 锁定进度
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 30, -Math.PI/2, -Math.PI/2 + enemy.lockProgress * Math.PI * 2);
+                    ctx.strokeStyle = '#f00';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    
+                    // 十字准星
+                    ctx.strokeStyle = `rgba(255, 0, 0, ${enemy.lockProgress})`;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(-20, 0);
+                    ctx.lineTo(20, 0);
+                    ctx.moveTo(0, -20);
+                    ctx.lineTo(0, 20);
+                    ctx.stroke();
+                }
+                
+                ctx.restore();
+            }
+            
+            // 绘制导弹
+            for (const missile of missiles) {
+                ctx.save();
+                ctx.translate(missile.x, missile.y);
+                const angle = Math.atan2(missile.vy, missile.vx) + Math.PI; // 添加180度旋转
+                ctx.rotate(angle);
+                ctx.drawImage(images.missile, -missile.width/2, -missile.height/2, missile.width, missile.height);
+                ctx.restore();
+            }
+            
+            // 绘制爆炸效果
+            for (const explosion of explosions) {
+                ctx.save();
+                ctx.globalAlpha = explosion.alpha;
+                ctx.fillStyle = `rgba(255, ${100 + Math.floor(Math.random() * 155)}, 0, ${explosion.alpha})`;
+                ctx.beginPath();
+                ctx.arc(explosion.x, explosion.y, explosion.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+            
+            drawRadar();
+        }
+        
+        function drawRadar() {
+            radarCtx.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
+            const centerX = radarCanvas.width / 2;
+            const centerY = radarCanvas.height / 2;
+            
+            for (const point of radarPoints) {
+                const dx = point.x - canvas.width / 2;
+                const dy = point.y - canvas.height / 2;
+                const angle = Math.atan2(dy, dx);
+                const clampedDistance = Math.min(point.distance, radarRange);
+                const distanceRatio = clampedDistance / radarRange;
+                const displayDistance = distanceRatio * radarDisplayRadius;
+                const radarX = centerX + Math.cos(angle) * displayDistance;
+                const radarY = centerY + Math.sin(angle) * displayDistance;
+                
+                radarCtx.fillStyle = point.active ? '#0f0' : '#f00';
+                radarCtx.beginPath();
+                radarCtx.arc(radarX, radarY, 3, 0, Math.PI * 2);
+                radarCtx.fill();
+            }
+        }
+
+        // 更新HUD显示
+        function updateHUD() {
+            document.getElementById('altitude').textContent = Math.floor(gameState.altitude - Math.random() * 10);
+            document.getElementById('speed').textContent = Math.floor(gameState.speed + Math.random() * 10 - 5);
+            document.getElementById('locked').textContent = gameState.locked;
+            document.getElementById('missiles').textContent = gameState.missiles;
+            document.getElementById('kills').textContent = gameState.kills;
+        }
+
+        // 开始计时器
+        function startTimer() {
+            gameState.timeLeft = 30;
+            document.getElementById('timer').style.display = 'block';
+            document.getElementById('timer').textContent = `${gameState.timeLeft}秒`;
+            
+            gameState.gameTimer = setInterval(() => {
+                gameState.timeLeft--;
+                document.getElementById('timer').textContent = `${gameState.timeLeft}秒`;
+                
+                if (gameState.timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        // 结束游戏
+        function endGame() {
+            gameState.gameOver = true;
+            clearInterval(gameState.gameTimer);
+            document.getElementById('finalKills').textContent = 10*gameState.kills+gameState.missiles;
+            document.getElementById('finalKillsCount').textContent = gameState.kills;
+            document.getElementById('gameOverMenu').style.display = 'flex';
+        }
+
+        // 重置游戏
+        function resetGame() {
+            // 清除之前的计时器
+            if (gameState.gameTimer) {
+                clearInterval(gameState.gameTimer);
+            }
+            
+            gameState = {
+                altitude: 12000,
+                speed: 850,
+                locked: 0,
+                missiles: 60,
+                kills: 0,
+                gameOver: false,
+                gameStarted: true,
+                timeLeft: 30,
+                gameTimer: null
+            };
+            
+            enemies = [];
+            missiles = [];
+            explosions = [];
+            radarPoints = [];
+            
+            updateHUD();
+            document.getElementById('gameOverMenu').style.display = 'none';
+            document.getElementById('timer').style.display = 'block';
+            startTimer();
+        }
+
+        // 游戏循环
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 初始化游戏
+        function init() {
+            loadImages();
+            updateHUD();
+            
+            // 鼠标移动事件 - 移动瞄准镜
+            document.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const targetX = e.clientX - rect.left;
+                const targetY = e.clientY - rect.top;
+                
+                // 更新瞄准镜位置
+                const reticle = document.querySelector('.targeting-reticle');
+                reticle.style.left = `${targetX}px`;
+                reticle.style.top = `${targetY}px`;
+            });
+            
+            // 鼠标点击事件 - 发射导弹
+            canvas.addEventListener('click', (e) => {
+                if (!gameState.gameStarted || gameState.gameOver) return;
+                
+                const rect = canvas.getBoundingClientRect();
+                const targetX = e.clientX - rect.left;
+                const targetY = e.clientY - rect.top;
+                
+                fireMissile(targetX, targetY);
+            });
+            
+            // 开始游戏按钮
+            document.getElementById('startBtn').addEventListener('click', () => {
+                document.getElementById('startMenu').style.display = 'none';
+                gameState.gameStarted = true;
+                resetGame();
+            });
+            
+            // 重新开始按钮
+            document.getElementById('restartBtn').addEventListener('click', () => {
+                resetGame();
+            });
+            
+            // 启动游戏循环
+            gameLoop();
+        }
+
+        // 页面加载完成后初始化游戏
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

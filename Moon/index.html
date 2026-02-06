@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <style type="text/css">
+    font {color:#9100ff;}
+    p {color:#fff;}
+	tr {color:#ed8121;}
+    </style>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=KjlNGfjB6ZrdP0XU0zWvTSn9foDwSMlK&services=true">   
+    </script>
+    
+    </style>
+    <title>月亮观察记录</title>
+</head>
+<body>
+	<body background="resources/back2.bmp">
+    <font face="楷体" size="20">赏月图鉴（月亮观察记录）</font>
+    <a href="https://baike.baidu.com/item/%E6%9C%88%E7%90%83/30767">关于月亮（百度百科）</a><br>
+    <p>更新于2023年12月7日</p>
+    <p>照片</p>
+
+    <table border="1">
+        <tr>
+            <th><img src="resources/1126.jpg" width="350" height="350" alt="11月26日"/></th>
+            <th><img src="resources/1127.jpg" width="350" height="350" alt="11月27日"/> </th>
+            <td><img src="resources/1128.jpg" width="350" height="350" alt="11月28日"/></td>
+        </tr>
+        <tr>
+            <td><img src="resources/1129.jpg" width="350" height="350" alt="11月29日"/></td>
+            <td><img src="resources/1130.jpg" width="350" height="350" alt="11月30日"/></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+
+    <p>记录</p>
+    <table border="1">
+        <tr>
+            <th>日期</th>
+            <th>月相</th>
+        </tr>
+        <tr>
+            <td>11月26日</td>
+            <td>满月</td>
+        </tr>
+        <tr>
+            <td>11月27日</td>
+            <td>满月</td>
+        </tr>
+        <tr>
+            <td>11月28日</td>
+            <td>满月</td>
+        </tr>
+		 <tr>
+            <td>11月29日</td>
+            <td>阴天</td>
+        </tr>
+		 <tr>
+            <td>11月30日</td>
+            <td>亏凸月</td>
+        </tr>
+    </table>
+<!-- ————————————————
+版权声明：本文为CSDN博主「宗而研之」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/zong596568821xp/article/details/83277729 -->
+    <div style="width:800px;height:50px;margin:auto;">----------------------------观测地点----------------------------</div>
+        <!--!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"-->
+        <!--html xmlns="http://www.w3.org/1999/xhtml"-->
+              <!--百度地图容器-->
+    <div style="width:800px;height:600px;margin:auto;" id="dituContent"></div><!--border:#ccc solid 1px;-->
+        <script type="text/javascript">
+                //创建和初始化地图函数：
+             function initMap(){
+        createMap();//创建地图
+        setMapEvent();//设置地图事件
+        addMapControl();//向地图添加控件
+        addMarker();//向地图中添加marker
+        addPolyline();//向地图中添加线
+        addRemark();//向地图中添加文字标注
+    }
+    
+    //创建地图函数：
+    function createMap(){
+        var map = new BMap.Map("dituContent");//在百度地图容器中创建一个地图
+        var point = new BMap.Point(117.3012,31.85128);//定义一个中心点坐标
+        map.centerAndZoom(point,17);//设定地图的中心点和坐标并将地图显示在地图容器中
+        window.map = map;//将map变量存储在全局
+    }
+    
+    //地图事件设置函数：
+    function setMapEvent(){
+        map.enableDragging();//启用地图拖拽事件，默认启用(可不写)
+        map.enableScrollWheelZoom();//启用地图滚轮放大缩小
+        map.enableDoubleClickZoom();//启用鼠标双击放大，默认启用(可不写)
+        map.enableKeyboard();//启用键盘上下左右键移动地图
+    }
+    
+    //地图控件添加函数：
+    function addMapControl(){
+        //向地图中添加缩放控件
+	var ctrl_nav = new BMap.NavigationControl({anchor:BMAP_ANCHOR_TOP_LEFT,type:BMAP_NAVIGATION_CONTROL_LARGE});
+	map.addControl(ctrl_nav);
+        //向地图中添加缩略图控件
+	var ctrl_ove = new BMap.OverviewMapControl({anchor:BMAP_ANCHOR_BOTTOM_RIGHT,isOpen:1});
+	map.addControl(ctrl_ove);
+        //向地图中添加比例尺控件
+	var ctrl_sca = new BMap.ScaleControl({anchor:BMAP_ANCHOR_BOTTOM_LEFT});
+	map.addControl(ctrl_sca);
+    }
+    
+    //标注点数组
+    var markerArr = [{title:"月亮观测点01",content:"常用观测点，在西二教学楼和升华楼之间。",point:"117.29886|31.852576",isOpen:0,icon:{w:21,h:21,l:0,t:0,x:6,lb:5}}
+		 ,{title:"月亮观测点02",content:"在西二教学楼四楼东侧窗台",point:"117.299489|31.852936",isOpen:0,icon:{w:21,h:21,l:0,t:0,x:6,lb:5}}
+		 ];
+    //创建marker
+    function addMarker(){
+        for(var i=0;i<markerArr.length;i++){
+            var json = markerArr[i];
+            var p0 = json.point.split("|")[0];
+            var p1 = json.point.split("|")[1];
+            var point = new BMap.Point(p0,p1);
+			var iconImg = createIcon(json.icon);
+            var marker = new BMap.Marker(point,{icon:iconImg});
+			var iw = createInfoWindow(i);
+			var label = new BMap.Label(json.title,{"offset":new BMap.Size(json.icon.lb-json.icon.x+10,-20)});
+			marker.setLabel(label);
+            map.addOverlay(marker);
+            label.setStyle({
+                        borderColor:"#808080",
+                        color:"#333",
+                        cursor:"pointer"
+            });
+			
+			(function(){
+				var index = i;
+				var _iw = createInfoWindow(i);
+				var _marker = marker;
+				_marker.addEventListener("click",function(){
+				    this.openInfoWindow(_iw);
+			    });
+			    _iw.addEventListener("open",function(){
+				    _marker.getLabel().hide();
+			    })
+			    _iw.addEventListener("close",function(){
+				    _marker.getLabel().show();
+			    })
+				label.addEventListener("click",function(){
+				    _marker.openInfoWindow(_iw);
+			    })
+				if(!!json.isOpen){
+					label.hide();
+					_marker.openInfoWindow(_iw);
+				}
+			})()
+        }
+    }   
+    //创建InfoWindow
+    function createInfoWindow(i){
+        var json = markerArr[i];
+        var iw = new BMap.InfoWindow("<b class='iw_poi_title' title='" + json.title + "'>" + json.title + "</b><div class='iw_poi_content'>"+json.content+"</div>");
+        return iw;
+    }
+    //创建一个Icon
+    function createIcon(json){
+        var icon = new BMap.Icon("http://app.baidu.com/map/images/us_mk_icon.png", new BMap.Size(json.w,json.h),{imageOffset: new BMap.Size(-json.l,-json.t),infoWindowOffset:new BMap.Size(json.lb+5,1),offset:new BMap.Size(json.x,json.h)})
+        return icon;
+    }
+//标注线数组
+    var plPoints = [{style:"solid",weight:4,color:"#f00",opacity:0.6,points:["117.297885|31.853388","117.298317|31.844953","117.307551|31.845322","117.307264|31.851916","117.306401|31.851885","117.306401|31.85253","117.305395|31.85253","117.305359|31.853634","117.297849|31.853419"]}
+		 ];
+    //向地图中添加线函数
+    function addPolyline(){
+		for(var i=0;i<plPoints.length;i++){
+			var json = plPoints[i];
+			var points = [];
+			for(var j=0;j<json.points.length;j++){
+				var p1 = json.points[j].split("|")[0];
+				var p2 = json.points[j].split("|")[1];
+				points.push(new BMap.Point(p1,p2));
+			}
+			var line = new BMap.Polyline(points,{strokeStyle:json.style,strokeWeight:json.weight,strokeColor:json.color,strokeOpacity:json.opacity});
+			map.addOverlay(line);
+		}
+	}
+//文字标注数组
+    var lbPoints = [{point:"117.305287|31.85197",content:"六号楼"}
+		 ,{point:"117.304784|31.851234",content:"乒羽馆"}
+		 ];
+    //向地图中添加文字标注函数
+    function addRemark(){
+        for(var i=0;i<lbPoints.length;i++){
+            var json = lbPoints[i];
+            var p1 = json.point.split("|")[0];
+            var p2 = json.point.split("|")[1];
+            var label = new BMap.Label("<div style='padding:2px;'>"+json.content+"</div>",{point:new BMap.Point(p1,p2),offset:new BMap.Size(3,-6)});
+            map.addOverlay(label);
+            label.setStyle({borderColor:"#999"});
+        }
+    }
+            initMap();//创建和初始化地图
+                 //background-color: #9100ff;border: 10px brown;
+        </script>
+    
+    <p>摄影：吴陶然</p>
+    <p>制作：吴陶然</p>
+
+    <p>这里是结尾</p>
+</body>
+</html>

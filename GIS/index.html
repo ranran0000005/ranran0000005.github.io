@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIS目录</title>
+    <link rel="shortcut icon" href="map.ico">
+</head>
+<body>
+  <div style="text-align: center;background: #f0f0f0;
+  padding: 20px;border-radius: 10px;">
+    <h1>GIS目录</h1>
+    <p>此目录下包含多个GIS项目，使用了GeoServer、ArcGIS等服务。</p>
+    <p>要访问GIS项目，请点击下方的按钮：</p>
+  </div>
+    <style>
+      .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px 28px;
+        max-width: 660px;
+        margin: 0 auto 20px auto;
+        margin-top: 10px;
+      }
+      .grid-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 23px 10px;
+        border-radius: 14px;
+        font-size: 1.35em;
+        font-weight: bold;
+      }
+      .grid-item a {
+        text-decoration: none;
+        color: #222;
+        font-size: 1.2em;
+      }
+      .bg-a { background: #f0f0f0; }
+      .bg-b { background: #e8edff; }
+      .bg-c { background: #ffe8e8; }
+      .bg-d { background: #e8ffe9; }
+      .bg-e { background: #fef5dd; }
+      .bg-f { background: #e8e8e8; }
+      @media (max-width:700px) {
+        .grid-container { grid-template-columns: 1fr; }
+      }
+      .main-back-btn {
+        display: block;
+        margin: 32px auto 0 auto;
+        padding: 13px 24px;
+        font-size: 1.1em;
+        border-radius: 9px;
+        background: #ececec;
+        border: 2px solid #aaa;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .main-back-btn:hover {
+        background: #d6eaff;
+      }
+    </style>
+    <div class="grid-container">
+      <div class="grid-item bg-a" onclick="window.open('integration/', '_blank')" style="cursor:pointer;">
+        Geoserver集成项目
+      </div>
+      <div class="grid-item bg-b" onclick="window.open('demo/baidumap/', '_blank')" style="cursor:pointer;">
+        百度地图集成项目
+      </div>
+      <div class="grid-item bg-d" onclick="window.open('demo/GeoServer/', '_blank')" style="cursor:pointer;">
+        GeoServer
+      </div>
+      <div class="grid-item bg-c" onclick="window.open('demo/ArcGIS/', '_blank')" style="cursor:pointer;">
+        ArcGIS
+      </div>
+      <div class="grid-item bg-e" onclick="window.open('../MarkDown/', '_blank')" style="cursor:pointer;">
+        帮助文档
+      </div>
+      <div class="grid-item bg-f" onclick="location.href='../about.html'" style="cursor:pointer;">
+        关于
+      </div>
+      
+    </div>
+    <button class="main-back-btn" onclick="location.href='../'">返回主界面</button>
+    <p>GIS是地理信息系统的缩写</p>
+    <p>此目录用于发布和共享地理空间数据。</p>
+  </body>
+</html>
