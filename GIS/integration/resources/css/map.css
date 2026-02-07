@@ -1,0 +1,53 @@
+/* 地图相关样式 */
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* 比例尺控件样式 - 左下角 */
+.ol-scale-line {
+    position: absolute !important;
+    bottom: 8px !important;
+    left: 8px !important;
+    top: auto !important;
+    right: auto !important;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 4px;
+    padding: 4px 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ol-scale-line-inner {
+    border: 2px solid #333;
+    border-top: none;
+    color: #333;
+    font-size: 11px;
+    text-align: center;
+    margin: 1px;
+    will-change: contents, width;
+    display: block;
+}
+
+/* 缩放控件样式 - 右上角 */
+.ol-zoom {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    bottom: auto !important;
+    left: auto !important;
+}
+
+.ol-zoom button {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ol-zoom button:hover {
+    background: rgba(255, 255, 255, 1);
+}
+
