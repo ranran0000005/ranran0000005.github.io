@@ -1,88 +1,63 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<doc type="html">
+<meta charset="utf-8" /> 
+<title>欢迎页</title>    
 
-<head>
-    <meta charset="utf-8" />
-    <title>WebGIS开发-吴陶然</title>
 
-    <link rel="shortcut icon" href="map.ico">
-    <link rel="stylesheet" type="text/css" href="resources/css/style_.css">
-    <link rel="stylesheet" href="resources/css/popup.css">
-   
-    <link rel="stylesheet" href="resources/css/settings.css">
-    <link rel="stylesheet" href="resources/css/markers.css">
-    <link rel="stylesheet" href="resources/css/layout.css">
-    <link rel="stylesheet" href="resources/css/map.css">
-    <!-- OpenLayers CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.4.0/ol.css">
-    <!-- Proj4js for coordinate transformations -->
-    <script src="https://cdn.jsdelivr.net/npm/proj4@2.9.0/dist/proj4.js"></script>
-    <!-- OpenLayers JS -->
-    <script src="https://cdn.jsdelivr.net/npm/ol@7.4.0/dist/ol.js"></script>
-    <!-- Shapefile.js for client-side shapefile parsing -->
-    <script src="https://cdn.jsdelivr.net/npm/shapefile@0.6.6/dist/shapefile.min.js"></script>
-    <!-- JSZip for extracting ZIP files -->
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-</head>
+    <head>
+        <link rel="shortcut icon" href="favicon.ico">
+        <header style="background:#005ce6;color:#fff;padding:10px 20px;font-size:18px;font-weight:bold;">
+            欢迎来到我的网站！
+        </header>
+    </head>
+<!-- 创建一个容器，里面有几个按钮，分别指向目录下不同文件 -->
+<div style="margin:20px;">
+  <h2>快速导航</h2>
+  
+  <style>
+    .nav-btn {
+      margin: 8px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: background 0.3s;
+    }
+    .nav-btn.gis { background: #005ce6; }
+    .nav-btn.nextcloud { background: #487060; }
+    .nav-btn.games { background: #673878; }
+    .nav-btn.websites { background: #5f3232; }
+  </style>
+  <button class="nav-btn gis" 
+      onmouseover="this.style.background='#004bb5'" 
+      onmouseout="this.style.background='#005ce6'" 
+      onclick="location.href='GIS/'">GIS开发</button>
+  <button class="nav-btn nextcloud"
+      onmouseover="this.style.background='#004bb5'" 
+      onmouseout="this.style.background='#487060'"
+      onclick="window.open('https://nextcloud.kjjfpt.top', '_blank')">NextCloud</button>
+  <button class="nav-btn games"
+      onmouseover="this.style.background='#004bb5'" 
+      onmouseout="this.style.background='#673878'"
+      onclick="location.href='games/'">休闲一下</button>
+  <button class="nav-btn websites"
+      onmouseover="this.style.background='#004bb5'" 
+      onmouseout="this.style.background='#5f3232'"
+      onclick="location.href='websites/'">常用网站</button>
+</div>
 
-<body>
-    <div class="top-header">
-        <div>GIS开发</div>
-        <div class="top-header-actions">
-            <!-- 搜索框 -->
-            <div class="search-container">
-                <input type="text" id="searchInput" class="search-input" placeholder="搜索地点（如：北京天安门）..." 
-                       onkeypress="if(event.key === 'Enter') { handleSearch(); }">
-                <button onclick="handleSearch()" class="search-button" title="搜索">🔍</button>
-                <button onclick="clearSearch()" id="clearSearchBtn" class="search-clear-btn" title="清除">×</button>
-            </div>
-            <span id="searchStatus" class="search-status">搜索中...</span>
-            <button class="right-button" onclick="showShapefileUploadDialog()" title="上传本地 Shapefile">上传 SHP</button>
-            <button class="right-button" onclick="toggleAddMarkerMode()" id="addMarkerBtn">添加标注</button>
-            <button class="right-button" onclick="showSpatialAnalysisDialog()" title="空间句法分析">空间分析</button>
-            <button class="right-button" onclick="Settting()">设置</button>
-        </div>
+    <div style="margin:20px;">
+        <h2>关于我</h2>
+        <p>我来自合工大，在资环学院地理信息科学专业。</p>
+        <p>QQ:2820814770</p>
+        <p>2025年11月</p>
     </div>
-
-    <div id="mapFrame">
-        <div id="container"></div>
-        <div id="loading">地图加载中...</div>
-    </div>
-
-    <div class="bottom-actions">
-        <!-- <button onclick="showMap()" class="action-button">显示地图</button> -->
-        <button onclick="showAbout()" class="action-button">关于</button>
-        <button onclick="showShapefileUploadDialog()" class="action-button">上传 Shapefile</button>
-        <button onclick="loadMarkersFromDatabase()" class="action-button">刷新标注</button>
-        <button onclick="showSpatialAnalysisDialog()" class="action-button">空间分析</button>
-        <button onclick="clearSpatialAnalysis()" class="action-button">清除分析</button>
-        <button onclick="location.href='../'" class="action-button">返回主界面</button>
-        <button onclick="location.href='../MarkDown/index.php'" class="action-button">帮助文档</button>
-    </div>
-
-    <!-- JavaScript 文件 - 按依赖顺序加载 -->
-    <script src="resources/js/config.js"></script>
-    <script src="resources/js/utils.js"></script>
-    <script src="resources/js/coordinate-utils.js"></script>
-    <script src="resources/js/map-core.js"></script>
-    <script src="resources/js/wms-layers.js"></script>
-    <script src="resources/js/geoserver.js"></script>
-    <script src="resources/js/markers.js"></script>
-    <script src="resources/js/settings.js"></script>
-    <script src="resources/js/search.js"></script>
-    <!-- WASM 加速模块（可选，如果不可用会自动回退到 JS 实现） -->
-    <script src="resources/wasm/spatial_analysis.js"></script>
-    <script src="resources/js/wasm-loader.js"></script>
-    <script src="resources/js/wasm-integration.js"></script>
-    <!-- 本地 Shapefile 加载模块 -->
-    <script src="resources/js/segment-splitter.js"></script>
-    <script src="resources/js/shapefile-loader.js"></script>
-    <script src="resources/js/local-analysis.js"></script>
-    <!-- 空间分析算法模块（必须在 spacial_analyse.js 之前加载） -->
-    <script src="resources/js/integration.js"></script>
-    <script src="resources/js/connection.js"></script>
-    <script src="resources/js/spacial_analyse.js"></script>
-    <script src="resources/js/main.js"></script>
+    
+    <!-- 将版权按钮固定在页面最底部 -->
+    <button style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:8px 16px;border:none;border-radius:5px;background:#e6e6e6;color:#333;font-size:14px;cursor:default;z-index:100;" onclick="location.href='upload/index.php'">
+        Copyright 2025
+    </button>
 </body>
-
 </html>
