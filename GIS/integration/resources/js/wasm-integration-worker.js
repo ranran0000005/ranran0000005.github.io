@@ -5,7 +5,7 @@
 
 // Import the WASM module (use absolute path from worker context)
 // The worker's base URL is relative to the HTML file, not the worker file itself
-importScripts('resources/wasm/spatial_analysis.js');
+importScripts('../../resources/wasm/spatial_analysis.js');
 
 let wasmModule = null;
 let wasmReady = false;
@@ -19,7 +19,7 @@ async function initWasm() {
         wasmModule = await SpatialAnalysisModule({
             locateFile: function(path) {
                 if (path.endsWith('.wasm')) {
-                    return 'resources/wasm/' + path;
+                    return '../../resources/wasm/' + path;
                 }
                 return path;
             }
