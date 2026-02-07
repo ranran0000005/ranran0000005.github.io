@@ -50,7 +50,7 @@ function initOpenLayersMap() {
             const z = tileCoord[0];
             const x = tileCoord[1];
             const y = -tileCoord[2] - 1;
-            return `https://online3.map.bdimg.com/onlinelabel/?qt=tile&x=${x}&y=${y}&z=${z}&styles=pl&scaler=1&p=1`;
+            return `http://online3.map.bdimg.com/onlinelabel/?qt=tile&x=${x}&y=${y}&z=${z}&styles=pl&scaler=1&p=1`;
         },
         attributions: '&copy; 百度地图'
     });
@@ -73,7 +73,7 @@ function initOpenLayersMap() {
             image: new ol.style.Icon({
                 anchor: [0.5, 1],
                 src: 'data:image/svg+xml;base64,' + btoa(`
-                    <svg xmlns="https://www.w3.org/2000/svg" width="32" height="48" viewBox="0 0 32 48">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="48" viewBox="0 0 32 48">
                         <path d="M16 0C7.163 0 0 7.163 0 16c0 11.5 16 32 16 32s16-20.5 16-32C32 7.163 24.837 0 16 0z" fill="#FF0000" stroke="#FFFFFF" stroke-width="2"/>
                         <circle cx="16" cy="16" r="6" fill="#FFFFFF"/>
                     </svg>
