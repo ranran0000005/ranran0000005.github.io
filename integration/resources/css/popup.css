@@ -1,0 +1,51 @@
+/* 弹出窗口样式 */
+.popup_ {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    max-width: 90%;
+    background-color: #fff;
+    border: 2px solid #000;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+    text-align: center;
+}
+
+.popup_-timer {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #666;
+}
+
+.popup_-close {
+    margin-top: 15px;
+    padding: 8px 16px;
+    background-color: #005ce6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 14px;
+}
+
+.popup_-close:hover {
+    background-color: #0044b3;
+}
+
+/* 弹窗内容样式 */
+.popup_ h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.popup_ p {
+    margin: 5px 0;
+    color: #666;
+    text-align: left;
+}
