@@ -50,7 +50,8 @@ function initOpenLayersMap() {
             const z = tileCoord[0];
             const x = tileCoord[1];
             const y = -tileCoord[2] - 1;
-            return `http://online3.map.bdimg.com/onlinelabel/?qt=tile&x=${x}&y=${y}&z=${z}&styles=pl&scaler=1&p=1`;
+            // 使用 HTTPS 协议以支持 HTTPS 网站
+            return `https://online3.map.bdimg.com/onlinelabel/?qt=tile&x=${x}&y=${y}&z=${z}&styles=pl&scaler=1&p=1`;
         },
         attributions: '&copy; 百度地图'
     });
