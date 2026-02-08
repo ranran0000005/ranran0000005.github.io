@@ -7,11 +7,13 @@ console.log('[Worker] Worker 脚本开始执行');
 console.log('[Worker] Worker location:', self.location.href);
 
 // Import the WASM module
-// Worker's base URL is same as the HTML file that created it
-// So from index.html perspective: resources/wasm/spatial_analysis.js
+// Worker URL: http://kjjfpt.top/GIS/integration/resources/js/wasm-integration-worker.js
+// Worker base: http://kjjfpt.top/GIS/integration/resources/js/
+// WASM target: http://kjjfpt.top/GIS/integration/resources/wasm/spatial_analysis.js
+// So from worker's perspective: ../wasm/spatial_analysis.js
 try {
     console.log('[Worker] 尝试加载 WASM 脚本...');
-    importScripts('resources/wasm/spatial_analysis.js');
+    importScripts('../wasm/spatial_analysis.js');
     console.log('[Worker] WASM 脚本加载成功');
 } catch (error) {
     console.error('[Worker] WASM 脚本加载失败:', error);
@@ -35,8 +37,8 @@ async function initWasm() {
         wasmModule = await SpatialAnalysisModule({
             locateFile: function(path) {
                 if (path.endsWith('.wasm')) {
-                    // From HTML file perspective
-                    const wasmPath = 'resources/wasm/' + path;
+                    // From worker's base URL (resources/js/), go to resources/wasm/
+                    const wasmPath = '../wasm/' + path;
                     console.log('[Worker] 定位 WASM 文件:', wasmPath);
                     return wasmPath;
                 }
