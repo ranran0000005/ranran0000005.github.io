@@ -300,94 +300,103 @@ async function calculateIntegrationWebGPU(features, adjacencyList, progressCallb
         
         console.log('【WebGPU Debug】Pipeline和BindGroup创建成功');
         
-        // Process each node as root
+        // Process nodes in batches to prevent GPU freeze
+        const BATCH_SIZE = 10; // Process 10 roots at a time
         const updateInterval = Math.max(1, Math.floor(nodeCount / 20));
         
-        for (let root = 0; root < nodeCount; root++) {
-            if (progressCallback && root % updateInterval === 0) {
-                const percent = 10 + (root / nodeCount) * 85;
-                progressCallback(`WebGPU 计算中... (${root + 1}/${nodeCount})`, Math.min(95, percent));
-            }
+        for (let batchStart = 0; batchStart < nodeCount; batchStart += BATCH_SIZE) {
+            const batchEnd = Math.min(batchStart + BATCH_SIZE, nodeCount);
             
-            if (root < 3 || root % 100 === 0) {
-                console.log(`【WebGPU Debug】开始计算根节点 ${root}`);
-            }
-            
-            // Update params for this root
-            const params = new Uint32Array([nodeCount, root]);
-            gpuDevice.queue.writeBuffer(paramsBuffer, 0, params);
-            
-            // Create command encoder
-            const commandEncoder = gpuDevice.createCommandEncoder();
-            
-            // Initialize distances
-            const initPass = commandEncoder.beginComputePass();
-            initPass.setPipeline(initPipeline);
-            initPass.setBindGroup(0, bindGroup);
-            const initWorkgroups = Math.ceil(nodeCount / 256);
-            initPass.dispatchWorkgroups(initWorkgroups);
-            initPass.end();
-            
-            // Run Dijkstra computation
-            const computePass = commandEncoder.beginComputePass();
-            computePass.setPipeline(pipeline);
-            computePass.setBindGroup(0, bindGroup);
-            const workgroups = Math.ceil(nodeCount / 256);
-            computePass.dispatchWorkgroups(workgroups);
-            computePass.end();
-            
-            // Copy results to read buffer
-            commandEncoder.copyBufferToBuffer(
-                distancesBuffer,
-                root * nodeCount * 4,
-                readBuffer,
-                0,
-                nodeCount * 4
-            );
-            
-            // Submit commands
-            gpuDevice.queue.submit([commandEncoder.finish()]);
-            
-            // Read results
-            await readBuffer.mapAsync(GPUMapMode.READ);
-            const distances = new Float32Array(readBuffer.getMappedRange()).slice();
-            readBuffer.unmap();
-            
-            // Debug first few roots
-            if (root < 3) {
-                console.log(`【WebGPU Debug】根节点 ${root} 的距离数组:`, distances.slice(0, 10));
-                console.log(`【WebGPU Debug】根节点 ${root} 可达节点数:`, distances.filter(d => d < 1e9).length);
-            }
-            
-            // Calculate integration value
-            let totalDepth = 0;
-            let reachableCount = 0;
-            for (let i = 0; i < nodeCount; i++) {
-                if (i !== root) {
-                    const dist = distances[i];
-                    if (dist < 1e9) {
-                        totalDepth += dist;
-                        reachableCount++;
-                    } else {
-                        totalDepth += (nodeCount * nodeCount * 10);
+            // Process batch
+            for (let root = batchStart; root < batchEnd; root++) {
+                if (progressCallback && root % updateInterval === 0) {
+                    const percent = 10 + (root / nodeCount) * 85;
+                    progressCallback(`WebGPU 计算中... (${root + 1}/${nodeCount})`, Math.min(95, percent));
+                }
+                
+                if (root < 3 || root % 100 === 0) {
+                    console.log(`【WebGPU Debug】开始计算根节点 ${root}`);
+                }
+                
+                // Update params for this root
+                const params = new Uint32Array([nodeCount, root]);
+                gpuDevice.queue.writeBuffer(paramsBuffer, 0, params);
+                
+                // Create command encoder
+                const commandEncoder = gpuDevice.createCommandEncoder();
+                
+                // Initialize distances
+                const initPass = commandEncoder.beginComputePass();
+                initPass.setPipeline(initPipeline);
+                initPass.setBindGroup(0, bindGroup);
+                const initWorkgroups = Math.ceil(nodeCount / 256);
+                initPass.dispatchWorkgroups(initWorkgroups);
+                initPass.end();
+                
+                // Run Dijkstra computation
+                const computePass = commandEncoder.beginComputePass();
+                computePass.setPipeline(pipeline);
+                computePass.setBindGroup(0, bindGroup);
+                const workgroups = Math.ceil(nodeCount / 256);
+                computePass.dispatchWorkgroups(workgroups);
+                computePass.end();
+                
+                // Copy results to read buffer
+                commandEncoder.copyBufferToBuffer(
+                    distancesBuffer,
+                    root * nodeCount * 4,
+                    readBuffer,
+                    0,
+                    nodeCount * 4
+                );
+                
+                // Submit commands
+                gpuDevice.queue.submit([commandEncoder.finish()]);
+                
+                // Read results
+                await readBuffer.mapAsync(GPUMapMode.READ);
+                const distances = new Float32Array(readBuffer.getMappedRange()).slice();
+                readBuffer.unmap();
+                
+                // Debug first few roots
+                if (root < 3) {
+                    console.log(`【WebGPU Debug】根节点 ${root} 的距离数组:`, distances.slice(0, 10));
+                    console.log(`【WebGPU Debug】根节点 ${root} 可达节点数:`, distances.filter(d => d < 1e9).length);
+                }
+                
+                // Calculate integration value
+                let totalDepth = 0;
+                let reachableCount = 0;
+                for (let i = 0; i < nodeCount; i++) {
+                    if (i !== root) {
+                        const dist = distances[i];
+                        if (dist < 1e9) {
+                            totalDepth += dist;
+                            reachableCount++;
+                        } else {
+                            totalDepth += (nodeCount * nodeCount * 10);
+                        }
                     }
                 }
+                
+                // Debug totals
+                if (root < 3) {
+                    console.log(`【WebGPU Debug】根节点 ${root} 总深度:`, totalDepth, '可达节点:', reachableCount);
+                }
+                
+                // Apply integration formula
+                const totalDepthConv = (2.0 * totalDepth) / (tulipBins - 1.0);
+                const integration = totalDepthConv > 0 ? (nodeCount * nodeCount) / totalDepthConv : 0;
+                
+                if (root < 3) {
+                    console.log(`【WebGPU Debug】根节点 ${root} 整合度:`, integration);
+                }
+                
+                results.set(root, integration);
             }
             
-            // Debug totals
-            if (root < 3) {
-                console.log(`【WebGPU Debug】根节点 ${root} 总深度:`, totalDepth, '可达节点:', reachableCount);
-            }
-            
-            // Apply integration formula
-            const totalDepthConv = (2.0 * totalDepth) / (tulipBins - 1.0);
-            const integration = totalDepthConv > 0 ? (nodeCount * nodeCount) / totalDepthConv : 0;
-            
-            if (root < 3) {
-                console.log(`【WebGPU Debug】根节点 ${root} 整合度:`, integration);
-            }
-            
-            results.set(root, integration);
+            // Yield control to browser between batches to prevent freeze
+            await new Promise(resolve => setTimeout(resolve, 0));
         }
         
         // Cleanup
