@@ -4,23 +4,6 @@
 <head>
     <meta charset="utf-8" />
     <title>WebGIS开发-吴陶然</title>
-    
-    <!-- Force HTTP protocol to avoid HTTPS certificate issues with Baidu Maps -->
-    <script>
-        (function() {
-            var currentProtocol = window.location.protocol;
-            console.log('当前协议:', currentProtocol);
-            
-            // Redirect to HTTP if accessed via HTTPS
-            if (currentProtocol === 'https:') {
-                var httpUrl = 'http://' + window.location.host + window.location.pathname + window.location.search + window.location.hash;
-                console.log('检测到 HTTPS，正在重定向到:', httpUrl);
-                window.location.replace(httpUrl);
-            } else {
-                console.log('已使用 HTTP 协议，无需重定向');
-            }
-        })();
-    </script>
 
     <link rel="shortcut icon" href="map.ico">
     <link rel="stylesheet" type="text/css" href="resources/css/style_.css">
