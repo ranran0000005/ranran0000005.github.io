@@ -77,7 +77,7 @@ function initOpenLayersMap() {
         target: 'container',
         layers: [amapLayer, markersLayer],
         view: view,
-        controls: ol.control.defaults({
+        controls: ol.control.defaults.defaults({
             attribution: true,
             zoom: true,
             rotate: false
