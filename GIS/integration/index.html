@@ -4,6 +4,14 @@
 <head>
     <meta charset="utf-8" />
     <title>WebGIS开发-吴陶然</title>
+    
+    <!-- Force HTTP protocol to avoid HTTPS certificate issues with Baidu Maps -->
+    <script>
+        // Redirect to HTTP if accessed via HTTPS
+        if (window.location.protocol === 'https:') {
+            window.location.href = 'http://' + window.location.host + window.location.pathname + window.location.search + window.location.hash;
+        }
+    </script>
 
     <link rel="shortcut icon" href="map.ico">
     <link rel="stylesheet" type="text/css" href="resources/css/style_.css">

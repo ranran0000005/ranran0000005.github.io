@@ -41,8 +41,14 @@ function initOpenLayersMap() {
         tileSize: 256
     });
 
-    // 创建百度地图源
-    const baiduSource = new ol.source.XYZ({
+    // 创建百度地图源 - 由于百度 HTTPS 证书问题，提供多个备选方案
+    let baiduSource;
+    
+    // 尝试使用不同的百度地图服务器
+    const baiduServers = ['online0', 'online1', 'online2', 'online3'];
+    const randomServer = baiduServers[Math.floor(Math.random() * baiduServers.length)];
+    
+    baiduSource = new ol.source.XYZ({
         projection: baiduProjection,
         tileGrid: baiduTileGrid,
         tileUrlFunction: function(tileCoord) {
@@ -50,8 +56,8 @@ function initOpenLayersMap() {
             const z = tileCoord[0];
             const x = tileCoord[1];
             const y = -tileCoord[2] - 1;
-            // 使用 HTTPS 协议以支持 HTTPS 网站
-            return `https://online3.map.bdimg.com/onlinelabel/?qt=tile&x=${x}&y=${y}&z=${z}&styles=pl&scaler=1&p=1`;
+            // 使用随机服务器以分散负载，并使用 HTTP（在 HTTPS 环境下可能被阻止，但作为备选）
+            return `http://${randomServer}.map.bdimg.com/onlinelabel/?qt=tile&x=${x}&y=${y}&z=${z}&styles=pl&scaler=1&p=1`;
         },
         attributions: '&copy; 百度地图'
     });
