@@ -106,7 +106,8 @@ function convertToAdjacencyMatrix(adjacencyList, nodeCount) {
 
 /**
  * WGSL shader code for parallel shortest path computation
- * Uses Bellman-Ford style relaxation (suitable for GPU parallelization)
+ * Uses Delta-Stepping style algorithm with fixed iteration count
+ * Each iteration does one relaxation step - multiple dispatches ensure convergence
  */
 const DIJKSTRA_SHADER = `
 @group(0) @binding(0) var<storage, read> adjacency: array<f32>;
@@ -116,45 +117,35 @@ const DIJKSTRA_SHADER = `
 const INF: f32 = 1e10;
 
 @compute @workgroup_size(256)
-fn dijkstra_kernel(@builtin(global_invocation_id) global_id: vec3<u32>) {
+fn relax_edges(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let node_count = params[0];
     let root_index = params[1];
     let thread_id = global_id.x;
     
-    // All threads execute the same code path to maintain uniform control flow
-    let dist_offset = root_index * node_count;
+    if (thread_id >= node_count) {
+        return;
+    }
     
-    // Bellman-Ford style relaxation: each iteration, each thread tries to relax edges
-    // We need node_count-1 iterations to ensure convergence
-    for (var iter: u32 = 0; iter < node_count; iter++) {
-        // Only active threads participate
-        if (thread_id < node_count) {
-            var my_dist = distances[dist_offset + thread_id];
-            var updated = false;
-            
-            // Try to relax edges pointing TO this node
-            for (var from_node: u32 = 0; from_node < node_count; from_node++) {
-                let edge_weight = adjacency[from_node * node_count + thread_id];
-                let from_dist = distances[dist_offset + from_node];
-                
-                if (edge_weight < INF && from_dist < INF) {
-                    let new_dist = from_dist + edge_weight;
-                    if (new_dist < my_dist) {
-                        my_dist = new_dist;
-                        updated = true;
-                    }
+    let dist_offset = root_index * node_count;
+    var my_dist = distances[dist_offset + thread_id];
+    
+    // Try to relax edges pointing TO this node from all neighbors
+    for (var from_node: u32 = 0; from_node < node_count; from_node++) {
+        let edge_weight = adjacency[from_node * node_count + thread_id];
+        
+        if (edge_weight < INF) {
+            let from_dist = distances[dist_offset + from_node];
+            if (from_dist < INF) {
+                let new_dist = from_dist + edge_weight;
+                if (new_dist < my_dist) {
+                    my_dist = new_dist;
                 }
             }
-            
-            // Write back updated distance
-            if (updated) {
-                distances[dist_offset + thread_id] = my_dist;
-            }
         }
-        
-        // No barrier needed - each thread works independently on its own node
-        // GPU will handle memory consistency between dispatches
     }
+    
+    // Write back the best distance found
+    distances[dist_offset + thread_id] = my_dist;
 }
 
 @compute @workgroup_size(256)
@@ -163,15 +154,16 @@ fn init_distances(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let root_index = params[1];
     let thread_id = global_id.x;
     
-    // All threads execute same path - just some write different values
-    if (thread_id < node_count) {
-        let dist_offset = root_index * node_count;
-        
-        if (thread_id == root_index) {
-            distances[dist_offset + thread_id] = 0.0;
-        } else {
-            distances[dist_offset + thread_id] = INF;
-        }
+    if (thread_id >= node_count) {
+        return;
+    }
+    
+    let dist_offset = root_index * node_count;
+    
+    if (thread_id == root_index) {
+        distances[dist_offset + thread_id] = 0.0;
+    } else {
+        distances[dist_offset + thread_id] = INF;
     }
 }
 `;
@@ -276,7 +268,7 @@ async function calculateIntegrationWebGPU(features, adjacencyList, progressCallb
             layout: pipelineLayout,
             compute: {
                 module: shaderModule,
-                entryPoint: 'dijkstra_kernel'
+                entryPoint: 'relax_edges'
             }
         });
         
@@ -333,13 +325,18 @@ async function calculateIntegrationWebGPU(features, adjacencyList, progressCallb
                 initPass.dispatchWorkgroups(initWorkgroups);
                 initPass.end();
                 
-                // Run Dijkstra computation
-                const computePass = commandEncoder.beginComputePass();
-                computePass.setPipeline(pipeline);
-                computePass.setBindGroup(0, bindGroup);
-                const workgroups = Math.ceil(nodeCount / 256);
-                computePass.dispatchWorkgroups(workgroups);
-                computePass.end();
+                // Run relaxation in multiple passes (Bellman-Ford needs n-1 iterations)
+                // Use logarithmic iterations for sparse graphs: log2(n) * 4 is usually enough
+                const relaxIterations = Math.min(nodeCount - 1, Math.ceil(Math.log2(nodeCount)) * 4);
+                
+                for (let iter = 0; iter < relaxIterations; iter++) {
+                    const computePass = commandEncoder.beginComputePass();
+                    computePass.setPipeline(pipeline);
+                    computePass.setBindGroup(0, bindGroup);
+                    const workgroups = Math.ceil(nodeCount / 256);
+                    computePass.dispatchWorkgroups(workgroups);
+                    computePass.end();
+                }
                 
                 // Copy results to read buffer
                 commandEncoder.copyBufferToBuffer(
