@@ -19,7 +19,7 @@ async function calculateIntegrationWasm(features, adjacencyList, progressCallbac
     });
     
     // Try to use Web Workers for parallel computation
-    const workerUrl = 'resources/js/wasm-integration-worker.js';
+    const workerUrl = 'wasm-integration-worker.js';
     
     try {
         // Create workers
