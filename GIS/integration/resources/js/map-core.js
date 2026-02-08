@@ -22,53 +22,34 @@ function initMap() {
 }
 
 /**
- * 初始化 OpenLayers 地图
+ * 初始化 OpenLayers 地图 - 使用高德地图
  */
 function initOpenLayersMap() {
-    // 定义百度地图投影 (BD-09 Mercator)
-    proj4.defs('BD-09', '+proj=merc +a=6378206 +b=6356584.314245179 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs');
-    ol.proj.proj4.register(proj4);
-    const baiduProjection = ol.proj.get('BD-09');
+    // 使用 Web Mercator 投影 (EPSG:3857) - 高德地图使用标准 Web Mercator
+    const projection = ol.proj.get('EPSG:3857');
 
-    const resolutions = [];
-    for (let i = 0; i <= 18; i++) {
-        resolutions[i] = Math.pow(2, 18 - i);
-    }
-
-    const baiduTileGrid = new ol.tilegrid.TileGrid({
-        origin: [0, 0],
-        resolutions: resolutions,
-        tileSize: 256
+    // 创建高德地图源（HTTPS支持，多服务器负载均衡）
+    const amapSource = new ol.source.XYZ({
+        url: 'https://webrd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+        attributions: '&copy; <a href="https://www.amap.com/">高德地图</a>',
+        crossOrigin: 'anonymous',
+        maxZoom: 18
     });
 
-    // 创建百度地图源 - 由于百度 HTTPS 证书问题，提供多个备选方案
-    let baiduSource;
-    
-    // 尝试使用不同的百度地图服务器
-    const baiduServers = ['online0', 'online1', 'online2', 'online3'];
-    const randomServer = baiduServers[Math.floor(Math.random() * baiduServers.length)];
-    
-    baiduSource = new ol.source.XYZ({
-        projection: baiduProjection,
-        tileGrid: baiduTileGrid,
-        tileUrlFunction: function(tileCoord) {
-            if (!tileCoord) return '';
-            const z = tileCoord[0];
-            const x = tileCoord[1];
-            const y = -tileCoord[2] - 1;
-            // 使用随机服务器以分散负载，并使用 HTTP（在 HTTPS 环境下可能被阻止，但作为备选）
-            return `http://${randomServer}.map.bdimg.com/onlinelabel/?qt=tile&x=${x}&y=${y}&z=${z}&styles=pl&scaler=1&p=1`;
-        },
-        attributions: '&copy; 百度地图'
+    const amapLayer = new ol.layer.Tile({ 
+        source: amapSource,
+        name: 'amap-base'
     });
 
-    baiduLayer = new ol.layer.Tile({ source: baiduSource });
+    // 保存到全局变量（用于兼容旧代码中使用 baiduLayer 的部分）
+    baiduLayer = amapLayer;
 
-    // 创建视图
+    // 创建视图 - 使用 Web Mercator 坐标系
     const view = new ol.View({
-        projection: baiduProjection,
-        center: ol.proj.fromLonLat([104.299, 31.769], baiduProjection),
-        zoom: 5,
+        projection: projection,
+        center: ol.proj.fromLonLat([117.2, 31.8]), // 合肥市中心 (WGS84 转 Web Mercator)
+        zoom: 10,
+        minZoom: 3,
         maxZoom: 18
     });
 
@@ -76,6 +57,7 @@ function initOpenLayersMap() {
     markersSource = new ol.source.Vector();
     markersLayer = new ol.layer.Vector({
         source: markersSource,
+        name: 'markers',
         style: new ol.style.Style({
             image: new ol.style.Icon({
                 anchor: [0.5, 1],
@@ -90,14 +72,37 @@ function initOpenLayersMap() {
         })
     });
 
-    // 创建地图（不添加默认控件，手动添加）
+    // 创建地图
     map = new ol.Map({
         target: 'container',
-        layers: [baiduLayer, markersLayer],
+        layers: [amapLayer, markersLayer],
         view: view,
-        controls: [] // 先不添加任何控件
+        controls: ol.control.defaults({
+            attribution: true,
+            zoom: true,
+            rotate: false
+        })
     });
-    
+
+    // 添加鼠标位置控件（显示经纬度）
+    map.addControl(new ol.control.MousePosition({
+        coordinateFormat: function(coord) {
+            const lonLat = ol.proj.toLonLat(coord);
+            return `经度: ${lonLat[0].toFixed(6)}, 纬度: ${lonLat[1].toFixed(6)}`;
+        },
+        projection: projection,
+        className: 'custom-mouse-position',
+        undefinedHTML: '&nbsp;'
+    }));
+
+    // 添加比例尺控件
+    map.addControl(new ol.control.ScaleLine({
+        units: 'metric',
+        position: 'bottom-left',
+        minWidth: 64,
+        maxWidth: 200
+    }));
+
     // 添加地图点击事件（用于添加标注）
     map.on('click', function(event) {
         if (isAddingMarker) {
@@ -138,22 +143,9 @@ function initOpenLayersMap() {
         }
     });
 
-    // 添加缩放控件，放在右上角
-    map.addControl(new ol.control.Zoom({
-        position: 'top-right'
-    }));
-
-    // 添加比例尺控件，放在左下角，配置单位以确保图形正确显示
-    map.addControl(new ol.control.ScaleLine({
-        units: 'metric', // 使用公制单位（米、千米）
-        position: 'bottom-left',
-        minWidth: 64, // 最小宽度，避免过长
-        maxWidth: 200 // 最大宽度，保持美观
-    }));
-
     // 错误处理
-    baiduSource.on('tileloaderror', (evt) => { 
-        console.error('Baidu tile load error', evt); 
+    amapSource.on('tileloaderror', (evt) => { 
+        console.error('Amap tile load error', evt); 
     });
 
     // 隐藏加载提示
@@ -162,6 +154,5 @@ function initOpenLayersMap() {
         loadingEl.style.display = 'none';
     }
 
-    console.log('OpenLayers 地图初始化成功');
+    console.log('OpenLayers 地图初始化成功 - 使用高德地图');
 }
-
