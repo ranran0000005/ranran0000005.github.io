@@ -121,7 +121,7 @@ function convertToAdjacencyMatrix(adjacencyList, nodeCount) {
 const DIJKSTRA_SHADER = `
 @group(0) @binding(0) var<storage, read> adjacency: array<f32>;
 @group(0) @binding(1) var<storage, read_write> distances: array<f32>;
-@group(0) @binding(2) var<storage, read_write> active: array<u32>;  // Active nodes bitmap
+@group(0) @binding(2) var<storage, read_write> active_nodes: array<u32>;  // Active nodes bitmap
 @group(0) @binding(3) var<storage, read> params: array<u32>;
 
 const INF: f32 = 1e10;
@@ -142,10 +142,10 @@ fn init_distances(@builtin(global_invocation_id) global_id: vec3<u32>) {
     
     if (thread_id == root_index) {
         distances[dist_offset + thread_id] = 0.0;
-        active[thread_id] = 1u;  // Root is active
+        active_nodes[thread_id] = 1u;  // Root is active
     } else {
         distances[dist_offset + thread_id] = INF;
-        active[thread_id] = 0u;
+        active_nodes[thread_id] = 0u;
     }
 }
 
@@ -161,7 +161,7 @@ fn relax_light(@builtin(global_invocation_id) global_id: vec3<u32>) {
     }
     
     // Only process active nodes
-    if (active[thread_id] == 0u) {
+    if (active_nodes[thread_id] == 0u) {
         return;
     }
     
@@ -182,13 +182,13 @@ fn relax_light(@builtin(global_invocation_id) global_id: vec3<u32>) {
             
             if (new_dist < old_dist) {
                 distances[dist_offset + neighbor] = new_dist;
-                active[neighbor] = 1u;  // Mark neighbor as active for next round
+                active_nodes[neighbor] = 1u;  // Mark neighbor as active for next round
             }
         }
     }
     
     // Deactivate this node after processing
-    active[thread_id] = 0u;
+    active_nodes[thread_id] = 0u;
 }
 
 // Check if any nodes are still active (for termination)
