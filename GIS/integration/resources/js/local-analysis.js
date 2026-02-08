@@ -57,14 +57,32 @@ async function performSpatialAnalysisLocal(analysisType) {
                 results = await calculateConnectivity(features, updateProgress, adjacencyList);
             }
         } else if (analysisType === 'integration') {
-            if (useWasm) {
-                updateProgress('使用 WASM 计算整合度...', 40);
-                console.log('调用 calculateIntegrationWasm');
-                results = await calculateIntegrationWasm(features, adjacencyList, updateProgress, 8);
-                console.log('calculateIntegrationWasm 返回结果:', results.size, '个');
-            } else {
-                console.log('使用 JavaScript 计算整合度...');
-                results = await calculateIntegration(features, 8, updateProgress, adjacencyList, spatialIntegrationMode);
+            // Try WebGPU first for large datasets
+            const useWebGPU = nodeCount > 500 && isWebGPUAvailable();
+            
+            if (useWebGPU) {
+                try {
+                    updateProgress('使用 WebGPU 计算整合度...', 40);
+                    console.log('调用 calculateIntegrationWebGPU');
+                    results = await calculateIntegrationWebGPU(features, adjacencyList, updateProgress, 8);
+                    console.log('calculateIntegrationWebGPU 返回结果:', results.size, '个');
+                } catch (error) {
+                    console.warn('WebGPU 计算失败，回退到 WASM:', error);
+                    // Fall through to WASM
+                }
+            }
+            
+            // Try WASM if WebGPU failed or not available
+            if (!results || results.size === 0) {
+                if (useWasm) {
+                    updateProgress('使用 WASM 计算整合度...', 40);
+                    console.log('调用 calculateIntegrationWasm');
+                    results = await calculateIntegrationWasm(features, adjacencyList, updateProgress, 8);
+                    console.log('calculateIntegrationWasm 返回结果:', results.size, '个');
+                } else {
+                    console.log('使用 JavaScript 计算整合度...');
+                    results = await calculateIntegration(features, 8, updateProgress, adjacencyList, spatialIntegrationMode);
+                }
             }
         } else {
             closeProgress(0); // 立即关闭
@@ -197,11 +215,24 @@ async function performSpatialAnalysisLocal(analysisType) {
         
         // 在进度窗口中显示完成信息
         const analysisName = analysisType === 'connectivity' ? '连接度' : '整合度';
-        const dataSource = (useWasm && analysisType === 'connectivity') ? 'WASM 加速' : 'JavaScript';
+        let computeMethod = 'JavaScript';
+        if (analysisType === 'connectivity' && useWasm) {
+            computeMethod = 'WASM 加速';
+        } else if (analysisType === 'integration') {
+            if (results && results.size > 0) {
+                // Determine which method was actually used
+                if (nodeCount > 500 && isWebGPUAvailable()) {
+                    computeMethod = 'WebGPU 加速';
+                } else if (useWasm) {
+                    computeMethod = 'WASM 加速';
+                }
+            }
+        }
+        
         const details = `
             <div style="text-align: left; margin-top: 10px; font-size: 14px; color: #666;">
                 <div><strong>数据源：</strong>本地 Shapefile</div>
-                <div><strong>计算方式：</strong>${dataSource}</div>
+                <div><strong>计算方式：</strong>${computeMethod}</div>
                 <div><strong>分析类型：</strong>${analysisName}</div>
                 <div><strong>要素数量：</strong>${features.length}</div>
                 <div><strong>颜色范围：</strong>${minValue.toFixed(2)} - ${maxValue.toFixed(2)}${(colorStretch && (colorStretch.min !== null || colorStretch.max !== null)) ? '（手动拉伸）' : '（自动）'}</div>

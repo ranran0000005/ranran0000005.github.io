@@ -7,6 +7,19 @@
 document.addEventListener('DOMContentLoaded', function() {
     initMap();
     
+    // 尝试初始化 WebGPU（如果可用）
+    if (typeof initWebGPU === 'function') {
+        initWebGPU().then((supported) => {
+            if (supported) {
+                console.log('✓ WebGPU 加速已启用');
+            } else {
+                console.log('WebGPU 不可用，将使用 WASM 或 JavaScript 实现');
+            }
+        }).catch(err => {
+            console.warn('WebGPU 初始化失败:', err);
+        });
+    }
+    
     // 尝试初始化 WASM 模块（如果可用）
     if (typeof initWasmModule === 'function') {
         initWasmModule().then(() => {
