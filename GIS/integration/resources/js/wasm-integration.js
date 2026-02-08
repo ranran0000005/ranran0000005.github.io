@@ -19,7 +19,8 @@ async function calculateIntegrationWasm(features, adjacencyList, progressCallbac
     });
     
     // Try to use Web Workers for parallel computation
-    const workerUrl = 'wasm-integration-worker.js';
+    // Worker URL is relative to the HTML file location
+    const workerUrl = 'resources/js/wasm-integration-worker.js';
     
     try {
         // Create workers
@@ -27,31 +28,51 @@ async function calculateIntegrationWasm(features, adjacencyList, progressCallbac
         const workerReady = [];
         
         console.log(`创建 ${workerCount} 个 Web Workers...`);
+        console.log('Worker URL:', workerUrl);
+        console.log('当前页面 URL:', window.location.href);
         
         // Initialize workers
         for (let i = 0; i < workerCount; i++) {
-            const worker = new Worker(workerUrl);
-            workers.push(worker);
-            
-            // Wait for worker to be ready
-            const readyPromise = new Promise((resolve, reject) => {
-                const timeout = setTimeout(() => {
-                    reject(new Error('Worker initialization timeout'));
-                }, 10000);
+            try {
+                const worker = new Worker(workerUrl);
+                workers.push(worker);
                 
-                worker.onmessage = (e) => {
-                    if (e.data.type === 'ready') {
-                        clearTimeout(timeout);
-                        resolve();
-                    } else if (e.data.type === 'error') {
-                        clearTimeout(timeout);
-                        reject(new Error(e.data.error));
-                    }
+                // Add error handler
+                worker.onerror = (error) => {
+                    console.error(`Worker ${i} 加载错误:`, error.message, error.filename, error.lineno);
                 };
-            });
-            
-            worker.postMessage({ type: 'init' });
-            workerReady.push(readyPromise);
+                
+                // Wait for worker to be ready
+                const readyPromise = new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => {
+                        console.error(`Worker ${i} 初始化超时 (10秒无响应)`);
+                        reject(new Error('Worker initialization timeout'));
+                    }, 10000);
+                    
+                    const messageHandler = (e) => {
+                        console.log(`Worker ${i} 收到消息:`, e.data.type);
+                        if (e.data.type === 'ready') {
+                            clearTimeout(timeout);
+                            worker.removeEventListener('message', messageHandler);
+                            resolve();
+                        } else if (e.data.type === 'error') {
+                            clearTimeout(timeout);
+                            worker.removeEventListener('message', messageHandler);
+                            console.error(`Worker ${i} 初始化失败:`, e.data.error);
+                            reject(new Error(e.data.error));
+                        }
+                    };
+                    
+                    worker.addEventListener('message', messageHandler);
+                });
+                
+                console.log(`向 Worker ${i} 发送 init 消息`);
+                worker.postMessage({ type: 'init' });
+                workerReady.push(readyPromise);
+            } catch (err) {
+                console.error(`创建 Worker ${i} 失败:`, err);
+                throw err;
+            }
         }
         
         // Wait for all workers to be ready
