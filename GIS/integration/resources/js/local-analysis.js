@@ -58,6 +58,7 @@ async function performSpatialAnalysisLocal(analysisType) {
             }
         } else if (analysisType === 'integration') {
             // Try WebGPU first for large datasets
+            const nodeCount = features.length;
             const useWebGPU = nodeCount > 500 && isWebGPUAvailable();
             
             if (useWebGPU) {
