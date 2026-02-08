@@ -3,9 +3,9 @@
  * This worker loads the WASM module and calculates integration for assigned nodes
  */
 
-// Import the WASM module (use absolute path from worker context)
-// The worker's base URL is relative to the HTML file, not the worker file itself
-importScripts('../../resources/wasm/spatial_analysis.js');
+// Import the WASM module
+// Worker is loaded from resources/js/, so wasm is at ../wasm/
+importScripts('../wasm/spatial_analysis.js');
 
 let wasmModule = null;
 let wasmReady = false;
@@ -15,18 +15,26 @@ async function initWasm() {
     if (wasmReady) return;
     
     try {
+        console.log('[Worker] 开始初始化 WASM...');
+        
         // Configure the module to use the correct path for .wasm file
         wasmModule = await SpatialAnalysisModule({
             locateFile: function(path) {
                 if (path.endsWith('.wasm')) {
-                    return '../../resources/wasm/' + path;
+                    // Worker is at resources/js/, wasm is at resources/wasm/
+                    const wasmPath = '../wasm/' + path;
+                    console.log('[Worker] 定位 WASM 文件:', wasmPath);
+                    return wasmPath;
                 }
                 return path;
             }
         });
+        
+        console.log('[Worker] WASM 初始化成功');
         wasmReady = true;
         self.postMessage({ type: 'ready' });
     } catch (error) {
+        console.error('[Worker] WASM 初始化失败:', error);
         self.postMessage({ 
             type: 'error', 
             error: 'WASM initialization failed: ' + error.message 
