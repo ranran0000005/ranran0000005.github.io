@@ -625,6 +625,15 @@ function showSpatialAnalysisDialog() {
                 <div style="font-size:12px;color:#777;margin-top:4px;">CPU 核心数: ${navigator.hardwareConcurrency || '未知'}，当前配置: ${wasmThreadCount} 线程</div>
             </div>
             <div style="margin-bottom: 15px;">
+                <label>
+                    <input type="checkbox" id="useWebGPU" ${isWebGPUAvailable() ? '' : 'disabled'}>
+                    使用 WebGPU 加速（实验性）
+                </label>
+                <div style="font-size:12px;color:#777;margin-top:4px;">
+                    ${isWebGPUAvailable() ? 'WebGPU 可用，仅用于整合度计算' : 'WebGPU 不可用，需要 Chrome 113+ 或 Edge 113+'}
+                </div>
+            </div>
+            <div style="margin-bottom: 15px;">
                 <label>颜色拉伸（可选）：</label>
                 <div style="display:flex; gap:8px; margin-top:5px;">
                     <input id="colorStretchMin" type="number" step="0.0001" placeholder="最小值" style="flex:1; padding:5px;">
@@ -660,12 +669,21 @@ function showSpatialAnalysisDialog() {
         const typeSelect = document.getElementById('spatialAnalysisType');
         const modeSelect = document.getElementById('spatialIntegrationMode');
         const threadCountInput = document.getElementById('wasmThreadCount');
+        const useWebGPUCheckbox = document.getElementById('useWebGPU');
         const stretchMinInput = document.getElementById('colorStretchMin');
         const stretchMaxInput = document.getElementById('colorStretchMax');
         
         const selectedDataSource = dataSourceSelect.value;
         const analysisType = typeSelect.value;
         spatialIntegrationMode = modeSelect ? modeSelect.value : 'angle';
+        
+        // Save WebGPU preference
+        const enableWebGPU = useWebGPUCheckbox ? useWebGPUCheckbox.checked : false;
+        try {
+            localStorage.setItem('enableWebGPU', enableWebGPU ? '1' : '0');
+        } catch (e) {
+            console.warn('无法保存 WebGPU 配置:', e);
+        }
         
         // Update thread count configuration
         const threadCount = parseInt(threadCountInput.value, 10);

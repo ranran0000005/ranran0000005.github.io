@@ -208,7 +208,9 @@ async function calculateIntegrationWebGPU(features, adjacencyList, progressCallb
     try {
         // Convert adjacency list to matrix
         const adjacencyMatrix = convertToAdjacencyMatrix(adjacencyList, nodeCount);
-        console.log('邻接矩阵大小:', adjacencyMatrix.length, 'elements');
+        console.log('【WebGPU Debug】邻接矩阵大小:', adjacencyMatrix.length, 'elements');
+        console.log('【WebGPU Debug】邻接矩阵前10个值:', adjacencyMatrix.slice(0, 10));
+        console.log('【WebGPU Debug】邻接矩阵非无穷值数量:', adjacencyMatrix.filter(v => v < 1e9).length);
         
         // Create GPU buffers
         const adjacencyBuffer = gpuDevice.createBuffer({
@@ -218,6 +220,7 @@ async function calculateIntegrationWebGPU(features, adjacencyList, progressCallb
         });
         new Float32Array(adjacencyBuffer.getMappedRange()).set(adjacencyMatrix);
         adjacencyBuffer.unmap();
+        console.log('【WebGPU Debug】邻接矩阵已上传到 GPU');
         
         // Distance buffer (nodeCount x nodeCount to store all distances)
         const distancesArray = new Float32Array(nodeCount * nodeCount);
@@ -227,6 +230,7 @@ async function calculateIntegrationWebGPU(features, adjacencyList, progressCallb
             size: distancesArray.byteLength,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
         });
+        console.log('【WebGPU Debug】距离缓冲区大小:', distancesArray.byteLength, 'bytes');
         
         // Parameters buffer [nodeCount, rootIndex]
         const paramsBuffer = gpuDevice.createBuffer({
@@ -270,6 +274,8 @@ async function calculateIntegrationWebGPU(features, adjacencyList, progressCallb
                 const percent = 10 + (root / nodeCount) * 85;
                 progressCallback(`WebGPU 计算中... (${root + 1}/${nodeCount})`, Math.min(95, percent));
             }
+            
+            console.log(`【WebGPU Debug】开始计算根节点 ${root}`);
             
             // Update params for this root
             const params = new Uint32Array([nodeCount, root]);
@@ -330,18 +336,39 @@ async function calculateIntegrationWebGPU(features, adjacencyList, progressCallb
             const distances = new Float32Array(readBuffer.getMappedRange()).slice();
             readBuffer.unmap();
             
+            // Debug first few roots
+            if (root < 3) {
+                console.log(`【WebGPU Debug】根节点 ${root} 的距离数组:`, distances.slice(0, 10));
+                console.log(`【WebGPU Debug】根节点 ${root} 可达节点数:`, distances.filter(d => d < 1e9).length);
+            }
+            
             // Calculate integration value
             let totalDepth = 0;
+            let reachableCount = 0;
             for (let i = 0; i < nodeCount; i++) {
                 if (i !== root) {
                     const dist = distances[i];
-                    totalDepth += dist < 1e9 ? dist : (nodeCount * nodeCount * 10);
+                    if (dist < 1e9) {
+                        totalDepth += dist;
+                        reachableCount++;
+                    } else {
+                        totalDepth += (nodeCount * nodeCount * 10);
+                    }
                 }
+            }
+            
+            // Debug totals
+            if (root < 3) {
+                console.log(`【WebGPU Debug】根节点 ${root} 总深度:`, totalDepth, '可达节点:', reachableCount);
             }
             
             // Apply integration formula
             const totalDepthConv = (2.0 * totalDepth) / (tulipBins - 1.0);
             const integration = totalDepthConv > 0 ? (nodeCount * nodeCount) / totalDepthConv : 0;
+            
+            if (root < 3) {
+                console.log(`【WebGPU Debug】根节点 ${root} 整合度:`, integration);
+            }
             
             results.set(root, integration);
         }

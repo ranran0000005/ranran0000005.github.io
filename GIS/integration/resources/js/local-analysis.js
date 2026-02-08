@@ -57,9 +57,23 @@ async function performSpatialAnalysisLocal(analysisType) {
                 results = await calculateConnectivity(features, updateProgress, adjacencyList);
             }
         } else if (analysisType === 'integration') {
-            // Try WebGPU first for large datasets
+            // Try WebGPU first if user enabled it
             const nodeCount = features.length;
-            const useWebGPU = nodeCount > 500 && isWebGPUAvailable();
+            let enableWebGPU = false;
+            try {
+                enableWebGPU = localStorage.getItem('enableWebGPU') === '1';
+            } catch (e) {
+                // ignore
+            }
+            
+            const useWebGPU = enableWebGPU && isWebGPUAvailable();
+            
+            console.log('整合度计算决策:', {
+                nodeCount: nodeCount,
+                enableWebGPU: enableWebGPU,
+                isWebGPUAvailable: isWebGPUAvailable(),
+                useWebGPU: useWebGPU
+            });
             
             if (useWebGPU) {
                 try {
@@ -151,7 +165,7 @@ async function performSpatialAnalysisLocal(analysisType) {
                 // 创建 OpenLayers 要素
                 const olFeature = geoJsonFormat.readFeature(feature, {
                     dataProjection: 'EPSG:4326',
-                    featureProjection: map.getView().getProjection()
+                    featureProjection: 'EPSG:3857'  // Use Web Mercator for Amap
                 });
                 
                 // 设置属性
@@ -169,7 +183,8 @@ async function performSpatialAnalysisLocal(analysisType) {
                 
                 spatialAnalysisSource.addFeature(olFeature);
             } catch (error) {
-                console.warn('处理要素失败:', index, error);
+                console.warn(`处理要素 ${index} 失败:`, error.message);
+                // Don't throw, just skip this feature
             }
         });
         
@@ -222,7 +237,14 @@ async function performSpatialAnalysisLocal(analysisType) {
         } else if (analysisType === 'integration') {
             if (results && results.size > 0) {
                 // Determine which method was actually used
-                if (nodeCount > 500 && isWebGPUAvailable()) {
+                let enableWebGPU = false;
+                try {
+                    enableWebGPU = localStorage.getItem('enableWebGPU') === '1';
+                } catch (e) {
+                    // ignore
+                }
+                
+                if (enableWebGPU && isWebGPUAvailable()) {
                     computeMethod = 'WebGPU 加速';
                 } else if (useWasm) {
                     computeMethod = 'WASM 加速';
