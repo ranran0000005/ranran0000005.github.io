@@ -246,9 +246,34 @@ async function calculateIntegrationWebGPU(features, adjacencyList, progressCallb
             code: DIJKSTRA_SHADER
         });
         
-        // Create compute pipeline
+        // Create explicit bind group layout to avoid auto-layout binding reordering
+        const bindGroupLayout = gpuDevice.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.COMPUTE,
+                    buffer: { type: 'read-only-storage' }
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.COMPUTE,
+                    buffer: { type: 'storage' }
+                },
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.COMPUTE,
+                    buffer: { type: 'read-only-storage' }
+                }
+            ]
+        });
+        
+        const pipelineLayout = gpuDevice.createPipelineLayout({
+            bindGroupLayouts: [bindGroupLayout]
+        });
+        
+        // Create compute pipeline with explicit layout
         const pipeline = gpuDevice.createComputePipeline({
-            layout: 'auto',
+            layout: pipelineLayout,
             compute: {
                 module: shaderModule,
                 entryPoint: 'dijkstra_kernel'
@@ -256,12 +281,24 @@ async function calculateIntegrationWebGPU(features, adjacencyList, progressCallb
         });
         
         const initPipeline = gpuDevice.createComputePipeline({
-            layout: 'auto',
+            layout: pipelineLayout,
             compute: {
                 module: shaderModule,
                 entryPoint: 'init_distances'
             }
         });
+        
+        // Create bind group once (reusable for all roots)
+        const bindGroup = gpuDevice.createBindGroup({
+            layout: bindGroupLayout,
+            entries: [
+                { binding: 0, resource: { buffer: adjacencyBuffer } },
+                { binding: 1, resource: { buffer: distancesBuffer } },
+                { binding: 2, resource: { buffer: paramsBuffer } }
+            ]
+        });
+        
+        console.log('【WebGPU Debug】Pipeline和BindGroup创建成功');
         
         // Process each node as root
         const updateInterval = Math.max(1, Math.floor(nodeCount / 20));
@@ -272,30 +309,13 @@ async function calculateIntegrationWebGPU(features, adjacencyList, progressCallb
                 progressCallback(`WebGPU 计算中... (${root + 1}/${nodeCount})`, Math.min(95, percent));
             }
             
-            console.log(`【WebGPU Debug】开始计算根节点 ${root}`);
+            if (root < 3 || root % 100 === 0) {
+                console.log(`【WebGPU Debug】开始计算根节点 ${root}`);
+            }
             
             // Update params for this root
             const params = new Uint32Array([nodeCount, root]);
             gpuDevice.queue.writeBuffer(paramsBuffer, 0, params);
-            
-            // Create bind group
-            const bindGroup = gpuDevice.createBindGroup({
-                layout: pipeline.getBindGroupLayout(0),
-                entries: [
-                    { binding: 0, resource: { buffer: adjacencyBuffer } },
-                    { binding: 1, resource: { buffer: distancesBuffer } },
-                    { binding: 2, resource: { buffer: paramsBuffer } }
-                ]
-            });
-            
-            const initBindGroup = gpuDevice.createBindGroup({
-                layout: initPipeline.getBindGroupLayout(0),
-                entries: [
-                    { binding: 0, resource: { buffer: adjacencyBuffer } },
-                    { binding: 1, resource: { buffer: distancesBuffer } },
-                    { binding: 2, resource: { buffer: paramsBuffer } }
-                ]
-            });
             
             // Create command encoder
             const commandEncoder = gpuDevice.createCommandEncoder();
@@ -303,7 +323,7 @@ async function calculateIntegrationWebGPU(features, adjacencyList, progressCallb
             // Initialize distances
             const initPass = commandEncoder.beginComputePass();
             initPass.setPipeline(initPipeline);
-            initPass.setBindGroup(0, initBindGroup);
+            initPass.setBindGroup(0, bindGroup);
             const initWorkgroups = Math.ceil(nodeCount / 256);
             initPass.dispatchWorkgroups(initWorkgroups);
             initPass.end();
