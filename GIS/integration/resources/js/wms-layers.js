@@ -15,8 +15,12 @@ function addWMSLayer(layerName, workspace) {
 
     const fullLayerName = workspace + ':' + layerName;
     
+    // 使用配置的GeoServer地址
+    const baseUrl = geoserverConfig.url.replace(/\/$/, '');
+    const wmsUrl = `${baseUrl}/${workspace}/wms`;
+    
     const wmsSource = new ol.source.ImageWMS({
-        url: 'http://gis.kjjfpt.top/geoserver/' + workspace + '/wms',
+        url: wmsUrl,
         params: {
             'LAYERS': fullLayerName,
             'VERSION': '1.1.0',

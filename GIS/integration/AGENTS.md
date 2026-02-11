@@ -12,9 +12,7 @@ This is a WebGIS application that provides interactive mapping functionality wit
 - **Mapping**: OpenLayers 7.4.0 (via CDN)
 - **Coordinate Systems**: Proj4js for transformations, primarily BD-09 (Baidu) and EPSG:4326 (WGS84)
 - **High-Performance Computing**: C++ compiled to WebAssembly via Emscripten (client-side computation)
-- **Client-side Data Processing**: 
-  - shapefile.js 0.6.6 for shapefile parsing
-  - JSZip 3.10.1 for ZIP file extraction
+- **Client-side Data Processing**: shapefile.js 0.6.6 for shapefile parsing, JSZip 3.10.1 for ZIP extraction
 - **Backend**: PHP 7.x/8.x (lightweight, only for proxies and marker storage - NO DATA PROCESSING)
 - **Database**: MySQL (database: `gis_markers`, user: `map_user`) - only for user markers
 - **GIS Server**: GeoServer (hosted at `gis.kjjfpt.top`) - optional, can work without it
@@ -28,25 +26,11 @@ The application follows a modular JavaScript architecture with files loaded in d
 
 1. **Configuration Layer** (`config.js`): Global variables, map/layer/marker state management
 2. **Core Map** (`map-core.js`): OpenLayers initialization, BD-09 projection setup, base layer creation
-3. **Utility Layer**:
-   - `utils.js`: General utilities and popup management
-   - `coordinate-utils.js`: Coordinate transformations between BD-09, WGS84, and Web Mercator
-4. **Feature Layers**:
-   - `wms-layers.js`: WMS layer management for GeoServer integration (optional)
-   - `geoserver.js`: GeoServer capabilities parsing and layer discovery (optional)
-   - `markers.js`: User-generated point markers with CRUD operations
-5. **User Interaction**:
-   - `search.js`: Baidu Geocoding API integration for place search
-   - `settings.js`: UI for layer visibility and map configuration
-6. **Local Data Processing** (NEW - fully client-side):
-   - `shapefile-loader.js`: Client-side shapefile parsing using shapefile.js and JSZip
-   - `local-analysis.js`: Spatial analysis on locally loaded data without server dependency
-7. **Spatial Analysis** (WASM-accelerated):
-   - `wasm-loader.js`: WASM module initialization and JavaScript bindings
-   - `wasm-integration.js`: WASM-based integration calculation wrapper
-   - `integration.js`: Graph-based integration algorithms (JavaScript fallback)
-   - `connection.js`: Connectivity analysis for vector features (JavaScript fallback)
-   - `spacial_analyse.js`: Main spatial syntax analysis orchestration with automatic WASM/JS fallback
+3. **Utility Layer**: `utils.js` (general utilities), `coordinate-utils.js` (coordinate transformations)
+4. **Feature Layers**: `wms-layers.js` (WMS layer management), `geoserver.js` (GeoServer integration), `markers.js` (user markers CRUD)
+5. **User Interaction**: `search.js` (Baidu Geocoding), `settings.js` (UI configuration)
+6. **Local Data Processing**: `shapefile-loader.js` (client-side shapefile parsing), `local-analysis.js` (spatial analysis on local data)
+7. **Spatial Analysis** (WASM-accelerated): `wasm-loader.js`, `wasm-integration.js`, `integration.js` (JS fallback), `connection.js` (JS fallback), `spacial_analyse.js` (orchestration)
 8. **Entry Point** (`main.js`): DOMContentLoaded initialization, WASM initialization
 
 ### WASM Acceleration Module
@@ -58,7 +42,6 @@ Located in `/wasm_modules/` with output to `/resources/wasm/`:
 - **wasm_bindings.cpp**: Emscripten bindings for JavaScript interop
 - **wasm-integration-worker.js**: Web Worker for multi-threaded WASM integration calculation
 - **build.sh**: Compilation script using Emscripten
-- **README.md**: Build instructions and troubleshooting
 
 **Performance improvements with WASM:**
 - Line intersection detection: ~5-10x faster

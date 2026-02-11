@@ -13,16 +13,26 @@
     <link rel="stylesheet" href="resources/css/markers.css">
     <link rel="stylesheet" href="resources/css/layout.css">
     <link rel="stylesheet" href="resources/css/map.css">
-    <!-- OpenLayers CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.4.0/ol.css">
+    <!-- OpenLayers CSS with fallback -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.4.0/ol.css" id="ol-css-cdn">
+    <script>
+        // CSS fallback: if CDN fails, load local version
+        document.getElementById('ol-css-cdn').onerror = function() {
+            console.warn('OpenLayers CSS CDN failed, loading local version');
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'resources/lib/ol.css';
+            document.head.appendChild(link);
+        };
+    </script>
     <!-- Proj4js for coordinate transformations -->
-    <script src="https://cdn.jsdelivr.net/npm/proj4@2.9.0/dist/proj4.js"></script>
-    <!-- OpenLayers JS -->
-    <script src="https://cdn.jsdelivr.net/npm/ol@7.4.0/dist/ol.js"></script>
-    <!-- Shapefile.js for client-side shapefile parsing -->
-    <script src="https://cdn.jsdelivr.net/npm/shapefile@0.6.6/dist/shapefile.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/proj4@2.9.0/dist/proj4.js" onerror="this.onerror=null; this.src='resources/lib/proj4.js'"></script>
+    <!-- OpenLayers JS with fallback -->
+    <script src="https://cdn.jsdelivr.net/npm/ol@7.4.0/dist/ol.js" onerror="this.onerror=null; this.src='resources/lib/ol.js'"></script>
+    <!-- shpjs for client-side shapefile parsing with better projection support -->
+    <script src="https://cdn.jsdelivr.net/npm/shpjs@4.0.4/dist/shp.min.js" onerror="this.onerror=null; this.src='resources/lib/shp.js'"></script>
     <!-- JSZip for extracting ZIP files -->
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" onerror="this.onerror=null; this.src='resources/lib/jszip.min.js'"></script>
 </head>
 
 <body>
@@ -55,6 +65,7 @@
         <button onclick="showShapefileUploadDialog()" class="action-button">上传 Shapefile</button>
         <button onclick="loadMarkersFromDatabase()" class="action-button">刷新标注</button>
         <button onclick="showSpatialAnalysisDialog()" class="action-button">空间分析</button>
+        <button onclick="exportSpatialAnalysisResults()" class="action-button">导出结果</button>
         <button onclick="clearSpatialAnalysis()" class="action-button">清除分析</button>
         <button onclick="location.href='../'" class="action-button">返回主界面</button>
         <button onclick="location.href='../MarkDown/index.php'" class="action-button">帮助文档</button>
@@ -76,7 +87,9 @@
     <script src="resources/js/wasm-integration.js"></script>
     <!-- 本地 Shapefile 加载模块 -->
     <script src="resources/js/segment-splitter.js"></script>
+    <script src="resources/js/layer-storage.js"></script>
     <script src="resources/js/shapefile-loader.js"></script>
+    <script src="resources/js/shapefile-writer.js"></script>
     <script src="resources/js/local-analysis.js"></script>
     <!-- Spatial Analysis算法模块（必须在 spacial_analyse.js 之前加载） -->
     <script src="resources/js/integration.js"></script>

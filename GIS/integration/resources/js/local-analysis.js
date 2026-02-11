@@ -16,11 +16,8 @@ async function performSpatialAnalysisLocal(analysisType) {
         // 显示初始进度
         updateProgress(`开始分析本地数据 (${features.length} 个要素)...`, 5);
         
-        // 移除之前的分析图层
-        if (spatialAnalysisLayer) {
-            map.removeLayer(spatialAnalysisLayer);
-            spatialAnalysisLayer = null;
-        }
+        // 不再移除之前的分析图层，每次分析创建新的独立图层
+        // 旧代码: if (spatialAnalysisLayer) { map.removeLayer(spatialAnalysisLayer); }
         
         // 使用 setTimeout 确保进度条能够更新
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -134,6 +131,10 @@ async function performSpatialAnalysisLocal(analysisType) {
         
         console.log('分析结果范围:', minValue, '到', maxValue);
         
+        // 对数值进行排序，用于分位数缩放
+        const sortedValues = values.slice().sort((a, b) => a - b);
+        console.log('使用分位数缩放，共', sortedValues.length, '个要素');
+        
         // 创建矢量图层
         spatialAnalysisSource = new ol.source.Vector();
         
@@ -154,7 +155,7 @@ async function performSpatialAnalysisLocal(analysisType) {
                 console.log(`要素 ${index}: 值=${value}, 类型=${typeof value}`);
             }
             
-            const color = valueToColor(value, minValue, maxValue);
+            const color = valueToColor(value, minValue, maxValue, sortedValues);
             
             // Debug: Log first few colors
             if (index < 3) {
@@ -188,12 +189,16 @@ async function performSpatialAnalysisLocal(analysisType) {
             }
         });
         
+        // 生成唯一的分析图层ID
+        analysisResultLayerCounter++;
+        const analysisLayerId = 'analysisResult_' + analysisResultLayerCounter;
+
         // 创建图层
         spatialAnalysisLayer = new ol.layer.Vector({
             source: spatialAnalysisSource,
-            name: 'spatialAnalysis'
+            name: analysisLayerId
         });
-        
+
         // 添加到地图
         map.addLayer(spatialAnalysisLayer);
 
@@ -217,7 +222,7 @@ async function performSpatialAnalysisLocal(analysisType) {
             };
             map.on('singleclick', spatialAnalysisLayer._integrationClickHandler);
         }
-        
+
         // 缩放到图层范围
         const extent = spatialAnalysisSource.getExtent();
         if (extent && !ol.extent.isEmpty(extent)) {
@@ -226,7 +231,46 @@ async function performSpatialAnalysisLocal(analysisType) {
                 duration: 1000
             });
         }
+
+        // 保存分析结果图层信息
+        // 获取源图层名称（从localShapefileLayers中查找）
+        let sourceName = 'Local Shapefile';
+        if (localShapefileLayers.length > 0) {
+            const lastLayer = localShapefileLayers[localShapefileLayers.length - 1];
+            sourceName = lastLayer.name || 'Local Shapefile';
+        }
+        const analysisTypeName = analysisType === 'connectivity' ? '连接度' : '整合度';
+        const analysisLayerInfo = {
+            id: analysisLayerId,
+            name: `${sourceName} - ${analysisTypeName}`,
+            layer: spatialAnalysisLayer,
+            source: spatialAnalysisSource,
+            features: features, // 添加features用于持久化
+            analysisType: analysisType,
+            results: results, // 添加results用于持久化
+            featureCount: features.length,
+            minValue: minValue,
+            maxValue: maxValue,
+            sortedValues: sortedValues, // 添加sortedValues用于持久化
+            sourceLayerName: sourceName, // 源图层名称
+            timestamp: Date.now()
+        };
+        analysisResultLayers.push(analysisLayerInfo);
         
+        // 保存到IndexedDB
+        if (typeof saveAnalysisLayerToStorage === 'function') {
+            try {
+                await saveAnalysisLayerToStorage(analysisLayerInfo);
+            } catch (error) {
+                console.warn('保存分析结果图层到IndexedDB失败:', error);
+            }
+        }
+
+        // 更新图层列表UI
+        if (typeof updateLocalShapefileLayerList === 'function') {
+            updateLocalShapefileLayerList();
+        }
+
         currentAnalysisType = analysisType;
         
         // 在进度窗口中显示完成信息
@@ -260,14 +304,19 @@ async function performSpatialAnalysisLocal(analysisType) {
                 <div><strong>要素数量：</strong>${features.length}</div>
                 <div><strong>颜色范围：</strong>${minValue.toFixed(2)} - ${maxValue.toFixed(2)}${(colorStretch && (colorStretch.min !== null || colorStretch.max !== null)) ? '（手动拉伸）' : '（自动）'}</div>
             </div>
-            <div style="margin-top: 15px; font-size: 12px; color: #999;">
-                窗口将在3秒后自动关闭
+            <div style="margin-top: 15px; text-align: center;">
+                <button onclick="exportSpatialAnalysisResults(); closeProgress(0);" style="padding: 8px 20px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                    导出为Shapefile
+                </button>
+            </div>
+            <div style="margin-top: 10px; font-size: 12px; color: #999;">
+                窗口将在5秒后自动关闭
             </div>
         `;
         showCompletionProgress('✓ 空间分析完成！', details);
-        
+
         // 延迟关闭进度窗口
-        closeProgress(3000);
+        closeProgress(5000);
         
         console.log('本地空间分析完成');
         

@@ -36,5 +36,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Note: GeoServer integration is optional
     // Users can upload local shapefiles instead
     console.log('应用已就绪 - 可以上传本地 Shapefile 进行分析');
+
+    // 从IndexedDB恢复之前保存的图层数据
+    if (isIndexedDBSupported()) {
+        // 延迟一点执行，确保地图完全初始化
+        setTimeout(() => {
+            restoreLayersFromStorage().catch(err => {
+                console.warn('恢复图层数据失败:', err);
+            });
+        }, 500);
+    } else {
+        console.log('浏览器不支持IndexedDB，图层数据将不会持久化保存');
+    }
 });
 

@@ -4,73 +4,43 @@
 
 /**
  * 从 GeoServer 获取图层列表
- * @param {string} workspace - 工作空间名称
+ * @param {string} workspace - 工作空间名称（可选，默认使用配置中的workspace）
  * @returns {Promise<Array>} 图层列表
  */
 async function fetchLayersFromGeoServer(workspace) {
-    // 优先使用代理，避免跨域问题
-    // 使用相对于当前页面的路径
-    const currentPath = window.location.pathname;
-    const basePath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
-    const proxyUrl = basePath + `api/geoserver_proxy.php?workspace=${encodeURIComponent(workspace)}`;
-    const directUrl = `http://gis.kjjfpt.top/geoserver/${workspace}/wms?service=WMS&version=1.1.0&request=GetCapabilities`;
+    // 使用传入的workspace或配置中的workspace
+    const targetWorkspace = workspace || geoserverConfig.workspace || '';
     
+    // 构建GeoServer基础URL
+    const baseUrl = geoserverConfig.url.replace(/\/$/, ''); // 移除末尾的斜杠
+    
+    // 构建GetCapabilities URL
+    let capabilitiesUrl;
+    if (targetWorkspace) {
+        capabilitiesUrl = `${baseUrl}/${targetWorkspace}/wms?service=WMS&version=1.1.0&request=GetCapabilities`;
+    } else {
+        // 不指定工作空间，获取所有图层
+        capabilitiesUrl = `${baseUrl}/wms?service=WMS&version=1.1.0&request=GetCapabilities`;
+    }
+    
+    console.log('正在从GeoServer获取图层列表:', capabilitiesUrl);
+    
+    // 尝试直接访问（公开的GeoServer服务通常支持CORS）
     let response;
     let xmlText;
-    let useProxy = true;
     
     try {
-        // 首先尝试使用代理
-        console.log('正在通过代理从 GeoServer 获取图层列表...', proxyUrl);
-        response = await fetch(proxyUrl);
+        response = await fetch(capabilitiesUrl);
         
         if (!response.ok) {
-            // 如果是 404，尝试获取错误信息
-            let errorMsg = `代理请求失败: HTTP ${response.status}`;
-            try {
-                const errorData = await response.json();
-                errorMsg += ' - ' + (errorData.error || errorData.message || '');
-                if (errorData.tried_urls) {
-                    console.warn('代理尝试的 URL:', errorData.tried_urls);
-                }
-            } catch (e) {
-                // 忽略 JSON 解析错误
-            }
-            throw new Error(errorMsg);
-        }
-        
-        // 检查返回的是否是 JSON 错误
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            const errorData = await response.json();
-            const errorMsg = errorData.error || errorData.message || '代理返回错误';
-            if (errorData.tried_urls) {
-                console.warn('代理尝试的 URL:', errorData.tried_urls);
-            }
-            throw new Error(errorMsg);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         xmlText = await response.text();
-        console.log('✓ 通过代理成功获取图层列表');
-    } catch (proxyError) {
-        console.warn('代理请求失败，尝试直接访问 GeoServer:', proxyError.message);
-        useProxy = false;
-        
-        try {
-            // 如果代理失败，尝试直接访问（可能已配置 CORS）
-            console.log('尝试直接访问 GeoServer...', directUrl);
-            response = await fetch(directUrl);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            xmlText = await response.text();
-            console.log('✓ 直接访问成功获取图层列表');
-        } catch (directError) {
-            // 如果直接访问也失败，抛出错误
-            throw new Error(`获取图层列表失败（代理和直接访问都失败）: ${directError.message}`);
-        }
+        console.log('✓ 成功获取图层列表');
+    } catch (fetchError) {
+        console.error('获取图层列表失败:', fetchError);
+        throw new Error(`无法连接到GeoServer: ${fetchError.message}`);
     }
     
     try {
@@ -138,21 +108,22 @@ async function fetchLayersFromGeoServer(workspace) {
                 continue;
             }
             
-            // 如果名称包含冒号，检查工作空间前缀
+            // 如果名称包含冒号，解析工作空间前缀
             let actualLayerName = layerName;
-            let actualWorkspace = workspace;
+            let actualWorkspace = targetWorkspace;
             
             if (layerName.includes(':')) {
                 const parts = layerName.split(':');
                 if (parts.length === 2) {
-                    if (parts[0] === workspace) {
-                        actualLayerName = parts[1];
-                    } else {
-                        // 不是当前工作空间，跳过
-                        console.log('跳过其他工作空间的图层:', layerName, '(工作空间:', parts[0], ')');
-                        continue;
-                    }
+                    actualWorkspace = parts[0];
+                    actualLayerName = parts[1];
                 }
+            }
+            
+            // 如果指定了工作空间，只显示该工作空间的图层
+            if (targetWorkspace && actualWorkspace !== targetWorkspace) {
+                console.log('跳过其他工作空间的图层:', layerName, '(工作空间:', actualWorkspace, ')');
+                continue;
             }
             
             // 对于没有工作空间前缀的图层名称，需要额外验证
@@ -230,15 +201,29 @@ async function fetchLayersFromGeoServer(workspace) {
                     // 检查是否有子 Layer（如果有，可能是父图层）
                     const hasChildLayers = parentLayer.getElementsByTagName('Layer').length > 1;
                     if (!hasChildLayers) {
-                        const fullName = workspace + ':' + name;
+                        // 解析工作空间
+                        let ws = targetWorkspace;
+                        let ln = name;
+                        if (name.includes(':')) {
+                            const parts = name.split(':');
+                            ws = parts[0];
+                            ln = parts[1];
+                        }
+                        
+                        // 如果指定了工作空间，只显示该工作空间的图层
+                        if (targetWorkspace && ws !== targetWorkspace) {
+                            continue;
+                        }
+                        
+                        const fullName = ws + ':' + ln;
                         const exists = layers.some(l => l.fullName === fullName);
                         if (!exists) {
                             const titleElements = parentLayer.getElementsByTagName('Title');
-                            const displayName = titleElements.length > 0 ? titleElements[0].textContent.trim() : name;
+                            const displayName = titleElements.length > 0 ? titleElements[0].textContent.trim() : ln;
                             
                             layers.push({
-                                workspace: workspace,
-                                name: name,
+                                workspace: ws,
+                                name: ln,
                                 displayName: displayName,
                                 fullName: fullName
                             });
@@ -260,14 +245,19 @@ async function fetchLayersFromGeoServer(workspace) {
         if (error.message && (error.message.includes('CORS') || error.message.includes('Failed to fetch') || error.message.includes('网络') || error.name === 'TypeError')) {
             console.warn('⚠️ 网络或跨域问题：无法获取 GeoServer 图层列表');
             console.warn('💡 解决方案：');
-            console.warn('   1. 检查代理服务器 api/geoserver_proxy.php 是否正常工作');
-            console.warn('   2. 在设置面板中使用"手动输入图层信息"功能添加图层');
-            console.warn('   3. 或在 GeoServer 服务器端配置 CORS 支持（Jetty 配置）');
+            console.warn('   1. 检查 GeoServer 地址是否正确');
+            console.warn('   2. 在设置面板中修改 GeoServer 地址');
+            console.warn('   3. 或在 GeoServer 服务器端配置 CORS 支持');
         }
         // 如果获取失败，返回预定义的图层列表
-        console.log('使用预定义的图层列表（共', availableLayers.length, '个图层）');
-        fetchedLayers = []; // 清空获取的图层列表
-        return availableLayers;
+        const fallbackLayers = geoserverConfig.fallbackLayers || [];
+        if (fallbackLayers.length > 0) {
+            console.log('使用配置的备用图层列表（共', fallbackLayers.length, '个图层）');
+            fetchedLayers = fallbackLayers;
+            return fallbackLayers;
+        }
+        fetchedLayers = [];
+        return [];
     }
 }
 
