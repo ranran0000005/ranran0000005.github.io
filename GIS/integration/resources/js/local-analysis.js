@@ -1,16 +1,17 @@
 /**
  * Perform spatial analysis on locally loaded data (no GeoServer fetch)
  * @param {string} analysisType - 'connectivity' or 'integration'
+ * @param {string} sourceLayerId - Optional source layer ID to get correct layer name
  */
-async function performSpatialAnalysisLocal(analysisType) {
+async function performSpatialAnalysisLocal(analysisType, sourceLayerId) {
     try {
-        console.log('开始本地空间分析:', analysisType);
-        
+        console.log('开始本地空间分析:', analysisType, '源图层ID:', sourceLayerId);
+
         // Check if local data is available
         if (!spatialFeaturesCache || spatialFeaturesCache.length === 0) {
             throw new Error('没有本地数据，请先上传 Shapefile');
         }
-        
+
         const features = spatialFeaturesCache;
         
         // 显示初始进度
@@ -235,7 +236,14 @@ async function performSpatialAnalysisLocal(analysisType) {
         // 保存分析结果图层信息
         // 获取源图层名称（从localShapefileLayers中查找）
         let sourceName = 'Local Shapefile';
-        if (localShapefileLayers.length > 0) {
+        if (sourceLayerId) {
+            // 如果指定了源图层ID，查找对应的图层名称
+            const sourceLayer = localShapefileLayers.find(l => l.id === sourceLayerId);
+            if (sourceLayer) {
+                sourceName = sourceLayer.name || 'Local Shapefile';
+            }
+        } else if (localShapefileLayers.length > 0) {
+            // 如果没有指定，使用最后一个图层（向后兼容）
             const lastLayer = localShapefileLayers[localShapefileLayers.length - 1];
             sourceName = lastLayer.name || 'Local Shapefile';
         }
@@ -347,5 +355,54 @@ async function performSpatialAnalysisLocal(analysisType) {
             // 如果没有进度窗口，显示普通弹窗
             showPopup('空间分析失败：' + error.message);
         }
+    }
+}
+
+/**
+ * 根据图层ID对特定本地图层进行空间分析
+ * @param {string} layerId - 本地图层ID
+ * @param {string} analysisType - 'connectivity' or 'integration'
+ */
+async function performSpatialAnalysisLocalById(layerId, analysisType) {
+    try {
+        console.log('开始本地空间分析，图层ID:', layerId, '分析类型:', analysisType);
+
+        // 查找对应的本地图层
+        const layerInfo = localShapefileLayers.find(l => l.id === layerId);
+        if (!layerInfo) {
+            throw new Error('未找到指定的本地图层: ' + layerId);
+        }
+
+        // 从图层中获取要素数据
+        let features = null;
+
+        // 尝试从图层中获取原始features
+        if (layerInfo.features && layerInfo.features.length > 0) {
+            features = layerInfo.features;
+        } else if (layerInfo.source) {
+            // 从source中获取要素并转换为GeoJSON格式
+            const olFeatures = layerInfo.source.getFeatures();
+            if (olFeatures && olFeatures.length > 0) {
+                const geoJsonFormat = new ol.format.GeoJSON();
+                features = olFeatures.map(f => geoJsonFormat.writeFeatureObject(f, {
+                    dataProjection: 'EPSG:4326',
+                    featureProjection: map.getView().getProjection()
+                }));
+            }
+        }
+
+        if (!features || features.length === 0) {
+            throw new Error('图层中没有可分析的要素数据');
+        }
+
+        // 更新缓存的要素数据
+        spatialFeaturesCache = features;
+
+        // 调用本地分析函数，传入源图层ID以获取正确的名称
+        await performSpatialAnalysisLocal(analysisType, layerId);
+
+    } catch (error) {
+        console.error('本地空间分析失败:', error);
+        showPopup('空间分析失败：' + error.message);
     }
 }

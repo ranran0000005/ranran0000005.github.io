@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGIS系统使用手册</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .section h3 {
+            color: #555;
+            font-size: 1.3em;
+            margin: 20px 0 10px 0;
+        }
+
+        .section p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+
+        .section ul, .section ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        .section li {
+            margin-bottom: 8px;
+        }
+
+        .feature-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .feature-box h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .button-demo {
+            display: inline-block;
+            padding: 6px 14px;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin: 0 2px;
+        }
+
+        .button-demo.secondary {
+            background: #6c757d;
+        }
+
+        .button-demo.danger {
+            background: #dc3545;
+        }
+
+        .button-demo.success {
+            background: #28a745;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .warning-box strong {
+            color: #856404;
+        }
+
+        .tip-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .tip-box strong {
+            color: #0c5460;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        .back-link:hover {
+            background: #5568d3;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 0.9em;
+        }
+
+        .step-list {
+            counter-reset: step;
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .step-list li {
+            position: relative;
+            padding-left: 50px;
+            margin-bottom: 20px;
+        }
+
+        .step-list li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 35px;
+            height: 35px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>WebGIS 空间分析系统</h1>
+            <p>使用手册 v1.0 | 基于 OpenLayers 的地理信息系统</p>
+        </header>
+
+        <div class="section">
+            <h2>系统简介</h2>
+            <p>本系统是一个基于 Web 的地理信息系统（GIS），集成了地图浏览、空间数据管理和空间句法分析功能。系统采用纯前端架构，无需后端服务器即可运行，支持本地 Shapefile 文件的上传、可视化和分析。</p>
+
+            <div class="feature-box">
+                <h4>主要特性</h4>
+                <ul>
+                    <li><strong>纯前端运行</strong> - 无需安装，浏览器即可使用</li>
+                    <li><strong>本地数据存储</strong> - 数据保存在浏览器本地，保护隐私</li>
+                    <li><strong>空间句法分析</strong> - 支持连接度和整合度计算</li>
+                    <li><strong>WASM 加速</strong> - 使用 WebAssembly 实现高性能计算</li>
+                    <li><strong>WebGPU 支持</strong> - 实验性支持 GPU 加速（Chrome 113+）</li>
+                    <li><strong>WMS 图层叠加</strong> - 支持 GeoServer 在线图层</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>界面说明</h2>
+
+            <h3>顶部工具栏</h3>
+            <table>
+                <tr>
+                    <th>按钮</th>
+                    <th>功能说明</th>
+                </tr>
+                <tr>
+                    <td><span class="button-demo">上传 SHP</span></td>
+                    <td>上传本地 Shapefile 文件（支持 .shp、.shx、.dbf、.prj 文件）</td>
+                </tr>
+                <tr>
+                    <td><span class="button-demo">本地标注</span></td>
+                    <td>进入标注添加模式，点击地图可添加标注点</td>
+                </tr>
+                <tr>
+                    <td><span class="button-demo">标注管理</span></td>
+                    <td>管理已添加的本地标注，支持编辑、删除、导出</td>
+                </tr>
+                <tr>
+                    <td><span class="button-demo">空间分析</span></td>
+                    <td>打开空间句法分析对话框</td>
+                </tr>
+                <tr>
+                    <td><span class="button-demo">在线图层</span></td>
+                    <td>配置和添加 GeoServer WMS 图层</td>
+                </tr>
+            </table>
+
+            <h3>底部工具栏</h3>
+            <table>
+                <tr>
+                    <th>按钮</th>
+                    <th>功能说明</th>
+                </tr>
+                <tr>
+                    <td><span class="button-demo secondary">关于</span></td>
+                    <td>显示系统版本和作者信息</td>
+                </tr>
+                <tr>
+                    <td><span class="button-demo secondary">空间分析</span></td>
+                    <td>快速打开空间分析对话框</td>
+                </tr>
+                <tr>
+                    <td><span class="button-demo secondary">返回主界面</span></td>
+                    <td>返回上一级页面</td>
+                </tr>
+                <tr>
+                    <td><span class="button-demo secondary">帮助文档</span></td>
+                    <td>打开本使用手册</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>功能使用指南</h2>
+
+            <h3>1. 上传 Shapefile 文件</h3>
+            <ol class="step-list">
+                <li>点击顶部工具栏的 <span class="button-demo">上传 SHP</span> 按钮</li>
+                <li>在弹出的对话框中选择 Shapefile 文件（.shp、.shx、.dbf、.prj）</li>
+                <li>选择坐标系（如已知），或让系统自动检测</li>
+                <li>点击"加载"按钮，数据将显示在地图上</li>
+            </ol>
+
+            <div class="tip-box">
+                <strong>提示：</strong>Shapefile 文件通常包含多个文件（.shp、.shx、.dbf、.prj），建议同时选择所有相关文件以确保数据完整性。
+            </div>
+
+            <h3>2. 添加本地标注</h3>
+            <ol class="step-list">
+                <li>点击 <span class="button-demo">本地标注</span> 按钮进入添加模式</li>
+                <li>在地图上点击想要标注的位置</li>
+                <li>在弹出的对话框中输入标注名称和描述</li>
+                <li>点击"保存"完成标注</li>
+            </ol>
+
+            <div class="feature-box">
+                <h4>标注管理功能</h4>
+                <ul>
+                    <li>点击 <span class="button-demo">标注管理</span> 可查看所有标注</li>
+                    <li>支持导出为 GeoJSON 格式</li>
+                    <li>支持导入 GeoJSON 文件</li>
+                    <li>标注数据保存在浏览器本地存储中</li>
+                </ul>
+            </div>
+
+            <h3>3. 空间句法分析</h3>
+            <p>空间句法分析是本系统的核心功能，支持两种分析类型：</p>
+
+            <table>
+                <tr>
+                    <th>分析类型</th>
+                    <th>说明</th>
+                    <th>应用场景</th>
+                </tr>
+                <tr>
+                    <td><strong>连接度 (Connectivity)</strong></td>
+                    <td>计算每条线段与其他线段直接相交的数量</td>
+                    <td>评估街道的局部连通性</td>
+                </tr>
+                <tr>
+                    <td><strong>整合度 (Integration)</strong></td>
+                    <td>计算线段到所有其他线段的平均距离倒数</td>
+                    <td>评估街道的全局可达性</td>
+                </tr>
+            </table>
+
+            <h4>分析步骤</h4>
+            <ol class="step-list">
+                <li>确保已上传 Shapefile 数据或已配置 GeoServer 图层</li>
+                <li>点击 <span class="button-demo">空间分析</span> 按钮</li>
+                <li>选择数据源（本地图层或 GeoServer 图层）</li>
+                <li>选择分析类型（连接度或整合度）</li>
+                <li>选择整合度计算模式（拓扑深度或角度+长度加权）</li>
+                <li>配置 WASM 线程数（默认使用 CPU 核心数）</li>
+                <li>可选：配置颜色拉伸范围</li>
+                <li>点击"开始分析"</li>
+            </ol>
+
+            <div class="feature-box">
+                <h4>整合度计算模式说明</h4>
+                <ul>
+                    <li><strong>拓扑深度</strong>：每跨越一条线段距离加1，不考虑角度和长度</li>
+                    <li><strong>角度+长度加权</strong>：综合考虑转弯角度和线段长度，更符合实际行走体验</li>
+                </ul>
+            </div>
+
+            <h3>4. 添加 GeoServer 在线图层</h3>
+            <ol class="step-list">
+                <li>点击 <span class="button-demo">在线图层</span> 按钮</li>
+                <li>输入 GeoServer 服务器地址（如：http://localhost:3001）</li>
+                <li>输入工作空间名称（可选）</li>
+                <li>点击"保存配置并刷新图层列表"</li>
+                <li>从列表中选择图层，或手动输入图层名称</li>
+                <li>点击"添加图层"</li>
+            </ol>
+
+            <div class="warning-box">
+                <strong>注意：</strong>GeoServer 需要配置 CORS 支持，或者与系统部署在同一域名下，否则可能会出现跨域访问问题。
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>图层管理</h2>
+
+            <p>系统左侧面板显示当前加载的所有图层，分为两类：</p>
+
+            <h3>数据图层</h3>
+            <p>显示用户上传的 Shapefile 文件，每个图层提供以下操作：</p>
+            <ul>
+                <li><span class="button-demo success">显示/隐藏</span> - 切换图层可见性</li>
+                <li><span class="button-demo">分析</span> - 对该图层进行空间句法分析</li>
+                <li><span class="button-demo danger">删除</span> - 移除图层</li>
+            </ul>
+
+            <h3>分析结果图层</h3>
+            <p>显示空间分析的结果，以颜色渐变方式展示分析数值：</p>
+            <ul>
+                <li><strong>蓝色</strong> - 数值较低</li>
+                <li><strong>青色/绿色</strong> - 数值中等</li>
+                <li><strong>黄色/红色</strong> - 数值较高</li>
+            </ul>
+            <p>点击分析结果图层上的线段，可查看具体的连接度或整合度数值。</p>
+        </div>
+
+        <div class="section">
+            <h2>性能优化</h2>
+
+            <h3>WASM 加速</h3>
+            <p>系统使用 WebAssembly (WASM) 技术加速空间分析计算。默认使用与 CPU 核心数相同的线程数，可在分析对话框中调整。</p>
+
+            <div class="tip-box">
+                <strong>建议：</strong>对于大型数据集（超过 1000 个要素），建议使用 4-8 个线程以获得最佳性能。
+            </div>
+
+            <h3>WebGPU 加速（实验性）</h3>
+            <p>系统实验性支持 WebGPU 加速整合度计算，需要：</p>
+            <ul>
+                <li>Chrome 113+ 或 Edge 113+ 浏览器</li>
+                <li>支持 WebGPU 的显卡</li>
+            </ul>
+            <p>在分析对话框中勾选"使用 WebGPU 加速"即可启用。</p>
+        </div>
+
+        <div class="section">
+            <h2>数据存储说明</h2>
+
+            <h3>本地存储</h3>
+            <p>系统使用浏览器的以下存储机制：</p>
+            <table>
+                <tr>
+                    <th>存储类型</th>
+                    <th>用途</th>
+                    <th>容量限制</th>
+                </tr>
+                <tr>
+                    <td>LocalStorage</td>
+                    <td>存储标注数据、配置信息</td>
+                    <td>约 5-10 MB</td>
+                </tr>
+                <tr>
+                    <td>IndexedDB</td>
+                    <td>存储 Shapefile 数据、分析结果</td>
+                    <td>取决于浏览器设置，通常数百 MB</td>
+                </tr>
+            </table>
+
+            <div class="warning-box">
+                <strong>注意：</strong>清除浏览器数据会导致本地存储的所有数据丢失。建议定期导出重要数据。
+            </div>
+
+            <h3>数据导出</h3>
+            <ul>
+                <li><strong>标注数据</strong>：在标注管理对话框中导出为 GeoJSON</li>
+                <li><strong>分析结果</strong>：在分析完成后点击"导出为 Shapefile"按钮</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>常见问题</h2>
+
+            <h3>Q: Shapefile 上传失败怎么办？</h3>
+            <p>A: 请确保：</p>
+            <ul>
+                <li>选择了正确的 Shapefile 文件（.shp）</li>
+                <li>同时选择了相关的 .shx 和 .dbf 文件</li>
+                <li>文件未损坏，可在其他 GIS 软件中打开</li>
+                <li>坐标系设置正确，或选择"自动检测"</li>
+            </ul>
+
+            <h3>Q: 空间分析计算很慢？</h3>
+            <p>A: 可尝试以下优化：</p>
+            <ul>
+                <li>增加 WASM 线程数（建议 4-8 线程）</li>
+                <li>启用 WebGPU 加速（如浏览器支持）</li>
+                <li>简化数据，减少线段数量</li>
+                <li>使用连接度分析代替整合度（计算更快）</li>
+            </ul>
+
+            <h3>Q: GeoServer 图层无法加载？</h3>
+            <p>A: 请检查：</p>
+            <ul>
+                <li>GeoServer 地址是否正确</li>
+                <li>GeoServer 是否已配置 CORS</li>
+                <li>工作空间名称是否正确</li>
+                <li>网络连接是否正常</li>
+            </ul>
+
+            <h3>Q: 数据会保存在服务器上吗？</h3>
+            <p>A: 不会。本系统采用纯前端架构，所有数据都保存在浏览器本地，不会上传到任何服务器。</p>
+        </div>
+
+        <div class="section">
+            <h2>技术支持</h2>
+            <p>如有问题或建议，请联系：</p>
+            <ul>
+                <li>作者：吴陶然</li>
+                <li>单位：合肥工业大学</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="index.html" class="back-link">返回主界面</a>
+        </div>
+
+        <footer>
+            <p>WebGIS 空间分析系统 v1.0 | 基于 OpenLayers 开发</p>
+            <p>© 2024 合肥工业大学</p>
+        </footer>
+    </div>
+</body>
+</html>

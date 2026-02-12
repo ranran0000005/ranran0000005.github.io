@@ -51,9 +51,23 @@ function showPopup(content_) {
     
     // 添加手动关闭事件（只绑定一次）
     closeButton.onclick = removePopup;
-    
+
     // 设置10秒后自动关闭的定时器
     popupTimer = setTimeout(removePopup, 10000);
+}
+
+/**
+ * 关闭当前弹窗
+ */
+function closeCurrentPopup() {
+    if (currentPopup && document.body.contains(currentPopup)) {
+        document.body.removeChild(currentPopup);
+        currentPopup = null;
+    }
+    if (popupTimer) {
+        clearTimeout(popupTimer);
+        popupTimer = null;
+    }
 }
 
 /**

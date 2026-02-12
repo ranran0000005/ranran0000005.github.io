@@ -5,97 +5,72 @@
     left: 50%;
     transform: translate(-50%, -50%);
     width: 400px;
-    max-width: 90%;
-    max-height: 90vh;
+    max-height: 80vh;
     overflow-y: auto;
     background-color: #fff;
-    border: 2px solid #000;
+    border: 2px solid #333;
     border-radius: 8px;
     padding: 20px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
     z-index: 1000;
-    text-align: left;
 }
 
 .setting_ h3 {
     margin-top: 0;
     margin-bottom: 15px;
     text-align: center;
-    color: #333;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
 }
 
 .setting_ h4 {
-    margin: 10px 0 5px 0;
+    margin-top: 15px;
+    margin-bottom: 10px;
     color: #333;
 }
 
-.setting_-close {
-    margin-top: 15px;
+.settings-section {
+    margin-bottom: 20px;
+}
+
+.settings-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.settings-input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.settings-select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.settings-button {
     padding: 8px 16px;
     background-color: #005ce6;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    width: 100%;
-    font-size: 14px;
-}
-
-.setting_-close:hover {
-    background-color: #0044b3;
-}
-
-/* 设置面板表单样式 */
-.settings-section {
-    margin-bottom: 15px;
-}
-
-.settings-label {
-    display: block;
+    margin-right: 5px;
     margin-bottom: 5px;
-    color: #333;
-    font-weight: normal;
-}
-
-.settings-label-bold {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: #333;
-}
-
-.settings-select {
-    width: 100%;
-    padding: 5px;
-    margin-bottom: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-.settings-input {
-    width: 100%;
-    padding: 5px;
-    margin-bottom: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-.settings-button {
-    padding: 5px 15px;
-    width: 100%;
-    background-color: #005ce6;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-bottom: 10px;
 }
 
 .settings-button:hover {
-    background-color: #0044b3;
+    background-color: #004bb5;
 }
 
 .settings-button:disabled {
@@ -103,42 +78,171 @@
     cursor: not-allowed;
 }
 
-.settings-divider {
-    border-top: 1px solid #ddd;
-    padding-top: 10px;
-    margin-top: 10px;
-}
-
-.settings-section-title {
+.setting_-close {
+    display: block;
+    width: 100%;
+    padding: 10px;
     margin-top: 15px;
+    background-color: #666;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
-/* 图层列表样式 */
+.setting_-close:hover {
+    background-color: #555;
+}
+
+.settings-divider {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #ddd;
+}
+
+.settings-label-bold {
+    font-weight: bold;
+    color: #333;
+}
+
 .added-layers-list {
-    margin-top: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    background-color: #f9f9f9;
 }
 
 .layer-item {
-    margin: 5px 0;
-    padding: 5px;
-    background: #f0f0f0;
+    margin-bottom: 10px;
+    padding: 8px;
+    background-color: #fff;
+    border: 1px solid #eee;
     border-radius: 4px;
 }
 
 .layer-item label {
     display: flex;
     align-items: center;
+    gap: 8px;
 }
 
-.layer-item span {
-    margin-left: 5px;
-    flex: 1;
-}
-
-.layer-item .layer-remove-btn {
+.layer-remove-btn {
     margin-left: auto;
     padding: 2px 8px;
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
     font-size: 12px;
+}
+
+.layer-remove-btn:hover {
+    background-color: #cc0000;
+}
+
+.layer-opacity-control {
+    margin-top: 5px;
+    padding-left: 20px;
+}
+
+.layer-opacity-control input[type="range"] {
+    width: 100px;
+    vertical-align: middle;
+}
+
+.empty-message {
+    color: #999;
+    text-align: center;
+    font-style: italic;
+}
+
+/* 本地标注对话框样式 */
+.local-marker-dialog .dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 999;
+}
+
+.local-marker-dialog .dialog-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 350px;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    z-index: 1000;
+}
+
+.local-marker-dialog h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.local-marker-dialog .form-group {
+    margin-bottom: 15px;
+}
+
+.local-marker-dialog label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.local-marker-dialog input[type="text"],
+.local-marker-dialog textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.local-marker-dialog textarea {
+    height: 60px;
+    resize: vertical;
+}
+
+.coordinate-display {
+    color: #666;
+    font-family: monospace;
+}
+
+.dialog-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.btn-primary {
+    padding: 8px 16px;
+    background-color: #005ce6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-secondary {
+    padding: 8px 16px;
+    background-color: #666;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-danger {
+    padding: 8px 16px;
     background-color: #ff4444;
     color: white;
     border: none;
@@ -146,22 +250,56 @@
     cursor: pointer;
 }
 
-.layer-item .layer-remove-btn:hover {
-    background-color: #cc0000;
+.file-input-label {
+    display: inline-block;
+    cursor: pointer;
 }
 
-.layer-opacity-control {
+/* 标注列表样式 */
+.marker-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.marker-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.marker-list-item:last-child {
+    border-bottom: none;
+}
+
+.marker-list-item .marker-info {
+    flex: 1;
+}
+
+.marker-list-item .marker-coords {
+    display: block;
+    color: #666;
+    font-size: 12px;
+}
+
+.marker-list-item .marker-actions button {
+    padding: 4px 8px;
+    margin-left: 5px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.local-badge {
+    display: inline-block;
+    background-color: #0066FF;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 12px;
     margin-top: 5px;
 }
-
-.layer-opacity-control label {
-    display: block;
-    font-size: 12px;
-}
-
-.empty-message {
-    color: #999;
-    font-size: 12px;
-    font-style: italic;
-}
-

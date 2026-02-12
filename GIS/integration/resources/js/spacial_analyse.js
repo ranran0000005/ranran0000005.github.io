@@ -534,10 +534,11 @@ async function performSpatialAnalysis(workspace, layerName, analysisType) {
 
         // 保存分析结果图层信息
         const sourceName = layerName || 'Unknown';
+        const fullSourceName = workspace ? `${workspace}:${sourceName}` : sourceName;
         const analysisTypeName = analysisType === 'connectivity' ? '连接度' : '整合度';
         const analysisLayerInfo = {
             id: analysisLayerId,
-            name: `${sourceName} - ${analysisTypeName}`,
+            name: `${fullSourceName} - ${analysisTypeName}`,
             layer: spatialAnalysisLayer,
             source: spatialAnalysisSource,
             features: features, // 添加features用于持久化
@@ -547,7 +548,7 @@ async function performSpatialAnalysis(workspace, layerName, analysisType) {
             minValue: minValue,
             maxValue: maxValue,
             sortedValues: sortedValues, // 添加sortedValues用于持久化
-            sourceLayerName: sourceName, // 源图层名称
+            sourceLayerName: fullSourceName, // 源图层名称
             timestamp: Date.now()
         };
         analysisResultLayers.push(analysisLayerInfo);
@@ -628,25 +629,34 @@ async function performSpatialAnalysis(workspace, layerName, analysisType) {
 function showSpatialAnalysisDialog() {
     // Check if local shapefile data is loaded
     const hasLocalData = spatialFeaturesCache && spatialFeaturesCache.length > 0;
-    
+
     // 获取可用图层列表（如果 GeoServer 功能可用）
     let layers = [];
     if (typeof getAvailableLayers === 'function') {
         layers = getAvailableLayers();
     }
-    
+
     // 创建对话框HTML（增加颜色拉伸输入和本地数据选项）
     let dataSourceOptions = '';
-    
-    if (hasLocalData) {
-        dataSourceOptions += `<option value="local">本地数据 (${spatialFeaturesCache.length} 个要素)</option>`;
+
+    // 添加本地已加载的Shapefile图层
+    if (localShapefileLayers.length > 0) {
+        localShapefileLayers.forEach(layer => {
+            dataSourceOptions += `<option value="local:${layer.id}">本地: ${layer.name} (${layer.featureCount} 个要素)</option>`;
+        });
     }
-    
+
+    // 添加本地缓存数据选项（如果有）
+    if (hasLocalData) {
+        dataSourceOptions += `<option value="local:cache">本地缓存数据 (${spatialFeaturesCache.length} 个要素)</option>`;
+    }
+
+    // 添加GeoServer图层
     layers.forEach(layer => {
         dataSourceOptions += `<option value="${layer.workspace}:${layer.name}">GeoServer: ${layer.displayName}</option>`;
     });
-    
-    if (!hasLocalData && layers.length === 0) {
+
+    if (dataSourceOptions === '') {
         showPopup('没有可用的数据源，请先上传本地 Shapefile');
         return;
     }
@@ -765,9 +775,16 @@ function showSpatialAnalysisDialog() {
         }
         
         // 开始分析
-        if (selectedDataSource === 'local') {
-            // Use local cached data
-            performSpatialAnalysisLocal(analysisType);
+        if (selectedDataSource.startsWith('local:')) {
+            // Use local data
+            const localId = selectedDataSource.substring(6); // Remove 'local:' prefix
+            if (localId === 'cache') {
+                // Use cached data
+                performSpatialAnalysisLocal(analysisType);
+            } else {
+                // Use specific local shapefile layer
+                performSpatialAnalysisLocalById(localId, analysisType);
+            }
         } else {
             // Use GeoServer data
             const [workspace, layerName] = selectedDataSource.split(':');

@@ -105,37 +105,37 @@ function initOpenLayersMap() {
 
     // 添加地图点击事件（用于添加标注）
     map.on('click', function(event) {
-        if (isAddingMarker) {
-            addMarkerAtCoordinate(event.coordinate);
+        if (isLocalMarkerMode) {
+            addLocalMarkerAtCoordinate(event.coordinate);
         }
     });
-    
+
     // 添加标注点击事件（显示标注信息）
     // 使用防抖机制避免重复触发
     let clickTimeout = null;
     map.on('singleclick', function(event) {
-        if (!isAddingMarker) {
+        if (!isLocalMarkerMode) {
             // 清除之前的定时器
             if (clickTimeout) {
                 clearTimeout(clickTimeout);
             }
-            
+
             // 延迟执行，避免快速点击导致重复弹窗
             clickTimeout = setTimeout(function() {
-                // 检查是否点击到了标注要素
+                // 检查是否点击到了本地标注要素
                 const feature = map.forEachFeatureAtPixel(event.pixel, function(feature) {
-                    // 只处理标注要素（有id属性的）
-                    if (feature && feature.get('id')) {
+                    // 只处理本地标注要素（有isLocal属性的）
+                    if (feature && feature.get('isLocal')) {
                         return feature;
                     }
                     return null;
                 });
-                
+
                 // 如果点击到了标注，显示信息（只显示一次）
-                if (feature && feature.get('id')) {
+                if (feature && feature.get('isLocal')) {
                     // 再次检查是否已有弹窗，避免重复
                     if (!currentPopup || !document.body.contains(currentPopup)) {
-                        showMarkerInfo(feature);
+                        showLocalMarkerInfo(feature);
                     }
                 }
                 clickTimeout = null;

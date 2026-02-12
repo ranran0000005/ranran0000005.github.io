@@ -11,7 +11,7 @@ var wmsLayers = {}; // 存储所有WMS图层，key为图层名称
 var markersLayer; // 标注图层
 var markersSource; // 标注数据源
 var markersVector = {}; // 存储所有标注的矢量要素，key为标注ID
-var isAddingMarker = false; // 是否处于添加标注模式
+var isLocalMarkerMode = false; // 是否处于本地标注添加模式
 
 // 弹窗管理变量（在utils.js中定义，这里声明以避免重复）
 var currentPopup = null;

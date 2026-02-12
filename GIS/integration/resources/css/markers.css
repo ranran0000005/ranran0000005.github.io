@@ -29,3 +29,229 @@
     background: #cc0000;
 }
 
+/* 本地标注样式 */
+.local-marker-info {
+    min-width: 200px;
+}
+
+.local-badge {
+    display: inline-block;
+    background: #0066FF;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.marker-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+}
+
+.marker-edit-btn {
+    padding: 5px 10px;
+    background: #0066FF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.marker-edit-btn:hover {
+    background: #0052cc;
+}
+
+/* 本地标注对话框样式 */
+.local-marker-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dialog-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.dialog-content {
+    position: relative;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    min-width: 300px;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.manager-dialog .dialog-content {
+    width: 450px;
+    max-height: 70vh;
+}
+
+.dialog-content h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.form-group textarea {
+    min-height: 60px;
+    resize: vertical;
+}
+
+.coordinate-display {
+    color: #666;
+    font-family: monospace;
+    font-size: 13px;
+}
+
+.dialog-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.dialog-buttons button,
+.file-input-label {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.btn-primary {
+    background: #0066FF;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0052cc;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+/* 标注列表样式 */
+.marker-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.marker-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.marker-list-item:last-child {
+    border-bottom: none;
+}
+
+.marker-list-item .marker-info {
+    flex: 1;
+}
+
+.marker-list-item .marker-info strong {
+    display: block;
+    color: #333;
+    margin-bottom: 3px;
+}
+
+.marker-list-item .marker-coords {
+    font-size: 12px;
+    color: #999;
+    font-family: monospace;
+}
+
+.marker-list-item .marker-actions {
+    display: flex;
+    gap: 5px;
+    margin: 0;
+}
+
+.marker-list-item .marker-actions button {
+    padding: 4px 8px;
+    background: #f0f0f0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.marker-list-item .marker-actions button:hover {
+    background: #e0e0e0;
+}
+
+.empty-message {
+    text-align: center;
+    color: #999;
+    padding: 20px;
+}
+
+.description {
+    color: #666;
+    font-style: italic;
+    margin: 5px 0;
+}

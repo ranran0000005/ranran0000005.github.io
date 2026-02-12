@@ -48,5 +48,12 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.log('浏览器不支持IndexedDB，图层数据将不会持久化保存');
     }
+
+    // 初始化本地标注系统
+    setTimeout(() => {
+        if (typeof initLocalMarkers === 'function') {
+            initLocalMarkers();
+        }
+    }, 600);
 });
 

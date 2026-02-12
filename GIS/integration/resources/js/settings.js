@@ -10,11 +10,11 @@ function showSettings() {
     if (document.querySelector('.setting_')) {
         return;
     }
-    
+
     // 创建设置元素
     const setting = document.createElement('div');
     setting.className = 'setting_';
-    
+
     setting.innerHTML = `<h3>图层设置</h3>` +
                      `<div class="settings-section">` +
                      `  <h4>GeoServer 配置</h4>` +
@@ -44,44 +44,44 @@ function showSettings() {
                      `  </div>` +
                      `</div>` +
                      `<button id="closeSettings" class="setting_-close">关闭</button>`;
-    
+
     document.body.appendChild(setting);
-    
+
     // 绑定关闭按钮事件
     document.getElementById('closeSettings').addEventListener('click', function() {
         if (document.body.contains(setting)) {
             document.body.removeChild(setting);
         }
     });
-    
+
     // 绑定保存配置按钮事件
     document.getElementById('saveGeoServerConfig').addEventListener('click', async function() {
         const url = document.getElementById('geoserverUrl').value.trim();
         const workspace = document.getElementById('geoserverWorkspace').value.trim();
-        
+
         if (!url) {
             alert('请输入GeoServer地址');
             return;
         }
-        
+
         // 保存配置
         saveGeoServerConfig({ url, workspace });
-        
+
         // 更新UI状态
         const layerSelect = document.getElementById('layerSelect');
         const addLayerBtn = document.getElementById('addLayerBtn');
-        
+
         layerSelect.innerHTML = '<option value="">正在加载图层列表...</option>';
         layerSelect.disabled = true;
         addLayerBtn.disabled = true;
-        
+
         try {
             // 添加10秒超时
             const timeoutPromise = new Promise((_, reject) => {
                 setTimeout(() => reject(new Error('请求超时(10秒)')), 10000);
             });
             const layers = await Promise.race([fetchLayersFromGeoServer(workspace), timeoutPromise]);
-            
+
             if (layers.length === 0) {
                 layerSelect.innerHTML = '<option value="">未找到图层，请检查配置</option>';
             } else {
@@ -94,7 +94,7 @@ function showSettings() {
                 layerSelect.disabled = false;
                 addLayerBtn.disabled = false;
             }
-            
+
             alert('配置已保存');
         } catch (error) {
             console.error('获取图层列表失败:', error);
@@ -102,12 +102,12 @@ function showSettings() {
             alert('获取图层列表失败: ' + error.message);
         }
     });
-    
+
     // 绑定添加图层按钮事件
     document.getElementById('addLayerBtn').addEventListener('click', function() {
         const select = document.getElementById('layerSelect');
         const option = select.options[select.selectedIndex];
-        
+
         if (option && option.value) {
             addWMSLayer(option.getAttribute('data-name'), option.getAttribute('data-workspace'));
             updateSettingsPanel();
@@ -115,22 +115,22 @@ function showSettings() {
             alert('请先选择一个图层');
         }
     });
-    
+
     // 绑定手动添加图层按钮事件
     document.getElementById('addManualLayerBtn').addEventListener('click', function() {
         const workspace = document.getElementById('manualWorkspace').value.trim();
         const layerName = document.getElementById('manualLayerName').value.trim();
-        
+
         if (!workspace || !layerName) {
             alert('请输入工作空间和图层名称');
             return;
         }
-        
+
         addWMSLayer(layerName, workspace);
         document.getElementById('manualLayerName').value = '';
         updateSettingsPanel();
     });
-    
+
     // 初始化已添加图层列表
     updateSettingsPanel();
 }
@@ -152,7 +152,7 @@ function updateSettingsPanel() {
         const info = wmsLayers[layerName];
         const visible = info.layer.getVisible();
         const opacity = info.layer.getOpacity();
-        
+
         html += `
             <div class="layer-item">
                 <label>
@@ -161,8 +161,8 @@ function updateSettingsPanel() {
                     <button onclick="removeWMSLayer('${layerName}'); updateSettingsPanel();" class="layer-remove-btn">移除</button>
                 </label>
                 <div class="layer-opacity-control">
-                    <label>不透明度: 
-                        <input type="range" min="0" max="1" step="0.1" value="${opacity}" 
+                    <label>不透明度:
+                        <input type="range" min="0" max="1" step="0.1" value="${opacity}"
                                onchange="setWMSLayerOpacity('${layerName}', parseFloat(this.value))">
                         <span>${Math.round(opacity * 100)}%</span>
                     </label>
