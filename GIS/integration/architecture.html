@@ -584,66 +584,66 @@ wasm_modules/
         <div class="section">
             <h2>5. 文件组织结构</h2>
             <div class="file-tree">
-<span class="folder">kjjfmap_web1/</span>
-├── <span class="file">index.html</span>              <span class="comment"># 主页面入口</span>
-├── <span class="file">manual.html</span>             <span class="comment"># 用户手册</span>
-├── <span class="file">architecture.html</span>       <span class="comment"># 架构说明（本文档）</span>
-│
-├── <span class="folder">resources/</span>
-│   ├── <span class="folder">css/</span>                  <span class="comment"># 样式文件</span>
-│   │   ├── style_.css
-│   │   ├── layout.css
-│   │   ├── map.css
-│   │   ├── markers.css
-│   │   ├── popup.css
-│   │   └── settings.css
-│   │
-│   ├── <span class="folder">js/</span>                   <span class="comment"># JavaScript 模块</span>
-│   │   ├── <span class="file">config.js</span>         <span class="comment"># 全局配置和变量</span>
-│   │   ├── <span class="file">utils.js</span>          <span class="comment"># 工具函数</span>
-│   │   ├── <span class="file">map-core.js</span>       <span class="comment"># 地图核心初始化</span>
-│   │   ├── <span class="file">coordinate-utils.js</span> <span class="comment"># 坐标转换工具</span>
-│   │   │
-│   │   ├── <span class="file">shapefile-loader.js</span> <span class="comment"># Shapefile 加载</span>
-│   │   ├── <span class="file">shapefile-writer.js</span> <span class="comment"># Shapefile 导出</span>
-│   │   ├── <span class="file">layer-storage.js</span>  <span class="comment"># 图层数据存储</span>
-│   │   ├── <span class="file">segment-splitter.js</span> <span class="comment"># 线段分割处理</span>
-│   │   │
-│   │   ├── <span class="file">local-markers.js</span>  <span class="comment"># 本地标注管理</span>
-│   │   │
-│   │   ├── <span class="file">geoserver.js</span>      <span class="comment"># GeoServer 接口</span>
-│   │   ├── <span class="file">wms-layers.js</span>     <span class="comment"># WMS 图层控制</span>
-│   │   ├── <span class="file">settings.js</span>       <span class="comment"># 设置面板</span>
-│   │   │
-│   │   ├── <span class="file">spacial_analyse.js</span> <span class="comment"># 空间分析主控</span>
-│   │   ├── <span class="file">local-analysis.js</span> <span class="comment"># 本地数据分析</span>
-│   │   ├── <span class="file">connection.js</span>     <span class="comment"># 连接度算法</span>
-│   │   ├── <span class="file">integration.js</span>    <span class="comment"># 整合度算法</span>
-│   │   │
-│   │   ├── <span class="file">wasm-loader.js</span>    <span class="comment"># WASM 模块加载</span>
-│   │   ├── <span class="file">wasm-integration.js</span> <span class="comment"># WASM 接口封装</span>
-│   │   ├── <span class="file">webgpu-integration.js</span> <span class="comment"># WebGPU 接口</span>
-│   │   │
-│   │   └── <span class="file">main.js</span>           <span class="comment"># 程序入口</span>
-│   │
-│   ├── <span class="folder">lib/</span>                  <span class="comment"># 第三方库</span>
-│   │   ├── ol.js / ol.css        <span class="comment"># OpenLayers</span>
-│   │   ├── proj4.js              <span class="comment"># 坐标转换</span>
-│   │   ├── shp.js                <span class="comment"># Shapefile 解析</span>
-│   │   └── jszip.min.js          <span class="comment"># ZIP 解压</span>
-│   │
-│   └── <span class="folder">wasm/</span>                 <span class="comment"># WASM 编译输出</span>
-│       ├── spatial_analysis.js
-│       └── spatial_analysis.wasm
-│
-├── <span class="folder">wasm_modules/</span>           <span class="comment"># C++ 源码</span>
-│   ├── spatial_analysis.cpp
-│   ├── spatial_analysis.h
-│   ├── wasm_bindings.cpp
-│   └── build.sh
-│
-└── <span class="folder">test-server/</span>            <span class="comment"># 测试服务器（Node.js）</span>
-    ├── wms-server.js
+<span class="folder">kjjfmap_web1/</span><br>
+├── <span class="file">index.html</span>              <span class="comment"># 主页面入口</span><br>
+├── <span class="file">manual.html</span>             <span class="comment"># 用户手册</span><br>
+├── <span class="file">architecture.html</span>       <span class="comment"># 架构说明（本文档）</span><br>
+│<br>
+├── <span class="folder">resources/</span><br>
+│   ├── <span class="folder">css/</span>                  <span class="comment"># 样式文件</span><br>
+│   │   ├── style_.css<br>
+│   │   ├── layout.css<br>
+│   │   ├── map.css<br>
+│   │   ├── markers.css<br>
+│   │   ├── popup.css<br>
+│   │   └── settings.css<br>
+│   │<br>
+│   ├── <span class="folder">js/</span>                   <span class="comment"># JavaScript 模块</span><br>
+│   │   ├── <span class="file">config.js</span>         <span class="comment"># 全局配置和变量</span><br>
+│   │   ├── <span class="file">utils.js</span>          <span class="comment"># 工具函数</span><br>
+│   │   ├── <span class="file">map-core.js</span>       <span class="comment"># 地图核心初始化</span><br>
+│   │   ├── <span class="file">coordinate-utils.js</span> <span class="comment"># 坐标转换工具</span><br>
+│   │   │<br>
+│   │   ├── <span class="file">shapefile-loader.js</span> <span class="comment"># Shapefile 加载</span><br>
+│   │   ├── <span class="file">shapefile-writer.js</span> <span class="comment"># Shapefile 导出</span><br>
+│   │   ├── <span class="file">layer-storage.js</span>  <span class="comment"># 图层数据存储</span><br>
+│   │   ├── <span class="file">segment-splitter.js</span> <span class="comment"># 线段分割处理</span><br>
+│   │   │<br>
+│   │   ├── <span class="file">local-markers.js</span>  <span class="comment"># 本地标注管理</span><br>
+│   │   │<br>
+│   │   ├── <span class="file">geoserver.js</span>      <span class="comment"># GeoServer 接口</span><br>
+│   │   ├── <span class="file">wms-layers.js</span>     <span class="comment"># WMS 图层控制</span><br>
+│   │   ├── <span class="file">settings.js</span>       <span class="comment"># 设置面板</span><br>
+│   │   │<br>
+│   │   ├── <span class="file">spacial_analyse.js</span> <span class="comment"># 空间分析主控</span><br>
+│   │   ├── <span class="file">local-analysis.js</span> <span class="comment"># 本地数据分析</span><br>
+│   │   ├── <span class="file">connection.js</span>     <span class="comment"># 连接度算法</span><br>
+│   │   ├── <span class="file">integration.js</span>    <span class="comment"># 整合度算法</span><br>
+│   │   │<br>
+│   │   ├── <span class="file">wasm-loader.js</span>    <span class="comment"># WASM 模块加载</span><br>
+│   │   ├── <span class="file">wasm-integration.js</span> <span class="comment"># WASM 接口封装</span><br>
+│   │   ├── <span class="file">webgpu-integration.js</span> <span class="comment"># WebGPU 接口</span><br>
+│   │   │<br>
+│   │   └── <span class="file">main.js</span>           <span class="comment"># 程序入口</span><br>
+│   │<br>
+│   ├── <span class="folder">lib/</span>                  <span class="comment"># 第三方库</span><br>
+│   │   ├── ol.js / ol.css        <span class="comment"># OpenLayers</span><br>
+│   │   ├── proj4.js              <span class="comment"># 坐标转换</span><br>
+│   │   ├── shp.js                <span class="comment"># Shapefile 解析</span><br>
+│   │   └── jszip.min.js          <span class="comment"># ZIP 解压</span><br>
+│   │<br>
+│   └── <span class="folder">wasm/</span>                 <span class="comment"># WASM 编译输出</span><br>
+│       ├── spatial_analysis.js<br>
+│       └── spatial_analysis.wasm<br>
+│<br>
+├── <span class="folder">wasm_modules/</span>           <span class="comment"># C++ 源码</span><br>
+│   ├── spatial_analysis.cpp<br>
+│   ├── spatial_analysis.h<br>
+│   ├── wasm_bindings.cpp<br>
+│   └── build.sh<br>
+│<br>
+└── <span class="folder">test-server/</span>            <span class="comment"># 测试服务器（Node.js）</span><br>
+    ├── wms-server.js<br>
     └── package.json
             </div>
         </div>
