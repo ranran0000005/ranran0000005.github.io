@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGIS系统架构详细说明</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .section h3 {
+            color: #555;
+            font-size: 1.3em;
+            margin: 25px 0 12px 0;
+        }
+
+        .section h4 {
+            color: #666;
+            font-size: 1.1em;
+            margin: 20px 0 10px 0;
+        }
+
+        .section p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+
+        .section ul, .section ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        .section li {
+            margin-bottom: 8px;
+        }
+
+        .architecture-diagram {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 0.9em;
+            line-height: 1.8;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .module-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .module-box h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .tech-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+        }
+
+        .tech-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .tech-card ul {
+            margin-left: 20px;
+            font-size: 0.95em;
+        }
+
+        .data-flow {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .data-flow h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .file-tree {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .file-tree .folder {
+            color: #e67e22;
+            font-weight: bold;
+        }
+
+        .file-tree .file {
+            color: #3498db;
+        }
+
+        .file-tree .comment {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .highlight-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .highlight-box strong {
+            color: #0c5460;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        .back-link:hover {
+            background: #5568d3;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .dependency-graph {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .dependency-item {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 5px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .dependency-arrow {
+            display: inline-block;
+            margin: 0 10px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>WebGIS 系统架构详细说明</h1>
+            <p>纯前端 GIS 系统的技术架构与实现原理</p>
+        </header>
+
+        <div class="section">
+            <h2>1. 架构概述</h2>
+            <p>本系统采用<strong>纯前端架构（Pure Frontend Architecture）</strong>，所有功能均在浏览器端实现，无需后端服务器支持。这种架构具有以下特点：</p>
+            <ul>
+                <li><strong>零后端依赖</strong> - 无需配置服务器环境，部署简单</li>
+                <li><strong>数据隐私保护</strong> - 用户数据仅存储在本地浏览器，不上传服务器</li>
+                <li><strong>跨平台兼容</strong> - 支持任何现代浏览器，包括桌面和移动设备</li>
+                <li><strong>高性能计算</strong> - 利用 WebAssembly 和 WebGPU 实现接近原生的计算性能</li>
+            </ul>
+
+            <div class="architecture-diagram">
+┌─────────────────────────────────────────────────────────────────┐
+│                        用户界面层 (UI Layer)                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │  地图显示     │  │  图层管理     │  │  分析对话框   │          │
+│  │  (OpenLayers)│  │  (DOM/CSS)   │  │  (Modal)     │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        业务逻辑层 (Logic Layer)                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │ 空间分析引擎  │  │ 数据管理器   │  │ 图层控制器   │          │
+│  │ (WASM/JS)    │  │ (IndexedDB)  │  │ (OL Layer)   │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │ 坐标转换     │  │ 标注管理     │  │ WMS服务      │          │
+│  │ (Proj4)      │  │ (LocalStorage)│  │ (GeoServer)  │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        数据存储层 (Storage Layer)                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │ LocalStorage │  │  IndexedDB   │  │  Memory Cache│          │
+│  │ (配置/标注)  │  │ (Shapefile)  │  │ (运行时数据) │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        外部服务层 (External Layer)                │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │ 高德地图瓦片  │  │ GeoServer    │  │ WASM模块     │          │
+│  │ (底图服务)   │  │ (WMS/WFS)    │  │ (计算加速)   │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>2. 技术栈</h2>
+            <div class="tech-stack">
+                <div class="tech-card">
+                    <h4>核心框架</h4>
+                    <ul>
+                        <li><strong>OpenLayers 7+</strong> - 地图渲染引擎</li>
+                        <li><strong>Proj4js</strong> - 坐标系转换</li>
+                        <li><strong>Vanilla JS</strong> - 原生 JavaScript</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h4>数据处理</h4>
+                    <ul>
+                        <li><strong>shp.js</strong> - Shapefile 解析</li>
+                        <li><strong>JSZip</strong> - ZIP 文件解压</li>
+                        <li><strong>GeoJSON</strong> - 数据交换格式</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h4>性能加速</h4>
+                    <ul>
+                        <li><strong>WebAssembly</strong> - C++ 编译加速</li>
+                        <li><strong>WebGPU</strong> - GPU 并行计算</li>
+                        <li><strong>Web Workers</strong> - 多线程处理</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h4>存储方案</h4>
+                    <ul>
+                        <li><strong>LocalStorage</strong> - 键值存储</li>
+                        <li><strong>IndexedDB</strong> - 结构化数据</li>
+                        <li><strong>Memory</strong> - 运行时缓存</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h4>外部服务</h4>
+                    <ul>
+                        <li><strong>高德地图</strong> - 底图瓦片</li>
+                        <li><strong>GeoServer</strong> - WMS/WFS 服务</li>
+                        <li><strong>CDN</strong> - 静态资源</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h4>开发工具</h4>
+                    <ul>
+                        <li><strong>Emscripten</strong> - C++ 编译工具链</li>
+                        <li><strong>VS Code</strong> - 代码编辑器</li>
+                        <li><strong>Git</strong> - 版本控制</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>3. 核心模块详解</h2>
+
+            <h3>3.1 地图核心模块 (map-core.js)</h3>
+            <div class="module-box">
+                <h4>功能职责</h4>
+                <ul>
+                    <li>初始化 OpenLayers 地图实例</li>
+                    <li>配置高德地图底图图层</li>
+                    <li>设置地图投影（Web Mercator EPSG:3857）</li>
+                    <li>添加地图控件（比例尺、鼠标位置）</li>
+                    <li>处理地图点击事件</li>
+                </ul>
+                <h4>关键技术点</h4>
+                <ul>
+                    <li>使用 <code>ol.source.XYZ</code> 加载高德瓦片</li>
+                    <li>坐标转换：WGS84(EPSG:4326) ↔ Web Mercator(EPSG:3857)</li>
+                    <li>地图视图初始位置：合肥市中心 (117.2, 31.8)</li>
+                </ul>
+            </div>
+
+            <h3>3.2 空间分析模块</h3>
+            <p>空间分析功能分布在多个文件中，形成完整的分析 pipeline：</p>
+
+            <div class="module-box">
+                <h4>spacial_analyse.js - 主分析控制器</h4>
+                <ul>
+                    <li>显示分析对话框 UI</li>
+                    <li>协调 GeoServer 数据获取</li>
+                    <li>管理分析结果可视化</li>
+                    <li>处理颜色映射和图例</li>
+                </ul>
+            </div>
+
+            <div class="module-box">
+                <h4>local-analysis.js - 本地数据分析</h4>
+                <ul>
+                    <li>处理本地 Shapefile 数据的分析</li>
+                    <li>管理分析结果图层</li>
+                    <li>保存分析结果到 IndexedDB</li>
+                </ul>
+            </div>
+
+            <div class="module-box">
+                <h4>connection.js - 连接度算法</h4>
+                <ul>
+                    <li>实现线段连接度计算</li>
+                    <li>构建线段邻接表</li>
+                    <li>支持拓扑和角度两种模式</li>
+                </ul>
+            </div>
+
+            <div class="module-box">
+                <h4>integration.js - 整合度算法</h4>
+                <ul>
+                    <li>实现线段整合度计算</li>
+                    <li>最短路径算法（Dijkstra）</li>
+                    <li>角度加权距离计算</li>
+                </ul>
+            </div>
+
+            <h3>3.3 WASM 加速模块</h3>
+            <div class="module-box">
+                <h4>wasm_modules/ 目录结构</h4>
+                <pre>
+wasm_modules/
+├── spatial_analysis.cpp    # 核心算法 C++ 实现
+├── spatial_analysis.h      # 头文件
+├── wasm_bindings.cpp       # JavaScript 绑定
+├── point.cpp/point.h       # 几何数据结构
+└── build.sh               # 编译脚本
+                </pre>
+                <h4>编译流程</h4>
+                <ol>
+                    <li>使用 Emscripten 编译 C++ 代码</li>
+                    <li>生成 .wasm 二进制文件和 .js 胶水代码</li>
+                    <li>输出到 resources/wasm/ 目录</li>
+                </ol>
+                <h4>暴露的接口</h4>
+                <ul>
+                    <li><code>buildAdjacencyList()</code> - 构建邻接表</li>
+                    <li><code>calculateConnectivity()</code> - 计算连接度</li>
+                    <li><code>calculateIntegration()</code> - 计算整合度</li>
+                </ul>
+            </div>
+
+            <h3>3.4 数据管理模块</h3>
+            <div class="module-box">
+                <h4>shapefile-loader.js - Shapefile 加载器</h4>
+                <ul>
+                    <li>解析 Shapefile 二进制格式</li>
+                    <li>坐标系自动检测和转换</li>
+                    <li>图层列表 UI 管理</li>
+                    <li>数据持久化到 IndexedDB</li>
+                </ul>
+            </div>
+
+            <div class="module-box">
+                <h4>layer-storage.js - 图层存储管理</h4>
+                <ul>
+                    <li>IndexedDB 数据库操作</li>
+                    <li>图层数据序列化/反序列化</li>
+                    <li>自动恢复上次会话数据</li>
+                </ul>
+            </div>
+
+            <div class="module-box">
+                <h4>local-markers.js - 标注管理</h4>
+                <ul>
+                    <li>本地标注的增删改查</li>
+                    <li>LocalStorage 持久化</li>
+                    <li>GeoJSON 导入/导出</li>
+                </ul>
+            </div>
+
+            <h3>3.5 GeoServer 集成模块</h3>
+            <div class="module-box">
+                <h4>geoserver.js - WMS 服务接口</h4>
+                <ul>
+                    <li>GetCapabilities 请求解析</li>
+                    <li>图层列表获取</li>
+                    <li>WMS 图层添加和管理</li>
+                </ul>
+            </div>
+
+            <div class="module-box">
+                <h4>wms-layers.js - WMS 图层控制</h4>
+                <ul>
+                    <li>WMS 图层创建和配置</li>
+                    <li>图层可见性控制</li>
+                    <li>透明度调节</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>4. 数据流设计</h2>
+
+            <h3>4.1 Shapefile 加载流程</h3>
+            <div class="data-flow">
+                <h4>数据流向</h4>
+                <p>用户选择文件 → JSZip 解压 → shp.js 解析 → 坐标转换 → OpenLayers 渲染 → IndexedDB 存储</p>
+            </div>
+            <ol>
+                <li><strong>文件选择</strong> - 用户通过文件选择器选择 .shp、.shx、.dbf 文件</li>
+                <li><strong>ZIP 解压</strong> - 如果是 .zip 文件，使用 JSZip 解压</li>
+                <li><strong>二进制解析</strong> - shp.js 解析 Shapefile 二进制格式</li>
+                <li><strong>坐标转换</strong> - 使用 Proj4js 将数据坐标系转换为地图投影</li>
+                <li><strong>要素创建</strong> - 创建 OpenLayers Feature 对象</li>
+                <li><strong>图层渲染</strong> - 添加到 VectorLayer 显示在地图上</li>
+                <li><strong>数据持久化</strong> - 序列化为 GeoJSON 存储到 IndexedDB</li>
+            </ol>
+
+            <h3>4.2 空间分析流程</h3>
+            <div class="data-flow">
+                <h4>分析流程</h4>
+                <p>选择数据源 → 获取要素 → 构建邻接表 → 计算指标 → 颜色映射 → 渲染结果 → 保存结果</p>
+            </div>
+            <ol>
+                <li><strong>数据源选择</strong> - 选择本地图层或 GeoServer 图层</li>
+                <li><strong>数据获取</strong> - 从本地缓存或 WFS 服务获取 GeoJSON 数据</li>
+                <li><strong>预处理</strong> - 提取线段坐标，构建线段列表</li>
+                <li><strong>邻接表构建</strong> - 计算线段相交关系（WASM 加速）</li>
+                <li><strong>指标计算</strong> - 计算连接度或整合度（WASM/WebGPU 加速）</li>
+                <li><strong>颜色映射</strong> - 根据数值范围映射到颜色渐变</li>
+                <li><strong>结果渲染</strong> - 创建分析结果图层，应用颜色样式</li>
+                <li><strong>结果保存</strong> - 保存到 IndexedDB，更新图层列表</li>
+            </ol>
+
+            <h3>4.3 存储架构</h3>
+            <table>
+                <tr>
+                    <th>存储类型</th>
+                    <th>存储内容</th>
+                    <th>数据格式</th>
+                    <th>容量限制</th>
+                </tr>
+                <tr>
+                    <td>LocalStorage</td>
+                    <td>用户配置、标注数据、GeoServer 配置</td>
+                    <td>JSON 字符串</td>
+                    <td>5-10 MB</td>
+                </tr>
+                <tr>
+                    <td>IndexedDB</td>
+                    <td>Shapefile 数据、分析结果</td>
+                    <td>GeoJSON + 元数据</td>
+                    <td>取决于磁盘空间</td>
+                </tr>
+                <tr>
+                    <td>内存</td>
+                    <td>运行时缓存、邻接表、计算结果</td>
+                    <td>JavaScript 对象</td>
+                    <td>取决于可用内存</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>5. 文件组织结构</h2>
+            <div class="file-tree">
+<span class="folder">kjjfmap_web1/</span>
+├── <span class="file">index.html</span>              <span class="comment"># 主页面入口</span>
+├── <span class="file">manual.html</span>             <span class="comment"># 用户手册</span>
+├── <span class="file">architecture.html</span>       <span class="comment"># 架构说明（本文档）</span>
+│
+├── <span class="folder">resources/</span>
+│   ├── <span class="folder">css/</span>                  <span class="comment"># 样式文件</span>
+│   │   ├── style_.css
+│   │   ├── layout.css
+│   │   ├── map.css
+│   │   ├── markers.css
+│   │   ├── popup.css
+│   │   └── settings.css
+│   │
+│   ├── <span class="folder">js/</span>                   <span class="comment"># JavaScript 模块</span>
+│   │   ├── <span class="file">config.js</span>         <span class="comment"># 全局配置和变量</span>
+│   │   ├── <span class="file">utils.js</span>          <span class="comment"># 工具函数</span>
+│   │   ├── <span class="file">map-core.js</span>       <span class="comment"># 地图核心初始化</span>
+│   │   ├── <span class="file">coordinate-utils.js</span> <span class="comment"># 坐标转换工具</span>
+│   │   │
+│   │   ├── <span class="file">shapefile-loader.js</span> <span class="comment"># Shapefile 加载</span>
+│   │   ├── <span class="file">shapefile-writer.js</span> <span class="comment"># Shapefile 导出</span>
+│   │   ├── <span class="file">layer-storage.js</span>  <span class="comment"># 图层数据存储</span>
+│   │   ├── <span class="file">segment-splitter.js</span> <span class="comment"># 线段分割处理</span>
+│   │   │
+│   │   ├── <span class="file">local-markers.js</span>  <span class="comment"># 本地标注管理</span>
+│   │   │
+│   │   ├── <span class="file">geoserver.js</span>      <span class="comment"># GeoServer 接口</span>
+│   │   ├── <span class="file">wms-layers.js</span>     <span class="comment"># WMS 图层控制</span>
+│   │   ├── <span class="file">settings.js</span>       <span class="comment"># 设置面板</span>
+│   │   │
+│   │   ├── <span class="file">spacial_analyse.js</span> <span class="comment"># 空间分析主控</span>
+│   │   ├── <span class="file">local-analysis.js</span> <span class="comment"># 本地数据分析</span>
+│   │   ├── <span class="file">connection.js</span>     <span class="comment"># 连接度算法</span>
+│   │   ├── <span class="file">integration.js</span>    <span class="comment"># 整合度算法</span>
+│   │   │
+│   │   ├── <span class="file">wasm-loader.js</span>    <span class="comment"># WASM 模块加载</span>
+│   │   ├── <span class="file">wasm-integration.js</span> <span class="comment"># WASM 接口封装</span>
+│   │   ├── <span class="file">webgpu-integration.js</span> <span class="comment"># WebGPU 接口</span>
+│   │   │
+│   │   └── <span class="file">main.js</span>           <span class="comment"># 程序入口</span>
+│   │
+│   ├── <span class="folder">lib/</span>                  <span class="comment"># 第三方库</span>
+│   │   ├── ol.js / ol.css        <span class="comment"># OpenLayers</span>
+│   │   ├── proj4.js              <span class="comment"># 坐标转换</span>
+│   │   ├── shp.js                <span class="comment"># Shapefile 解析</span>
+│   │   └── jszip.min.js          <span class="comment"># ZIP 解压</span>
+│   │
+│   └── <span class="folder">wasm/</span>                 <span class="comment"># WASM 编译输出</span>
+│       ├── spatial_analysis.js
+│       └── spatial_analysis.wasm
+│
+├── <span class="folder">wasm_modules/</span>           <span class="comment"># C++ 源码</span>
+│   ├── spatial_analysis.cpp
+│   ├── spatial_analysis.h
+│   ├── wasm_bindings.cpp
+│   └── build.sh
+│
+└── <span class="folder">test-server/</span>            <span class="comment"># 测试服务器（Node.js）</span>
+    ├── wms-server.js
+    └── package.json
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>6. 模块依赖关系</h2>
+
+            <h3>6.1 JS 文件加载顺序</h3>
+            <div class="dependency-graph">
+                <span class="dependency-item">config.js</span>
+                <span class="dependency-arrow">→</span>
+                <span class="dependency-item">utils.js</span>
+                <span class="dependency-arrow">→</span>
+                <span class="dependency-item">coordinate-utils.js</span>
+                <span class="dependency-arrow">→</span>
+                <span class="dependency-item">map-core.js</span>
+                <br><br>
+                <span class="dependency-item">map-core.js</span>
+                <span class="dependency-arrow">→</span>
+                <span class="dependency-item">wms-layers.js</span>
+                <span class="dependency-arrow">→</span>
+                <span class="dependency-item">geoserver.js</span>
+                <span class="dependency-arrow">→</span>
+                <span class="dependency-item">settings.js</span>
+                <br><br>
+                <span class="dependency-item">shapefile-loader.js</span>
+                <span class="dependency-arrow">↔</span>
+                <span class="dependency-item">layer-storage.js</span>
+                <br><br>
+                <span class="dependency-item">wasm-loader.js</span>
+                <span class="dependency-arrow">→</span>
+                <span class="dependency-item">connection.js</span>
+                <span class="dependency-arrow">→</span>
+                <span class="dependency-item">integration.js</span>
+            </div>
+
+            <h3>6.2 关键依赖说明</h3>
+            <table>
+                <tr>
+                    <th>模块</th>
+                    <th>依赖</th>
+                    <th>说明</th>
+                </tr>
+                <tr>
+                    <td>map-core.js</td>
+                    <td>config.js, utils.js</td>
+                    <td>需要全局配置和工具函数</td>
+                </tr>
+                <tr>
+                    <td>shapefile-loader.js</td>
+                    <td>layer-storage.js</td>
+                    <td>加载后需要持久化存储</td>
+                </tr>
+                <tr>
+                    <td>spacial_analyse.js</td>
+                    <td>connection.js, integration.js</td>
+                    <td>调用算法实现</td>
+                </tr>
+                <tr>
+                    <td>wasm-integration.js</td>
+                    <td>wasm-loader.js</td>
+                    <td>需要 WASM 模块先加载</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>7. 性能优化策略</h2>
+
+            <h3>7.1 计算加速</h3>
+            <div class="module-box">
+                <h4>WebAssembly 加速</h4>
+                <ul>
+                    <li>核心算法使用 C++ 实现，编译为 WASM</li>
+                    <li>相比 JavaScript 实现，性能提升 5-10 倍</li>
+                    <li>支持多线程计算（使用 pthread）</li>
+                </ul>
+            </div>
+
+            <div class="module-box">
+                <h4>WebGPU 加速</h4>
+                <ul>
+                    <li>整合度计算使用 GPU 并行计算</li>
+                    <li>利用 GPU 的数千个计算核心</li>
+                    <li>适合大规模数据（>1000 个要素）</li>
+                </ul>
+            </div>
+
+            <h3>7.2 渲染优化</h3>
+            <ul>
+                <li><strong>图层分层</strong> - 底图、数据图层、分析结果分层管理</li>
+                <li><strong>懒加载</strong> - 数据按需加载，减少初始加载时间</li>
+                <li><strong>缓存机制</strong> - 邻接表、计算结果缓存，避免重复计算</li>
+                <li><strong>增量更新</strong> - 只更新变化的要素，而非全量重绘</li>
+            </ul>
+
+            <h3>7.3 存储优化</h3>
+            <ul>
+                <li><strong>数据压缩</strong> - GeoJSON 数据压缩存储</li>
+                <li><strong>分块加载</strong> - 大数据集分块处理</li>
+                <li><strong>IndexedDB 索引</strong> - 建立索引加速查询</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>8. 安全设计</h2>
+
+            <h3>8.1 数据安全</h3>
+            <ul>
+                <li><strong>本地存储</strong> - 所有数据仅存储在浏览器本地</li>
+                <li><strong>无上传机制</strong> - 系统设计上不存在数据上传功能</li>
+                <li><strong>CORS 限制</strong> - 外部服务访问受同源策略限制</li>
+            </ul>
+
+            <h3>8.2 代码安全</h3>
+            <ul>
+                <li><strong>输入验证</strong> - 文件类型、大小、格式验证</li>
+                <li><strong>XSS 防护</strong> - 用户输入内容转义处理</li>
+                <li><strong>CSP 支持</strong> - 内容安全策略防止注入攻击</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>9. 扩展性设计</h2>
+
+            <h3>9.1 插件机制</h3>
+            <p>系统预留了以下扩展点：</p>
+            <ul>
+                <li><strong>新的分析算法</strong> - 可在 analysis/ 目录添加新算法模块</li>
+                <li><strong>新的数据源</strong> - 实现标准接口即可接入新数据源</li>
+                <li><strong>新的渲染样式</strong> - OpenLayers 样式系统支持自定义</li>
+            </ul>
+
+            <h3>9.2 配置化</h3>
+            <ul>
+                <li>地图初始位置、缩放级别可配置</li>
+                <li>GeoServer 地址可配置</li>
+                <li>WASM 线程数可配置</li>
+                <li>颜色映射方案可配置</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>10. 部署说明</h2>
+
+            <h3>10.1 静态部署</h3>
+            <p>由于采用纯前端架构，部署非常简单：</p>
+            <ol>
+                <li>将项目文件复制到任意 Web 服务器目录</li>
+                <li>配置 MIME 类型支持 .wasm 文件</li>
+                <li>可选：配置 HTTPS（WebGPU 需要安全上下文）</li>
+            </ol>
+
+            <h3>10.2 推荐的 Web 服务器配置</h3>
+            <pre>
+# Nginx 配置示例
+server {
+    listen 80;
+    server_name gis.example.com;
+    root /var/www/kjjfmap_web1;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # WASM 文件 MIME 类型
+    location ~ \.wasm$ {
+        add_header Content-Type application/wasm;
+    }
+
+    # 启用 Gzip 压缩
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript;
+}
+            </pre>
+        </div>
+
+        <div class="highlight-box">
+            <strong>架构设计原则：</strong>
+            <ul>
+                <li><strong>简洁性</strong> - 纯前端架构，无后端依赖</li>
+                <li><strong>性能优先</strong> - WASM/WebGPU 加速核心计算</li>
+                <li><strong>隐私保护</strong> - 数据本地存储，不上传服务器</li>
+                <li><strong>可扩展性</strong> - 模块化设计，易于功能扩展</li>
+                <li><strong>兼容性</strong> - 支持主流现代浏览器</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="index.html" class="back-link">返回主界面</a>
+            <a href="manual.html" class="back-link" style="margin-left: 10px;">用户手册</a>
+        </div>
+
+        <footer>
+            <p>WebGIS 空间分析系统 v1.0 | 架构文档</p>
+            <p>© 2024 合肥工业大学</p>
+        </footer>
+    </div>
+</body>
+</html>
