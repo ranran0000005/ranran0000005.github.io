@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <title>WebGIS开发-吴陶然</title>
+
+    <link rel="shortcut icon" href="../../map.ico">
+    <link rel="stylesheet" type="text/css" href="resources/css/style_.css">
+    <link rel="stylesheet" href="resources/css/popup.css">
+    <link rel="stylesheet" href="resources/css/seeting.css">
+
+    <!-- 确保地图容器有实际高度 -->
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #mapFrame {
+            width: 95%;
+            height: 600px;
+            margin: 5px;
+            border: 2px solid #000;
+            border-radius: 10px;
+        }
+
+        #container {
+            width: 100%;
+            height: 100%;
+        }
+
+        #loading {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="display: flex; align-items: center; justify-content: space-between; background:#005ce6;color:#fff;padding:10px 20px;font-size:18px;font-weight:bold; border-radius: 10px;">
+        <div>GIS开发</div>
+        <div>
+            <button class="right-button" onclick="Settting()">设置</button>
+        </div>
+    </div>
+
+    <div id="mapFrame">
+        <div id="container"></div>
+        <div id="loading">地图加载中...</div>
+    </div>
+
+    <div id="mapFrame3" style="width: 600px; height: 400px; margin: 10px;border: 0px solid #000;">
+        <!-- <button onclick="showMap()" style="margin-bottom: 5px; padding: 14px 28px; font-size: 18px; border-radius: 10px;">显示地图</button> -->
+        <button onclick="showAbout()" style="margin-bottom: 5px; padding: 14px 28px; font-size: 18px; border-radius: 10px;">关于</button>
+        <button onclick="location.href='../../'" style="margin-bottom: 5px; padding: 14px 28px; font-size: 18px; border-radius: 10px;">返回</button>
+	    <button onclick="location.href='./ArcGIS'" style="margin-bottom: 5px; padding: 14px 28px; font-size: 18px; border-radius: 10px;">ArcGIS目录</button>
+        <button onclick="location.href='./GeoServer'" style="margin-bottom: 5px; padding: 14px 28px; font-size: 18px; border-radius: 10px;">GeoServer目录</button>
+    </div>
+
+    <script src="resources/map.js"></script>
+</body>
+
+</html>

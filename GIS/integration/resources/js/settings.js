@@ -16,7 +16,7 @@ function showSettings() {
     const setting = document.createElement('div');
     setting.className = 'setting_';
 
-    setting.innerHTML = `<h3>图层设置</h3>` +
+    setting.innerHTML = `<h3>在线图层设置</h3>` +
                     `<div>实验功能，可能暂不可用</div>` +
                      `<div class="settings-section">` +
                      `  <h4>GeoServer 配置</h4>` +

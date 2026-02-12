@@ -1,0 +1,44 @@
+
+/* 添加弹出窗口样式 */
+.setting_ {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    background-color: #fff;
+    border: 2px solid #000;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+    text-align: center;
+    
+    }
+    .setting_-timer {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #666;
+    }
+    .setting_-close {
+    margin-top: 15px;
+    padding: 8px 16px;
+    background-color: #005ce6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    }
+
+    /* .toggle-label .text {
+        line-height: 30px;
+        font-size: 18px;
+    */
+        /*
+        用来阻止页面文字被选中，出现蓝色
+        可以将下面两行代码注释掉来查看区别
+        */
+    /*
+       -webkit-user-select: none;
+       user-select: none;
+    } */

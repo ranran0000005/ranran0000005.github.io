@@ -1,0 +1,30 @@
+
+/* 添加弹出窗口样式 */
+.popup_ {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    background-color: #fff;
+    border: 2px solid #000;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+    text-align: center;
+    }
+    .popup_-timer {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #666;
+    }
+    .popup_-close {
+    margin-top: 15px;
+    padding: 8px 16px;
+    background-color: #005ce6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    }

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoServer WMS 基础示例</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.4.0/ol.css">
+    <script src="https://cdn.jsdelivr.net/npm/ol@7.4.0/dist/ol.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+        .panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+            line-height: 1.4;
+            max-width: 320px;
+        }
+        .panel h3 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+        }
+        .panel a {
+            word-break: break-all;
+            color: #0077cc;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="panel">
+        <h3>GeoServer WMS</h3>
+        <div>服务地址：<a href="http://10.4.54.70:8080/geoserver/ne/wms" target="_blank">http://10.4.54.70:8080/geoserver/ne/wms</a></div>
+        <div>图层：ne:world</div>
+        <div>叠加层：GeoMap01:行政区划</div>
+    </div>
+
+    <script>
+        // WMS 源（以 4326 请求）
+        const wmsSource = new ol.source.TileWMS({
+            url: 'http://10.4.54.70:8080/geoserver/ne/wms',
+            params: {
+                LAYERS: 'ne:world',
+                VERSION: '1.1.0',
+                SRS: 'EPSG:4326',
+                TILED: true
+            },
+            serverType: 'geoserver'
+        });
+
+        // 行政区划 WMS（让服务端重投影为 4326，便于与底图一致）
+        const adminSource = new ol.source.TileWMS({
+            url: 'http://10.4.54.70:8080/geoserver/GeoMap01/wms',
+            params: {
+                LAYERS: 'GeoMap01:行政区划',
+                VERSION: '1.1.0',
+                SRS: 'EPSG:4326',
+                TILED: true
+            },
+            serverType: 'geoserver'
+        });
+
+        const map = new ol.Map({
+            target: 'map',
+            layers: [
+                // 底图方便确认视图范围
+                new ol.layer.Tile({ source: new ol.source.OSM() }),
+                // GeoServer WMS 覆盖层
+                new ol.layer.Tile({
+                    source: wmsSource,
+                    opacity: 0.85
+                }),
+                // 行政区划叠加
+                new ol.layer.Tile({
+                    source: adminSource,
+                    opacity: 0.65
+                })
+            ],
+            view: new ol.View({
+                projection: 'EPSG:4326',
+                center: [0, 20], // 世界范围，略偏北方便浏览
+                zoom: 2
+            })
+        });
+        // 添加比例尺；默认控件已启用，无需自定义 defaults
+        map.addControl(new ol.control.ScaleLine());
+
+        // 简单的瓦片加载错误日志，便于排查
+        wmsSource.on('tileloaderror', (evt) => {
+            console.error('WMS tile load error', evt);
+        });
+    </script>
+</body>
+</html>

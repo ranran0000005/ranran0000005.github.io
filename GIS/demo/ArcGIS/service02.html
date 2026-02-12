@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcGIS Server 02</title>
+    <link rel="stylesheet" href="esri3_20.css">
+    <style>
+        html, body, #map {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+    </style>
+    <script>
+        // 老版本 ArcGIS JS API 依赖 dojo 配置
+        var dojoConfig = {
+            parseOnLoad: true
+        };
+    </script>
+    <script src="arcgs3_20.js"></script>
+    <script>
+        var map;
+
+        function init() {
+            // 创建地图，不设置底图（避免网络问题）
+            map = new esri.Map("map", {
+                center: [0, 0],
+                zoom: 2
+            });
+
+            var mapServiceLayer = new esri.layers.ArcGISDynamicMapServiceLayer(
+                (function() {
+                    var defaultIP = "10.4.26.20";
+                    var ip = prompt("请输入ArcGIS Server的IP地址：", defaultIP) || defaultIP;
+                    var url = "http://" + ip + ":6080/arcgis/rest/services/server02_files/server02/MapServer";
+                    return url;
+                })(),
+                {
+                    id: "worldCitiesLayer",
+                    opacity: 0.8
+                }
+            );
+
+            map.addLayer(mapServiceLayer);
+
+            dojo.connect(mapServiceLayer, "onLoad", function () {
+                console.log("地图服务加载成功");
+                // 服务加载成功后，根据服务的范围设置地图视图
+                if (mapServiceLayer.fullExtent) {
+                    map.setExtent(mapServiceLayer.fullExtent);
+                }
+            });
+
+            dojo.connect(mapServiceLayer, "onError", function (error) {
+                console.error("地图服务加载失败:", error);
+                alert("地图服务加载失败，请检查服务地址是否正确");
+            });
+        }
+
+        dojo.require("esri.map");
+        dojo.require("esri.layers.ArcGISDynamicMapServiceLayer");
+        dojo.addOnLoad(init);
+    </script>
+</head>
+<body>
+    <h3>ArcGIS Server 02</h3>
+    <div id="map"></div>
+</body>
+</html>
+

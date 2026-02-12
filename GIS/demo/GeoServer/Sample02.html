@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoServer + 百度底图示例 (已修正偏移)</title>
+    <link rel="stylesheet" href="resources/ol.css">
+    <script src="https://cdn.jsdelivr.net/npm/proj4@2.9.0/dist/proj4.js"></script>
+    <script src="resources/ol.js"></script>
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        #map { width: 100%; height: 100vh; }
+        .panel {
+            position: absolute; top: 10px; left: 10px; background: rgba(255, 255, 255, 0.92);
+            padding: 12px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+            line-height: 1.4; max-width: 320px;
+        }
+        .panel h3 { margin: 0 0 8px 0; font-size: 16px; }
+        .panel a { word-break: break-all; color: #0077cc; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="panel">
+        <h3>GeoServer WMS</h3>
+        <div>叠加层：WebGIS:China_boundary</div>
+        <div>底图：百度地图 (AK 已配置)</div>
+        <div style="margin-top: 10px; font-size: 12px; color: #555;">
+            <b>核心思路:</b>
+            <ol style="padding-left: 20px; margin: 5px 0;">
+                <li>使用 proj4 定义百度地图投影 (BD-09)。</li>
+                <li>将地图视图 (View) 的投影设为百度投影。</li>
+                <li>WMS 图层指定其原始投影 (EPSG:4326)。</li>
+                <li>OpenLayers 会自动将 WMS 图层重投影到视图的百度投影上，实现完美对齐。</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // ===========================================================================================
+        // 1. 定义百度地图投影 (BD-09 Mercator)
+        //    这是解决偏移问题的关键。通过定义一个自定义投影，我们告诉OpenLayers如何正确处理百度坐标系。
+        // ===========================================================================================
+        proj4.defs('BD-09', '+proj=merc +a=6378206 +b=6356584.314245179 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs');
+        ol.proj.proj4.register(proj4);
+        const baiduProjection = ol.proj.get('BD-09');
+
+        const resolutions = [];
+        for (let i = 0; i <= 18; i++) {
+            resolutions[i] = Math.pow(2, 18 - i);
+        }
+
+        const baiduTileGrid = new ol.tilegrid.TileGrid({
+            origin: [0, 0],
+            resolutions: resolutions,
+            tileSize: 256
+        });
+
+        // ===========================================================================================
+        // 2. 创建百度地图源，并明确指定其投影为我们刚定义的百度投影
+        // ===========================================================================================
+        const baiduSource = new ol.source.XYZ({
+            projection: baiduProjection,
+            tileGrid: baiduTileGrid,
+            tileUrlFunction: function(tileCoord) {
+                if (!tileCoord) return '';
+                const z = tileCoord[0];
+                const x = tileCoord[1];
+                const y = -tileCoord[2] - 1;
+                return `http://online3.map.bdimg.com/onlinelabel/?qt=tile&x=${x}&y=${y}&z=${z}&styles=pl&scaler=1&p=1`;
+            },
+            attributions: '&copy; 百度地图'
+        });
+
+        const baiduLayer = new ol.layer.Tile({ source: baiduSource });
+
+        // ===========================================================================================
+        // 3. 创建WMS源，并明确指定其数据源的原始投影 (EPSG:4326)
+        //    我们不需要手动转换，OpenLayers会处理这一切。
+        // ===========================================================================================
+        const boundarySource = new ol.source.ImageWMS({
+            url: 'http://gis.kjjfpt.top/geoserver/WebGIS/wms',
+            params: {
+                'LAYERS': 'WebGIS:China_boundary',
+                'VERSION': '1.1.0',
+                'TRANSPARENT': true
+            },
+            serverType: 'geoserver',
+            ratio: 1,
+            projection: 'EPSG:4326' // 明确指定WMS源的投影是WGS84
+        });
+
+        const boundaryLayer = new ol.layer.Image({ source: boundarySource, opacity: 0.8 });
+
+        // ===========================================================================================
+        // 4. 创建视图(View)，并将其基础投影设置为百度投影
+        //    这是最重要的一步。视图和底图使用相同的投影，其他图层会自动向这个投影对齐。
+        // ===========================================================================================
+        const view = new ol.View({
+            projection: baiduProjection, // 使用百度投影作为视图的基础
+            center: ol.proj.fromLonLat([104.299, 31.769], baiduProjection), // 将WGS84中心点坐标转换到百度投影
+            zoom: 5,
+            maxZoom: 18
+        });
+
+        const map = new ol.Map({
+            target: 'map',
+            layers: [baiduLayer, boundaryLayer],
+            view: view
+        });
+
+        map.addControl(new ol.control.ScaleLine());
+
+        // 错误处理
+        baiduSource.on('tileloaderror', (evt) => { console.error('Baidu tile load error', evt); });
+        boundarySource.on('tileloaderror', (evt) => { console.error('WMS tile load error', evt); });
+    </script>
+</body>
+</html>
