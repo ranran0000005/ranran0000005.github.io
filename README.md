@@ -2,6 +2,7 @@
 
 ## 简介
 #### 这是一个纯前端WebGIS项目（当然还夹带了大量私货），地址是https://kjjfpt.top/GIS/integration
+#### 网站根目录是https://kjjfpt.top
 
 ## 常见问题解答
 ### WebGPU不可用，提示浏览器版本低或无法获取图形适配器，可能原因：
