@@ -11,11 +11,13 @@ function showSettings() {
         return;
     }
 
+
     // 创建设置元素
     const setting = document.createElement('div');
     setting.className = 'setting_';
 
     setting.innerHTML = `<h3>图层设置</h3>` +
+                    `<div>实验功能，可能暂不可用</div>` +
                      `<div class="settings-section">` +
                      `  <h4>GeoServer 配置</h4>` +
                      `  <label class="settings-label">服务器地址:</label>` +
@@ -76,9 +78,9 @@ function showSettings() {
         addLayerBtn.disabled = true;
 
         try {
-            // 添加10秒超时
+            // 添加20秒超时
             const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('请求超时(10秒)')), 10000);
+                setTimeout(() => reject(new Error('请求超时(20秒)')), 20000);
             });
             const layers = await Promise.race([fetchLayersFromGeoServer(workspace), timeoutPromise]);
 
