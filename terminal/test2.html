@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>TerminalJS 示例</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@santacrc/terminaljs/terminal.css">
+</head>
+<body>
+    <pre id="asciiText">
+  _____         _      _           
+ |_   _|       | |    (_)          
+   | | ___ _ __| |__   _ _ __ ___  
+   | |/ _ \ '__| '_ \ | | '_ ` _ \ 
+   | |  __/ |  | | | || | | | | | |
+   \_/\___|_|  |_| |_||_|_| |_| |_|
+    </pre>
+    
+    <pre id="instructions"></pre>
+    <pre id="output"></pre>
+    
+    <div id="prompt">
+        <span id="command-input" contenteditable="true"></span><span id="cursor" class="blink"></span>
+    </div>
+
+    <div id="interlaced"></div>  
+    <div id="glare"></div>
+
+    <!-- 加载库文件（无版本号，自动获取最新） -->
+    <script src="https://cdn.jsdelivr.net/npm/@santacrc/terminaljs/functions.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@santacrc/terminaljs/terminal.js"></script>
+    
+    <script>
+        // 等待库加载完成
+        window.addEventListener('load', function() {
+            console.log('TerminalJS 版本:', typeof commands !== 'undefined' ? '已加载' : '加载失败');
+            
+            if (typeof commands !== 'undefined') {
+                // 添加自定义命令
+                commands['hello'] = {
+                    description: 'Say hello',
+                    function: function() {
+                        return 'Hello, world!';
+                    }
+                };
+
+                commands['date'] = {
+                    description: 'Show current date',
+                    function: function() {
+                        return new Date().toString();
+                    }
+                };
+
+                // 添加一个彩蛋命令
+                commands['fortune'] = {
+                    description: 'Get a random fortune',
+                    function: function() {
+                        const fortunes = [
+                            'You will have a great day!',
+                            'The answer is 42.',
+                            'Keep calm and code on.',
+                            'Linux is everywhere!',
+                            'sudo make me a sandwich'
+                        ];
+                        return fortunes[Math.floor(Math.random() * fortunes.length)];
+                    }
+                };
+                
+                console.log('✅ 终端初始化成功，可用命令：', Object.keys(commands));
+            } else {
+                console.error('❌ commands 对象未找到，库文件加载失败');
+            }
+        });
+    </script>
+</body>
+</html>
