@@ -45,6 +45,17 @@
         <div id="loading">地图加载中...</div>
     </div>
 
+    <!-- 关闭确认对话框 -->
+    <div id="closeConfirmOverlay" class="close-confirm-overlay"></div>
+    <div id="closeConfirmDialog" class="close-confirm-dialog">
+        <h3>确定要关闭吗？</h3>
+        <p>你即将离开此页面，未保存的数据可能会丢失</p>
+        <div class="close-confirm-dialog-buttons">
+            <button class="btn-cancel" onclick="cancelClose()">取消</button>
+            <!-- <button class="btn-confirm" onclick="confirmClose()">确定关闭</button> -->
+        </div>
+    </div>
+
     <div class="bottom-actions">
         <button onclick="showAbout()" class="action-button">关于</button>
         <button onclick="showSpatialAnalysisDialog()" class="action-button">空间分析</button>
@@ -79,11 +90,35 @@
     <script src="resources/js/spacial_analyse.js"></script>
     <script src="resources/js/main.js"></script>
     <script>
+        let isConfirmingClose = false;
+
+        // 处理页面关闭事件
         window.addEventListener('beforeunload', function(e) {
-            e.preventDefault();
-            e.returnValue = '';
-            return '';
+            if (!isConfirmingClose) {
+                // 显示自定义对话框
+                const overlay = document.getElementById('closeConfirmOverlay');
+                const dialog = document.getElementById('closeConfirmDialog');
+                overlay.classList.add('show');
+                dialog.classList.add('show');
+                
+                // 最后阻止页面关闭
+                e.preventDefault();
+            }
         });
+
+        // 取消关闭
+        function cancelClose() {
+            const overlay = document.getElementById('closeConfirmOverlay');
+            const dialog = document.getElementById('closeConfirmDialog');
+            overlay.classList.remove('show');
+            dialog.classList.remove('show');
+        }
+
+        // 确认关闭
+        function confirmClose() {
+            isConfirmingClose = true;
+            window.close();
+        }
     </script>
 </body>
 
