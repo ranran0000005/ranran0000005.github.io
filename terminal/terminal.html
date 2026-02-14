@@ -4,13 +4,22 @@
     <meta charset="UTF-8">
     <title>TerminalJS 示例</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@santacrc/terminaljs/terminal.css">
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+        }
+        .loading-pyodide {
+            color: #ffd700;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <pre id="asciiText">
    ____   ___   ____  
-  / ___| |_ _| / ___| 
- | |  _   | |  \___ \ 
- | |_| |  | |   ___| |
+  / ___| |_ _| / ___|   powered by TerminalJS
+ | |  _   | |  \___ \
+ | |_| |  | |   ___| |  ptyhon is powered by pyodide
   \____| |___| |____/ 
     </pre>
     
@@ -25,15 +34,91 @@
     <div id="glare"></div>
 
     <!-- 加载本地库文件 -->
+    <script defer src="https://cdn.jsdelivr.net/pyodide/v0.24.0/full/pyodide.js"></script>
     <script src="./functions.js"></script>
     <script src="./terminal.js"></script>
     
     <script>
+        let pyodideReady = false;
+        
+        // 初始化 Pyodide
+        async function initPyodide() {
+            try {
+                console.log('正在加载 Pyodide...');
+                window.pyodide = await loadPyodide();
+                pyodideReady = true;
+                console.log('✅ Pyodide 加载成功');
+                
+                // 设置输出重定向以捕获print()输出
+                await window.pyodide.runPythonAsync(`
+import sys
+from io import StringIO
+
+class OutputCapture:
+    def __init__(self):
+        self.buffer = StringIO()
+    
+    def write(self, text):
+        self.buffer.write(text)
+        return len(text)
+    
+    def flush(self):
+        pass
+    
+    def getvalue(self):
+        return self.buffer.getvalue()
+    
+    def clear(self):
+        self.buffer = StringIO()
+
+_output = OutputCapture()
+sys.stdout = _output
+`);
+                
+                // 更新输出显示Pyodide已就绪
+                const output = document.getElementById('output');
+                output.innerHTML += '<br><span class="loading-pyodide">✓ Python 环境已就绪</span><br>';
+            } catch (err) {
+                console.error('❌ Pyodide 加载失败:', err);
+            }
+        }
+        
+        // 执行Python代码并捕获输出
+        async function runPython(code) {
+            if (!pyodideReady) {
+                return '⚠️ Python 环境尚未加载，请稍候...';
+            }
+            try {
+                await window.pyodide.runPythonAsync(code);
+                // 获取捕获的输出
+                const result = window.pyodide.globals.get('_output').getvalue();
+                // 清空缓冲区以供下次使用
+                window.pyodide.runPythonAsync('_output.clear()');
+                return result || '(执行完成)';
+            } catch (err) {
+                return `❌ Python 错误: ${err.message}`;
+            }
+        }
+        
         // 等待库加载完成
         window.addEventListener('load', function() {
             console.log('TerminalJS 版本:', typeof commands !== 'undefined' ? '已加载' : '加载失败');
             
             if (typeof commands !== 'undefined') {
+                // 添加Python命令 - 进入REPL模式
+                commands['python'] = {
+                    description: 'Enter Python REPL mode (exit() to quit)',
+                    function: function() {
+                        if (!pyodideReady) {
+                            return '⚠️ Python 环境尚未加载，请稍候...';
+                        }
+                        pythonREPLMode = true;
+                        pythonMultilineBuffer = '';
+                        return '进入 Python REPL 模式（输入 exit() 或 quit() 退出）\n';
+                    },
+                    hasArgs: false,
+                };
+                
                 // 添加自定义命令
                 commands['hello'] = {
                     description: 'Say hello',
@@ -68,6 +153,9 @@
             } else {
                 console.error('❌ commands 对象未找到，库文件加载失败');
             }
+            
+            // 初始化Pyodide
+            initPyodide();
         });
     </script>
 </body>
