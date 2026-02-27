@@ -33,10 +33,10 @@
 
     <!-- 视频播放器 -->
     <video id="movie" controls preload="metadata">
-        <source src="Treasures_of_the_Snow/Treasures_of_the_Snow.mp4" type="video/mp4">
+        <source src="Treasures_of_the_Snow/Treasures_of_the_Snow0.mp4" type="video/mp4">
         <!-- 如果浏览器支持 WebVTT，可以改用 .vtt 文件。此处为 .srt，仅作示例，某些浏览器可直接识别。 -->
-        <track kind="subtitles" label="English" srclang="en" src="Treasures_of_the_Snow/Treasures_of_the_Snow.srt">
-        <track kind="subtitles" label="中文" srclang="zh" src="Treasures_of_the_Snow/Treasures_of_the_Snow_cn.srt">
+        <track kind="subtitles" label="English" srclang="en" src="Treasures_of_the_Snow/Treasures_of_the_Snow.vtt">
+        <track kind="subtitles" label="中文" srclang="zh" src="Treasures_of_the_Snow/Treasures_of_the_Snow_cn.vtt">
         您的浏览器不支持 HTML5 视频。
     </video>
 
@@ -45,31 +45,177 @@
         <a href="Treasures_of_the_Snow/info.txt" target="_blank">点击查看 info.txt</a>
     </div>
 
+    <!-- 选集控件（可添加/切换分段视频） -->
+    <div id="episode-container" style="margin-top:0.8rem;">
+        <label for="episodeSelect">选集：</label>
+        <select id="episodeSelect"></select>
+        <button id="addEpisodeBtn">添加选集</button>
+    </div>
+
     <script>
-    // HTML5 video prefers WebVTT; some browsers don\'t natively handle .srt
-    // This small helper fetches any .srt track, converts it to WebVTT,
-    // and rewrites the track.src to a Blob URL.
-    document.addEventListener('DOMContentLoaded', () => {
+    // 处理字幕（支持 .srt 转 .vtt）、选集管理，并确保全屏时字幕可见
+    document.addEventListener('DOMContentLoaded', async () => {
         const video = document.getElementById('movie');
         if (!video) return;
-        const tracks = video.querySelectorAll('track');
-        tracks.forEach(track => {
-            const src = track.getAttribute('src');
-            if (src && src.toLowerCase().endsWith('.srt')) {
-                fetch(src)
-                    .then(res => res.text())
-                    .then(text => {
-                        // convert timing commas to dots and add VTT header
-                        let vtt = 'WEBVTT\n\n' +
-                            text
-                                .replace(/\r\n/g, '\n')
-                                .replace(/(\d+:\d+:\d+),(\d+)/g, '$1.$2');
-                        const blob = new Blob([vtt], { type: 'text/vtt' });
-                        track.src = URL.createObjectURL(blob);
-                    })
-                    .catch(err => console.warn('Failed to load subtitles', err));
+
+        // helper: convert .srt text to WebVTT blob URL
+        async function srtToVttBlobUrl(url) {
+            const res = await fetch(url);
+            const text = await res.text();
+            const vtt = 'WEBVTT\n\n' + text.replace(/\r\n/g,'\n').replace(/(\d+:\d+:\d+),(\d+)/g, '$1.$2');
+            return URL.createObjectURL(new Blob([vtt], { type: 'text/vtt' }));
+        }
+
+        // load tracks array (paths) into <track> elements on the video
+        async function loadTracks(trackPaths) {
+            // remove existing tracks
+            const existing = video.querySelectorAll('track');
+            existing.forEach(t => t.remove());
+
+            for (let i = 0; i < trackPaths.length; i++) {
+                const src = trackPaths[i];
+                if (!src) continue;
+                const trackEl = document.createElement('track');
+                trackEl.kind = 'subtitles';
+                trackEl.label = src.split('/').pop();
+                // handle .srt by converting to vtt on the fly
+                if (src.toLowerCase().endsWith('.srt')) {
+                    try {
+                        trackEl.src = await srtToVttBlobUrl(src);
+                    } catch (e) {
+                        console.warn('无法加载 srt:', src, e);
+                        continue;
+                    }
+                } else {
+                    // assume .vtt or other supported format
+                    trackEl.src = src;
+                }
+                video.appendChild(trackEl);
             }
+
+            // ensure tracks are shown when available
+            setTimeout(() => {
+                for (let i = 0; i < video.textTracks.length; i++) {
+                    try { video.textTracks[i].mode = 'showing'; } catch(e){}
+                }
+            }, 200);
+        }
+
+        // episodes stored in-memory only (no localStorage)
+        let episodes = [];
+
+        // populate select UI
+        const select = document.getElementById('episodeSelect');
+        function populateSelect() {
+            select.innerHTML = '';
+            episodes.forEach((ep, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = ep.label;
+                select.appendChild(opt);
+            });
+        }
+
+        async function loadEpisode(index) {
+            const ep = episodes[index];
+            if (!ep) return;
+            // update source
+            const sourceEl = video.querySelector('source');
+            if (sourceEl) sourceEl.src = ep.video;
+            // reload video element so new sources/tracks take effect
+            await loadTracks(ep.tracks || []);
+            video.load();
+            // try to keep subtitles visible
+            setTimeout(() => {
+                for (let i = 0; i < video.textTracks.length; i++) try { video.textTracks[i].mode = 'showing'; } catch(e){}
+            }, 300);
+        }
+
+        // wire up add button
+        document.getElementById('addEpisodeBtn').addEventListener('click', () => {
+            const videoPath = prompt('请输入视频文件路径或 URL，例如 Treasures_of_the_Snow/part1.mp4');
+            if (!videoPath) return;
+            const tracksInput = prompt('请输入字幕文件路径（可用逗号分隔多个），支持 .vtt 或 .srt，例如 Treasures_of_the_Snow/part1.vtt');
+            const tracks = tracksInput ? tracksInput.split(',').map(s=>s.trim()).filter(Boolean) : [];
+            const label = prompt('为该选集输入名称（例如 第1集），留空则使用文件名', videoPath.split('/').pop()) || videoPath.split('/').pop();
+            episodes.push({ label, video: videoPath, tracks });
+            populateSelect();
+            select.value = episodes.length - 1;
+            loadEpisode(episodes.length - 1);
         });
+
+        // change handler
+        select.addEventListener('change', () => { loadEpisode(parseInt(select.value,10)); });
+
+        // ensure subtitles are visible when entering fullscreen (various vendor events)
+        function ensureSubtitlesOn() {
+            try { for (let i = 0; i < video.textTracks.length; i++) video.textTracks[i].mode = 'showing'; } catch(e){}
+        }
+        ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange'].forEach(ev => document.addEventListener(ev, ensureSubtitlesOn));
+
+        // 自动发现分段视频与对应字幕（按命名规则 Treasures_of_the_Snow0.mp4, ...）
+        const initialEpisodes = [];
+
+        // small helper: check if a URL exists (try HEAD, fallback to GET range)
+        async function urlExists(url) {
+            try {
+                let res = await fetch(url, { method: 'HEAD' });
+                if (res && res.ok) return true;
+            } catch (e) { }
+            try {
+                const res2 = await fetch(url, { method: 'GET', headers: { Range: 'bytes=0-0' } });
+                return res2 && (res2.status === 206 || res2.status === 200);
+            } catch (e) { return false; }
+        }
+
+        // discover numbered video segments and per-segment subtitles
+        async function discoverSegments(baseName, dir) {
+            const episodes = [];
+            // try index 0..99
+            for (let i = 0; i < 100; i++) {
+                const v = `${dir}/${baseName}${i}.mp4`;
+                if (!(await urlExists(v))) break;
+                // look for per-segment subtitle files (.vtt preferred, then .srt)
+                const trackCandidates = [];
+                const enVtt = `${dir}/${baseName}${i}.vtt`;
+                const enSrt = `${dir}/${baseName}${i}.srt`;
+                const cnVtt = `${dir}/${baseName}_cn${i}.vtt`;
+                const cnSrt = `${dir}/${baseName}_cn${i}.srt`;
+                if (await urlExists(enVtt)) trackCandidates.push(enVtt);
+                else if (await urlExists(enSrt)) trackCandidates.push(enSrt);
+                if (await urlExists(cnVtt)) trackCandidates.push(cnVtt);
+                else if (await urlExists(cnSrt)) trackCandidates.push(cnSrt);
+
+                episodes.push({ label: `第${i+1}段`, video: v, tracks: trackCandidates });
+            }
+            return episodes;
+        }
+
+        // try to auto-discover in Treasures_of_the_Snow folder
+        const discovered = await discoverSegments('Treasures_of_the_Snow', 'Treasures_of_the_Snow');
+        if (discovered && discovered.length > 0) {
+            initialEpisodes.push(...discovered);
+        }
+
+        // initialize in-memory episodes from discovered segments only (no fallback "original/full")
+        episodes = initialEpisodes.slice();
+
+        // global-splitting is disabled per user request (we rely on per-segment .vtt/.srt files)
+        async function trySplitGlobalSubtitleIfPresent() { return; }
+        await trySplitGlobalSubtitleIfPresent();
+
+        populateSelect();
+        // if episodes discovered, enable selector and load first; otherwise disable selector
+        const addBtn = document.getElementById('addEpisodeBtn');
+        if (episodes.length > 0) {
+            select.disabled = false;
+            addBtn.disabled = false;
+            select.value = 0;
+            loadEpisode(0);
+        } else {
+            select.disabled = true;
+            addBtn.disabled = false;
+        }
     });
     </script>
 </body>
