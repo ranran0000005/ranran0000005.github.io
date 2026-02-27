@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>Treasures of the Snow</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #222;
+            color: #eee;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        h1 {
+            margin-bottom: 0.5rem;
+        }
+
+        video {
+            max-width: 100%;
+            box-shadow: 0 0 10px rgba(0,0,0,0.7);
+        }
+
+        .info-link {
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>《雪中宝藏》 / Treasures of the Snow</h1>
+
+    <!-- 视频播放器 -->
+    <video id="movie" controls preload="metadata">
+        <source src="Treasures_of_the_Snow/Treasures_of_the_Snow.mp4" type="video/mp4">
+        <!-- 如果浏览器支持 WebVTT，可以改用 .vtt 文件。此处为 .srt，仅作示例，某些浏览器可直接识别。 -->
+        <track kind="subtitles" label="English" srclang="en" src="Treasures_of_the_Snow/Treasures_of_the_Snow.srt">
+        <track kind="subtitles" label="中文" srclang="zh" src="Treasures_of_the_Snow/Treasures_of_the_Snow_cn.srt">
+        您的浏览器不支持 HTML5 视频。
+    </video>
+
+    <!-- 查看信息文件 -->
+    <div class="info-link">
+        <a href="Treasures_of_the_Snow/info.txt" target="_blank">点击查看 info.txt</a>
+    </div>
+
+    <script>
+    // HTML5 video prefers WebVTT; some browsers don\'t natively handle .srt
+    // This small helper fetches any .srt track, converts it to WebVTT,
+    // and rewrites the track.src to a Blob URL.
+    document.addEventListener('DOMContentLoaded', () => {
+        const video = document.getElementById('movie');
+        if (!video) return;
+        const tracks = video.querySelectorAll('track');
+        tracks.forEach(track => {
+            const src = track.getAttribute('src');
+            if (src && src.toLowerCase().endsWith('.srt')) {
+                fetch(src)
+                    .then(res => res.text())
+                    .then(text => {
+                        // convert timing commas to dots and add VTT header
+                        let vtt = 'WEBVTT\n\n' +
+                            text
+                                .replace(/\r\n/g, '\n')
+                                .replace(/(\d+:\d+:\d+),(\d+)/g, '$1.$2');
+                        const blob = new Blob([vtt], { type: 'text/vtt' });
+                        track.src = URL.createObjectURL(blob);
+                    })
+                    .catch(err => console.warn('Failed to load subtitles', err));
+            }
+        });
+    });
+    </script>
+</body>
+</html>
