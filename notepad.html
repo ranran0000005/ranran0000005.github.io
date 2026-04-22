@@ -193,6 +193,7 @@
             <button class="btn btn-save" id="saveBtn">💿 保存到缓存</button>
             <button class="btn" id="loadBtn">📂 从缓存加载</button>
             <button class="btn" id="clearEditorBtn">🗑️ 清空编辑器</button>
+            <button class="btn" id="downloadBtn">📥 下载为TXT</button>
         </div>
         
         <hr>
@@ -217,6 +218,7 @@
             const loadBtn = document.getElementById("loadBtn");
             const clearEditorBtn = document.getElementById("clearEditorBtn");
             const clearCacheBtn = document.getElementById("clearCacheBtn");
+            const downloadBtn = document.getElementById("downloadBtn");
             const cacheMessage = document.getElementById("cacheMessage");
             const wordCountDisplay = document.getElementById("wordCountDisplay");
 
@@ -295,6 +297,20 @@
                 }
             }
 
+            // --- 下载为TXT文件 ---
+            function downloadAsTxt() {
+                const text = textarea.value;
+                const blob = new Blob([text], {type: 'text/plain'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '网页笔记.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
             // --- 初始化: 页面加载时自动从缓存读取，并显示在文本框---
             function initializeNotepad() {
                 // 尝试加载缓存内容，如果存在就填充；否则文本框为空，提示新建
@@ -360,6 +376,11 @@
             // 清除缓存按钮 (删除localStorage中的数据，编辑器内容保留不变)
             clearCacheBtn.addEventListener('click', function() {
                 clearCache();
+            });
+
+            // 下载按钮: 下载当前文本为TXT文件
+            downloadBtn.addEventListener('click', function() {
+                downloadAsTxt();
             });
 
             // 额外: 如果用户粘贴/拖拽文本, 字数统计已经通过input更新, 自动保存也工作。
