@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>飞行棋 · Flying Chess</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%232f6fe0'/%3E%3Cpath d='M9 17l12-7-4 12-3-5z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg0:#efe7d5; --bg1:#e7dcc3;
+    --board:#f4ead8; --board-line:#c9b189;
+    --ink:#3a2f28; --ink-soft:#6b5b4e;
+    --paper:#fffdf7;
+    --panel:#fbf5e8;
+    --shadow:0 14px 34px rgba(80,60,30,.18);
+    --red:#e03a24; --yellow:#f0b02e; --blue:#2f6fe0; --green:#2e9e4f;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #fbf4e4 0%, transparent 60%),
+      linear-gradient(160deg, var(--bg0), var(--bg1));
+    background-attachment:fixed;
+    display:flex; justify-content:center; align-items:center;
+    padding:20px; min-height:100%;
+  }
+  .game{
+    width:100%; max-width:1180px;
+    display:flex; gap:22px; align-items:stretch; justify-content:center;
+    flex-wrap:wrap;
+  }
+  /* ===== 棋盘 ===== */
+  .board-wrap{
+    flex:0 1 640px; min-width:320px;
+    aspect-ratio:1/1;
+    background:linear-gradient(150deg,#f7eeda,#efdfc0);
+    border:2px solid #d8c79e; border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:10px; position:relative;
+  }
+  #board{display:block;width:100%;height:100%;border-radius:12px}
+
+  /* ===== 侧栏 ===== */
+  .panel{
+    flex:1 1 300px; max-width:420px; min-width:280px;
+    background:var(--panel);
+    border:1px solid #e6d9bd; border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:18px 20px 20px;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .turn-banner{
+    display:flex; align-items:center; gap:12px;
+    padding:12px 14px; border-radius:12px; color:#fff;
+    box-shadow:0 6px 14px rgba(0,0,0,.15);
+    transition:background .2s;
+  }
+  .turn-banner .disc{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;flex:none}
+  .turn-banner .disc svg{display:block}
+  .turn-banner .t-label{font-size:12px;opacity:.85;letter-spacing:.05em}
+  .turn-banner .t-name{font-size:20px;font-weight:800;line-height:1.1}
+
+  .dice-block{display:flex;align-items:center;gap:16px}
+  .die{
+    width:92px;height:92px;flex:none;
+    background:#fff; border-radius:14px;
+    border:3px solid #e6d9bd;
+    box-shadow:0 8px 16px rgba(80,60,30,.15);
+    display:grid; place-items:center;
+    position:relative;
+  }
+  .die.rolling{animation:shake .12s infinite}
+  @keyframes shake{0%{transform:rotate(-6deg)}100%{transform:rotate(6deg)}}
+  .dice-meta{display:flex;flex-direction:column;gap:4px}
+  #rollBtn{
+    border:none; cursor:pointer;
+    padding:12px 18px; border-radius:12px;
+    background:var(--ink); color:#fffdf6;
+    font-size:16px; font-weight:700; letter-spacing:.04em;
+    box-shadow:0 6px 14px rgba(58,47,40,.28);
+    transition:transform .08s, box-shadow .2s, opacity .2s;
+  }
+  #rollBtn:hover{transform:translateY(-2px);box-shadow:0 9px 18px rgba(58,47,40,.3)}
+  #rollBtn:active{transform:translateY(0)}
+  #rollBtn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+  .hint{font-size:13px;color:var(--ink-soft);line-height:1.5;min-height:40px}
+
+  .players{display:flex;flex-direction:column;gap:8px}
+  .prow{
+    display:flex;align-items:center;gap:10px;
+    padding:8px 10px; border-radius:10px;
+    background:#fffdf6; border:1px solid #ece0c6;
+  }
+  .prow.active{box-shadow:inset 0 0 0 2px currentColor}
+  .pdot{width:16px;height:16px;border-radius:50%;flex:none;border:2px solid rgba(0,0,0,.12)}
+  .pname{font-weight:700;font-size:14px;flex:1}
+  .pstat{font-size:12px;color:var(--ink-soft)}
+  .pstat b{color:var(--ink)}
+
+  .controls{display:flex;gap:10px;margin-top:auto}
+  .ghost-btn{
+    flex:1; border:1px solid #d8c79e; background:#fffdf6;
+    padding:10px; border-radius:10px; cursor:pointer;
+    font-size:14px; font-weight:600; color:var(--ink);
+    transition:background .15s;
+  }
+  .ghost-btn:hover{background:#f6edda}
+
+  .rules{
+    font-size:12.5px; color:var(--ink-soft); line-height:1.6;
+    border-top:1px dashed #e0d3b4; padding-top:10px;
+  }
+  .rules summary{cursor:pointer;font-weight:700;color:var(--ink);font-size:13px}
+  .rules ul{margin:6px 0 0 18px}
+
+  /* ===== 配置遮罩 ===== */
+  .overlay{
+    position:fixed; inset:0; z-index:50;
+    background:rgba(46,40,34,.55); backdrop-filter:blur(4px);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .overlay.hidden{display:none}
+  .modal{
+    width:min(440px,92vw); background:var(--paper);
+    border-radius:20px; padding:26px 26px 22px;
+    box-shadow:0 30px 60px rgba(0,0,0,.3);
+  }
+  .modal h1{font-size:26px;font-weight:900;letter-spacing:.02em}
+  .modal .sub{color:var(--ink-soft);font-size:13px;margin:4px 0 18px}
+  .field{margin-bottom:16px}
+  .field .lab{font-size:13px;font-weight:700;margin-bottom:8px;color:var(--ink-soft)}
+  .seg{display:flex;gap:8px}
+  .seg button{
+    flex:1; padding:10px 0; border-radius:10px; cursor:pointer;
+    background:#f1e7d0; border:1px solid transparent; font-size:15px; font-weight:700; color:var(--ink);
+  }
+  .seg button.on{background:var(--ink); color:#fffdf6}
+  .ppl{display:flex;flex-direction:column;gap:8px}
+  .ppl-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:#fffdf6;border:1px solid #ece0c6}
+  .ppl-row .sw{flex:1}
+  .ppl-row .pname{font-weight:700}
+  .sw-btn{border:1px solid #d8c79e;background:#f1e7d0;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink)}
+  .sw-btn.on{background:var(--ink);color:#fffdf6;border-color:var(--ink)}
+  #startBtn{
+    width:100%; border:none; cursor:pointer; padding:14px; border-radius:12px;
+    background:var(--ink); color:#fffdf6; font-size:17px; font-weight:800; letter-spacing:.06em;
+  }
+  #startBtn:hover{filter:brightness(1.08)}
+  .win-note{text-align:center;font-size:14px;font-weight:600;margin-bottom:14px}
+  .win-note b{font-size:18px}
+
+  @media (max-width:760px){
+    body{padding:12px}
+    .game{gap:14px}
+    .panel{max-width:none;flex:1 1 100%}
+    .board-wrap{flex:1 1 100%;max-width:480px}
+  }
+</style>
+</head>
+<body>
+  <div class="game">
+    <div class="board-wrap">
+      <canvas id="board"></canvas>
+    </div>
+
+    <aside class="panel">
+      <div class="turn-banner" id="turnBanner">
+        <div class="disc" id="turnDisc"></div>
+        <div>
+          <div class="t-label" id="turnLabel">当前回合</div>
+          <div class="t-name" id="turnName">—</div>
+        </div>
+      </div>
+
+      <div class="dice-block">
+        <div class="die" id="die"></div>
+        <div class="dice-meta">
+          <button id="rollBtn">掷骰子</button>
+          <div class="hint" id="hint">点击掷骰子开始游戏</div>
+        </div>
+      </div>
+
+      <div class="players" id="players"></div>
+
+      <div class="controls">
+        <button class="ghost-btn" id="restartBtn">重新开始</button>
+      </div>
+
+      <details class="rules">
+        <summary>游戏规则</summary>
+        <ul>
+          <li>掷出 6 点才能让飞机从停机坪起飞，并可再掷一次。</li>
+          <li>连掷 3 个 6 点时，本回合结束（换下家）。</li>
+          <li>飞机落在对方单架飞机上，对方被击回停机坪；落在己方飞机上可叠机（叠机不受攻击）。</li>
+          <li>踩中带飞机符号的格子会直接飞到下一个飞机格。</li>
+          <li>必须掷出恰好点数才能到达终点中心；全机到达者获胜。</li>
+        </ul>
+      </details>
+    </aside>
+  </div>
+
+  <div class="overlay hidden" id="overlay">
+    <div class="modal">
+      <h1>飞行棋</h1>
+      <div class="sub">四色飞机 · 掷骰起飞 · 你追我赶</div>
+
+      <div class="field">
+        <div class="lab">玩家数量</div>
+        <div class="seg" id="numSeg">
+          <button data-n="2">2 人</button>
+          <button data-n="3">3 人</button>
+          <button data-n="4" class="on">4 人</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="lab">每位玩家类型（可切换 真人 / 电脑）</div>
+        <div class="ppl" id="pplList"></div>
+      </div>
+
+      <button id="startBtn">开始游戏</button>
+    </div>
+  </div>
+
+<script>
+/* ==CORE== */
+/* ================= 常量与几何 ================= */
+const COLORS=['red','yellow','blue','green'];
+const CNAME={red:'红队',yellow:'黄队',blue:'蓝队',green:'绿队'};
+const CHEX={red:'#e03a24',yellow:'#f0b02e',blue:'#2f6fe0',green:'#2e9e4f'};
+const CKIND={red:0,yellow:1,blue:2,green:3}; // 中心三角象限顺序
+
+// 52 个外圈格（顺时针，index 0..51）
+function buildRing(){
+  const r=[];
+  for(let c=1;c<=13;c++) r.push({c,r:0});       // 0..12  上
+  for(let y=1;y<=13;y++) r.push({c:14,r:y});    // 13..25 右
+  for(let c=13;c>=1;c--) r.push({c,r:14});      // 26..38 下
+  for(let y=13;y>=1;y--) r.push({c:0,r:y});     // 39..51 左
+  return r;
+}
+const RING=buildRing();
+
+// 各色起飞格 index（该格也即滑道入口：绕满一圈回到此处进入滑道）
+const TAKE={red:26, yellow:39, blue:51, green:13};
+
+// 各色滑道（通往中心，4 个中间格；终点=中心 d=56）
+const LANE={
+  red:  [{c:11,r:11},{c:10,r:10},{c:9,r:9},{c:8,r:8}],
+  yellow:[{c:2,r:12},{c:3,r:11},{c:4,r:10},{c:5,r:9}],
+  blue: [{c:2,r:2},{c:3,r:3},{c:4,r:4},{c:5,r:5}],
+  green: [{c:12,r:2},{c:11,r:3},{c:10,r:4},{c:9,r:5}]
+};
+const CENTER={c:7,r:7};
+
+// 飞行格（踩中即飞往下一个飞机格）
+const PLANE=[6,19,32,45];
+const PLANE_IDX={}; PLANE.forEach((v,i)=>PLANE_IDX[v]=i);
+
+// 基地区域（2×2），每色停机坪，棋子停在格内
+const BASE={
+  red:   {c:12,r:12,w:2},
+  yellow:{c:1,r:12,w:2},
+  blue:  {c:1,r:1,w:2},
+  green: {c:12,r:1,w:2}
+};
+
+/* ================= 画布几何 ================= */
+const CELL=64, MARGIN=28, LOGICAL=MARGIN*2+CELL*15;
+let canvas,ctx,Sscale;
+function latToXY(l){return {x:MARGIN+(l.c+0.5)*CELL, y:MARGIN+(l.r+0.5)*CELL}}
+
+// 棋子距离 d：-1 停机坪；0..51 外圈；52..55 滑道中间；56 到达中心
+function ringLat(pl,d){ return RING[(TAKE[COLORS[pl]]+d)%52]; }
+function pieceLat(pl,d){
+  if(d<0) return null;
+  if(d<=51) return ringLat(pl,d);
+  if(d<=55) return LANE[COLORS[pl]][d-52];
+  return CENTER; // 56
+}
+
+/* ================= 游戏状态 ================= */
+let players=[];        // {color,human,pieces:[d,d,d,d]}
+let N=4, cur=0, roll=0, consecSix=0;
+let phase='idle';      // idle | waiting(可掷) | choose(掷后选子) | anim | over
+let pending=[];        // 当前可选移动 [{piece,takeoff}]
+let sel=null;          // 已选 {piece,takeoff}
+let anim=null;         // 进行中的动画
+let lastMovedArrive=false;
+
+/* ================= 规则引擎 ================= */
+function movableOptions(pi){
+  const p=players[pi], opts=[];
+  if(roll===6) for(let i=0;i<4;i++) if(p.pieces[i]===-1) opts.push({piece:i,takeoff:true});
+  for(let i=0;i<4;i++){
+    const d=p.pieces[i];
+    if(d<0||d>=56) continue;
+    if(d+roll<=56) opts.push({piece:i,takeoff:false});
+  }
+  return opts;
+}
+
+// 位于外圈某格（lat）的所有棋子
+function occupants(lat){
+  const res=[];
+  for(let p=0;p<N;p++)for(let i=0;i<4;i++){
+    const d=players[p].pieces[i];
+    if(d>=0&&d<=51){const L=ringLat(p,d); if(L.c===lat.c&&L.r===lat.r) res.push({p,i,d});}
+  }
+  return res;
+}
+
+// 落地处理（外圈）：返回事件 {captured:bool, stacked:bool, flew:bool}
+function applyLanding(pi, d){
+  let ev={captured:false,stacked:false,flew:false};
+  // 飞行格：先跳到下一个飞机格
+  if(d>=0&&d<=51){
+    let idx=(TAKE[COLORS[pi]]+d)%52;
+    if(PLANE_IDX[idx]!==undefined){
+      const nxt=PLANE[(PLANE_IDX[idx]+1)%PLANE.length];
+      d=(nxt-TAKE[COLORS[pi]]+52)%52;
+      ev.flew=true;
+    }
+  }
+  if(d>=0&&d<=51){
+    const lat=ringLat(pi,d);
+    const occ=occupants(lat);
+    let own=0, opp=[];
+    occ.forEach(o=>{ if(o.p===pi) own++; else opp.push(o); });
+    if(own>0){ ev.stacked=true; }              // 己方叠机
+    else if(opp.length===1){                    // 打飞机
+      players[opp[0].p].pieces[opp[0].i]=-1; ev.captured=true;
+    } else if(opp.length>1){ /* 对方叠机，免疫 */ }
+  }
+  return {d, ...ev};
+}
+
+/* ================= AI 决策 ================= */
+function aiScore(pi,opt){
+  const p=players[pi], d=p.pieces[opt.piece];
+  if(opt.takeoff) return 60;                       // 起飞：尽早出机
+  const target=d+roll;
+  let s=0;
+  if(target===56) s+=80;                           // 到达终点
+  else if(target>=52) s+=55+(target-52)*6;         // 进入滑道
+  else {
+    // 计算落点
+    const lat=ringLat(pi,target);
+    const occ=occupants(lat);
+    const opp=occ.filter(o=>o.p!==pi);
+    const own=occ.filter(o=>o.p===pi);
+    if(opp.length===1) s+=120;                     // 能打飞机
+    else if(opp.length>1) s+=25;                   // 对方叠机，安全
+    if(own.length>0) s+=40;                        // 叠机安全
+    if(PLANE_IDX[(TAKE[COLORS[pi]]+target)%52]!==undefined) s+=35; // 踩飞机格
+    s+=target*1.2;                                 // 越靠近终点越优
+    s-=(51-target)*0.4;
+  }
+  // 减少被攻击风险：评估落点周围
+  return s;
+}
+function aiPick(pi){
+  const opts=movableOptions(pi);
+  let best=opts[0], bs=-1e9;
+  opts.forEach(o=>{const s=aiScore(pi,o); if(s>bs){bs=s;best=o;}});
+  return best;
+}
+
+/* ==UI== */
+let noBonus=false;
+
+/* ================= DOM 引用 ================= */
+const boardWrap=document.querySelector('.board-wrap');
+canvas=document.getElementById('board');
+ctx=canvas.getContext('2d');
+const die=document.getElementById('die');
+const rollBtn=document.getElementById('rollBtn');
+const hintEl=document.getElementById('hint');
+const turnBanner=document.getElementById('turnBanner');
+const turnDisc=document.getElementById('turnDisc');
+const turnName=document.getElementById('turnName');
+const playersEl=document.getElementById('players');
+const overlay=document.getElementById('overlay');
+const restartBtn=document.getElementById('restartBtn');
+
+/* ================= 骰子 ================= */
+const PIPS={1:[[1,1]],2:[[0,0],[2,2]],3:[[0,0],[1,1],[2,2]],
+  4:[[0,0],[0,2],[2,0],[2,2]],5:[[0,0],[0,2],[1,1],[2,0],[2,2]],
+  6:[[0,0],[0,2],[2,0],[2,2],[0,1],[2,1]]};
+function drawDie(v){
+  die.innerHTML='';
+  const grid=document.createElement('div');
+  grid.style.cssText='width:100%;height:100%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:14px;gap:6px';
+  for(let r=0;r<3;r++)for(let c=0;c<3;c++){
+    const cell=document.createElement('div');
+    cell.style.cssText='display:grid;place-items:center';
+    if(PIPS[v]&&PIPS[v].some(p=>p[0]===r&&p[1]===c)){
+      const dot=document.createElement('div');
+      dot.style.cssText='width:60%;height:60%;border-radius:50%;background:#3a2f28';
+      cell.appendChild(dot);
+    }
+    grid.appendChild(cell);
+  }
+  die.appendChild(grid);
+}
+function animateRoll(cb){
+  die.classList.add('rolling');
+  let n=0; const iv=setInterval(()=>drawDie(1+Math.floor(Math.random()*6)),90);
+  setTimeout(()=>{clearInterval(iv);die.classList.remove('rolling');drawDie(roll);cb();},680);
+}
+
+/* ================= 画布绘制 ================= */
+function rr(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function drawPlaneIcon(x,y,color){
+  ctx.save(); ctx.translate(x,y); ctx.scale(CELL/64,CELL/64);
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.moveTo(6,13); ctx.lineTo(30,2); ctx.lineTo(25,17);
+  ctx.lineTo(18,15); ctx.lineTo(15,23); ctx.lineTo(9,19); ctx.lineTo(5,13);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+const QUAD=['blue','green','red','yellow']; // 中心四象限 TL TR BR BL
+function baseSlotXY(col,i){
+  const b=BASE[col], cx=MARGIN+(b.c+1)*CELL, cy=MARGIN+(b.r+1)*CELL, o=CELL*0.30;
+  const offs=[[-o,-o],[o,-o],[-o,o],[o,o]];
+  return {x:cx+offs[i][0], y:cy+offs[i][1]};
+}
+function arrivedXY(p,i){
+  const b=BASE[COLORS[p]];
+  const dirx=b.c+1-7, diry=b.r+1-7, norm=Math.hypot(dirx,diry);
+  const cx=MARGIN+7.5*CELL, cy=MARGIN+7.5*CELL;
+  const ccx=cx+dirx/norm*CELL*0.95, ccy=cy+diry/norm*CELL*0.95;
+  const o=CELL*0.24, cl=[[-o,-o],[o,-o],[-o,o],[o,o]];
+  return {x:ccx+cl[i][0], y:ccy+cl[i][1]};
+}
+function stackOffsets(cnt){
+  if(cnt===1) return [[0,0]];
+  if(cnt===2) return [[-9,0],[9,0]];
+  if(cnt===3) return [[0,-10],[-10,7],[10,7]];
+  return [[-10,-10],[10,-10],[-10,10],[10,10]];
+}
+
+function draw(){
+  ctx.clearRect(0,0,LOGICAL,LOGICAL);
+  const t=performance.now()/1000;
+  // 背景
+  ctx.fillStyle='#f4ead8';
+  rr(2,2,LOGICAL-4,LOGICAL-4,18); ctx.fill();
+  ctx.strokeStyle='#d9c9a4'; ctx.lineWidth=2; ctx.stroke();
+
+  // 中心
+  const cxc=MARGIN+7.5*CELL, cyc=MARGIN+7.5*CELL, R=CELL*2.1;
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cxc,cyc,R,0,Math.PI*2); ctx.clip();
+  QUAD.forEach((col,q)=>{
+    ctx.fillStyle=CHEX[col];
+    if(q===0) ctx.fillRect(cxc-R,cyc-R,R,R);
+    else if(q===1) ctx.fillRect(cxc,cyc-R,R,R);
+    else if(q===2) ctx.fillRect(cxc,cyc,R,R);
+    else ctx.fillRect(cxc-R,cyc,R,R);
+  });
+  ctx.restore();
+  ctx.beginPath(); ctx.arc(cxc,cyc,R,0,Math.PI*2);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=5; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cxc,cyc,R-8,0,Math.PI*2);
+  ctx.strokeStyle='rgba(0,0,0,.08)'; ctx.lineWidth=1.5; ctx.stroke();
+
+  // 滑道格
+  COLORS.forEach(col=>{
+    ctx.fillStyle=CHEX[col]+'55';
+    LANE[col].forEach(l=>{
+      const p=latToXY(l);
+      rr(p.x-CELL/2+1.5,p.y-CELL/2+1.5,CELL-3,CELL-3,6); ctx.fill();
+    });
+  });
+
+  // 外圈格
+  RING.forEach((lat,idx)=>{
+    const p=latToXY(lat), plane=PLANE_IDX[idx]!==undefined;
+    ctx.fillStyle=plane?'#f6e6c2':'#fffaf0';
+    rr(p.x-CELL/2+1.5,p.y-CELL/2+1.5,CELL-3,CELL-3,6); ctx.fill();
+    ctx.strokeStyle='#ddccaa'; ctx.lineWidth=1; ctx.stroke();
+    if(plane) drawPlaneIcon(p.x,p.y,'#a97f2f');
+  });
+  // 起飞格角标
+  COLORS.forEach(col=>{
+    const lat=RING[TAKE[col]], p=latToXY(lat);
+    ctx.fillStyle=CHEX[col];
+    rr(p.x-CELL/2+3,p.y-CELL/2+3,CELL-6,CELL-6,5); ctx.strokeStyle=CHEX[col]; ctx.lineWidth=2.5; ctx.stroke();
+  });
+
+  // 停机坪
+  COLORS.forEach(col=>{
+    const b=BASE[col];
+    const x0=MARGIN+b.c*CELL, y0=MARGIN+b.r*CELL;
+    ctx.fillStyle=CHEX[col]+'cc';
+    rr(x0+2,y0+2,CELL*2-4,CELL*2-4,10); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.7)'; ctx.lineWidth=2; ctx.stroke();
+  });
+
+  // 高亮：可选棋子脉冲环
+  const pulse=(Math.sin(t*5.5)+1)/2;
+  if(phase==='choose'&&players[cur]&&players[cur].human){
+    pending.forEach(o=>{
+      const pos = o.takeoff? baseSlotXY(COLORS[cur],o.piece) : latToXY(pieceLat(cur,players[cur].pieces[o.piece]));
+      ctx.beginPath(); ctx.arc(pos.x,pos.y,CELL*0.4+2+pulse*3,0,Math.PI*2);
+      ctx.strokeStyle=CHEX[COLORS[cur]]; ctx.lineWidth=3; ctx.globalAlpha=0.5+pulse*0.5; ctx.stroke();
+      ctx.globalAlpha=1;
+    });
+  }
+  // 已选棋子落点标记
+  if(sel){
+    const p=players[cur];
+    const lat=latToXY(sel.takeoff? ringLat(cur,0):pieceLat(cur,p.pieces[sel.piece]));
+    ctx.beginPath(); ctx.arc(lat.x,lat.y,CELL*0.46,0,Math.PI*2);
+    ctx.strokeStyle='#fff'; ctx.lineWidth=4; ctx.stroke();
+  }
+
+  // 棋子
+  drawPieces(t);
+}
+
+function drawPieces(t){
+  if(!players||!players.length) return;
+  for(let p=0;p<N;p++){
+    const col=COLORS[p];
+    for(let i=0;i<4;i++){
+      const d=players[p].pieces[i];
+      let pos;
+      if(d<0) pos=baseSlotXY(col,i);
+      else if(d>=56) pos=arrivedXY(p,i);
+      else {
+        const lat=pieceLat(p,d);
+        // 同色同格堆叠偏移
+        let cnt=0,idx=-1;
+        for(let j=0;j<4;j++){const dj=players[p].pieces[j];
+          if(dj>=0&&dj<=55){const L=pieceLat(p,dj); if(L.c===lat.c&&L.r===lat.r){cnt++;if(j===i)idx=cnt-1;}}}
+        const so=stackOffsets(cnt)[idx];
+        const c=latToXY(lat);
+        pos={x:c.x+so[0], y:c.y+so[1]};
+      }
+      // 动画中的该棋子跟随路径
+      if(anim&&anim.p===p&&anim.i===i&&anim.cur){ pos=anim.cur; }
+      ctx.beginPath();
+      ctx.arc(pos.x,pos.y,d>=56?CELL*0.28:CELL*0.40,0,Math.PI*2);
+      ctx.fillStyle=CHEX[col];
+      ctx.fill();
+      ctx.lineWidth=2.5; ctx.strokeStyle='#fff'; ctx.stroke();
+      // 高光
+      ctx.beginPath(); ctx.arc(pos.x,pos.y,CELL*0.40,0,Math.PI*2);
+      ctx.strokeStyle=CHEX[col]; ctx.lineWidth=1.5; ctx.globalAlpha=.45; ctx.stroke(); ctx.globalAlpha=1;
+    }
+  }
+}
+
+/* ================= 动画引擎 ================= */
+let animCb=null,lastT=0;
+function startMoveAnim(pi,piece,path,cb){
+  anim={p:pi,i:piece,path,start:performance.now(),segDur:175,cur:path[0]};
+  animCb=cb; phase='anim'; sel=null;
+  updateRollBtn(); renderPlayers(); draw();
+}
+function stepAnim(now){
+  if(!anim) return;
+  const steps=anim.path.length-1;
+  if(steps<0){ const cb=animCb; anim=null; animCb=null; if(cb) cb(); return; }
+  let el=now-anim.start; if(!(el>=0)) el=0;
+  let idx=Math.floor(el/anim.segDur);
+  if(idx<0) idx=0; if(idx>steps) idx=steps;
+  const f=Math.min(1,Math.max(0,(el/anim.segDur)-idx));
+  const a=anim.path[idx], b=anim.path[Math.min(steps,idx+1)];
+  if(!a||!b){ const cb=animCb; anim=null; animCb=null; if(cb) cb(); return; }
+  anim.cur={x:a.x+(b.x-a.x)*f, y:a.y+(b.y-a.y)*f};
+  if(el>=anim.segDur*steps){
+    const cb=animCb; anim=null; animCb=null;
+    draw(); cb();
+  }
+}
+function loop(now){
+  if(!lastT) lastT=now;
+  stepAnim(now);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ================= 回合流程 ================= */
+function doRoll(){
+  if(phase!=='waiting')return;
+  phase='rolling';
+  roll=1+Math.floor(Math.random()*6);
+  const was6=roll===6;
+  if(was6) consecSix++; else consecSix=0;
+  noBonus = consecSix>=3;
+  if(noBonus) consecSix=0;
+  animateRoll(()=>{
+    if(noBonus) hint(`${CNAME[COLORS[cur]]}掷出 ${roll}，连掷三个 6，回合结束`);
+    const opts=movableOptions(cur);
+    if(opts.length===0){
+      hint(`${CNAME[COLORS[cur]]}掷出 ${roll}，无棋可动，轮到下家`);
+      advanceTurn(); return;
+    }
+    pending=opts;
+    if(players[cur].human){
+      phase='choose'; sel=null;
+      if(opts.length===1){ sel=opts[0]; hint(`只有一种走法：${optLabel(opts[0])}`); setTimeout(commitSel,380); }
+      else { hint('点击要移动的飞机'); }
+    } else {
+      sel=aiPick(cur); hint(`${CNAME[COLORS[cur]]}掷出 ${roll}，电脑思考中…`);
+      setTimeout(commitSel,520);
+    }
+    renderPlayers(); draw(); updateRollBtn();
+  });
+}
+function optLabel(o){
+  return o.takeoff? `起飞` : `第${o.piece+1}架前进${roll}格`;
+}
+function commitSel(){
+  if(!sel)return;
+  const opt=sel; sel=null;
+  const pi=cur, p=players[pi];
+  const d0=p.pieces[opt.piece];
+  const d1=opt.takeoff?0:d0+roll;
+  let path;
+  if(opt.takeoff){
+    path=[baseSlotXY(COLORS[pi],opt.piece), latToXY(ringLat(pi,0))];
+  } else {
+    path=[];
+    for(let k=0;k<=roll;k++) path.push(latToXY(pieceLat(pi,d0+k)));
+  }
+  const res=applyLanding(pi,d1);
+  p.pieces[opt.piece]=res.d;
+  if(!opt.takeoff&&res.d!==d1) path.push(latToXY(pieceLat(pi,res.d))); // 飞行跳格
+  lastMovedArrive = (p.pieces[opt.piece]===56);
+  startMoveAnim(pi,opt.piece,path,()=>finishMove(opt,res));
+}
+function finishMove(opt,res){
+  const msgs=[];
+  if(opt.takeoff) msgs.push(`${CNAME[COLORS[cur]]}起飞一架飞机`);
+  else msgs.push(`${CNAME[COLORS[cur]]}前进 ${roll} 格`);
+  if(res.captured) msgs.push('击落对方飞机');
+  if(res.stacked) msgs.push('与己方叠机');
+  if(res.flew) msgs.push('踩中飞机格，飞向下一个');
+  if(lastMovedArrive) msgs.push('一架飞机到达终点');
+  // 胜利
+  if(players[cur].pieces.every(x=>x===56)){ gameOver(cur); return; }
+  const bonus = (roll===6 && !noBonus) || lastMovedArrive;
+  if(bonus){ hint(msgs.join('，')+'（再掷一次）'); phase='waiting';
+    if(!players[cur].human) setTimeout(doRoll,480);
+  }
+  else { hint(msgs.join('，')+'，轮到下家'); advanceTurn(); }
+  renderPlayers(); draw(); updateRollBtn();
+}
+function advanceTurn(){
+  cur=(cur+1)%N;
+  phase='waiting'; sel=null; pending=[];
+  renderPlayers(); draw(); updateTurnUI();
+  if(!players[cur].human) setTimeout(doRoll,480);
+}
+function gameOver(winner){
+  phase='over'; sel=null; pending=[];
+  showWin(winner);
+}
+function updateTurnUI(){
+  const c=CHEX[COLORS[cur]];
+  turnBanner.style.background=c;
+  turnDisc.style.color=c;
+  turnName.textContent=CNAME[COLORS[cur]];
+  updateRollBtn();
+}
+function updateRollBtn(){
+  rollBtn.disabled = !(phase==='waiting' && players[cur] && players[cur].human);
+}
+
+/* ================= 玩家列表 ================= */
+function renderPlayers(){
+  playersEl.innerHTML='';
+  for(let p=0;p<N;p++){
+    const col=COLORS[p], pp=players[p];
+    const inBase=pp.pieces.filter(x=>x<0).length;
+    const arrived=pp.pieces.filter(x=>x>=56).length;
+    const row=document.createElement('div');
+    row.className='prow'+(p===cur?' active':'');
+    row.style.color=CHEX[col];
+    row.innerHTML=
+      `<div class="pdot" style="background:${CHEX[col]}"></div>`+
+      `<div class="pname">${CNAME[col]}${pp.human?'':' <span style="font-size:11px;color:#a98">AI</span>'}</div>`+
+      `<div class="pstat">停机坪 <b>${inBase}</b> · 到达 <b>${arrived}</b></div>`;
+    playersEl.appendChild(row);
+  }
+}
+function hint(s){ hintEl.textContent=s; }
+
+/* ================= 配置与开局 ================= */
+let humans=[true,false,false,false];
+function openConfig(){
+  phase='idle'; sel=null; pending=[]; anim=null; animCb=null;
+  overlay.classList.remove('hidden');
+  overlay.innerHTML=`
+    <div class="modal">
+      <h1>飞行棋</h1>
+      <div class="sub">四色飞机 · 掷骰起飞 · 你追我赶</div>
+      <div class="field"><div class="lab">玩家数量</div>
+        <div class="seg" id="numSeg">
+          <button data-n="2">2 人</button><button data-n="3">3 人</button>
+          <button data-n="4" class="on">4 人</button>
+        </div>
+      </div>
+      <div class="field"><div class="lab">每位玩家类型（可切换 真人 / 电脑）</div>
+        <div class="ppl" id="pplList"></div>
+      </div>
+      <button id="startBtn">开始游戏</button>
+    </div>`;
+  const seg=overlay.querySelector('#numSeg');
+  seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.n===N));
+  seg.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b)return;
+    N=+b.dataset.n;
+    if(humans.length>N) humans=humans.slice(0,N);
+    else while(humans.length<N) humans.push(false);
+    renderConfig();
+  });
+  renderConfig();
+  overlay.querySelector('#startBtn').addEventListener('click',startGame);
+}
+function renderConfig(){
+  const seg=overlay.querySelector('#numSeg');
+  seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.n===N));
+  const list=overlay.querySelector('#pplList');
+  list.innerHTML='';
+  for(let p=0;p<N;p++){
+    const col=COLORS[p];
+    const row=document.createElement('div');
+    row.className='ppl-row';
+    row.innerHTML=`<div class="pdot" style="background:${CHEX[col]}"></div>`+
+      `<div class="pname">${CNAME[col]}</div>`+
+      `<button class="sw-btn ${humans[p]?'on':''}">${humans[p]?'真人':'电脑'}</button>`;
+    row.querySelector('.sw-btn').onclick=()=>{humans[p]=!humans[p];renderConfig();};
+    list.appendChild(row);
+  }
+}
+function startGame(){
+  players=[];
+  for(let p=0;p<N;p++) players.push({color:COLORS[p],human:humans[p],pieces:[-1,-1,-1,-1]});
+  cur=0; consecSix=0; noBonus=false; roll=0;
+  overlay.classList.add('hidden');
+  phase='waiting'; sel=null; pending=[]; anim=null; animCb=null;
+  drawDie(6); hint(`游戏开始！${CNAME[COLORS[0]]}先掷骰子`);
+  renderPlayers(); updateTurnUI(); draw();
+  if(!players[0].human) setTimeout(doRoll,600);
+}
+restartBtn.addEventListener('click',()=>{ openConfig(); });
+
+/* ================= 胜利弹窗 ================= */
+function showWin(w){
+  overlay.classList.remove('hidden');
+  overlay.innerHTML=`
+    <div class="modal">
+      <div class="win-note"><div style="font-size:13px;color:#999">恭喜</div>
+        <b style="color:${CHEX[COLORS[w]]}">${CNAME[COLORS[w]]}获胜！</b></div>
+      <button id="againBtn" style="width:100%;border:none;cursor:pointer;padding:14px;border-radius:12px;background:var(--ink);color:#fffdf6;font-size:17px;font-weight:800;margin-bottom:10px">再来一局</button>
+      <button id="cfgBtn" class="ghost-btn" style="width:100%">更改设置</button>
+    </div>`;
+  overlay.querySelector('#againBtn').onclick=()=>{ overlay.innerHTML=''; startGame(); };
+  overlay.querySelector('#cfgBtn').onclick=()=>{ overlay.innerHTML=''; openConfig(); };
+}
+
+/* ================= 交互 ================= */
+rollBtn.addEventListener('click',doRoll);
+canvas.addEventListener('pointerdown',e=>{
+  if(phase!=='choose'||!players[cur]||!players[cur].human)return;
+  const rect=canvas.getBoundingClientRect();
+  const px=(e.clientX-rect.left)/rect.width*LOGICAL;
+  const py=(e.clientY-rect.top)/rect.height*LOGICAL;
+  let best=null,bd=46;
+  pending.forEach(o=>{
+    const pos=o.takeoff? baseSlotXY(COLORS[cur],o.piece) : latToXY(pieceLat(cur,players[cur].pieces[o.piece]));
+    const dd=Math.hypot(px-pos.x,py-pos.y);
+    if(dd<bd){bd=dd;best=o;}
+  });
+  if(best){ sel=best; hint(`已选：${optLabel(best)}，出发！`); setTimeout(commitSel,320); draw(); }
+});
+
+/* ================= 自适应 ================= */
+function fit(){
+  const size=Math.min(boardWrap.clientWidth||560, 640);
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=canvas.height=size*dpr;
+  canvas.style.width=canvas.style.height=size+'px';
+  Sscale=size/LOGICAL;
+  ctx.setTransform(Sscale*dpr,0,0,Sscale*dpr,0,0);
+  draw();
+}
+window.addEventListener('resize',fit);
+
+/* ================= 初始化 ================= */
+drawDie(6);
+renderConfig();
+fit();
+openConfig();
+
+
+</script>
+</body>
+</html>
