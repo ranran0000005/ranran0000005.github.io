@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<!-- saved from url=(0270)https://p26-flow-sign.byteimg.com/tos-cn-i-ik7evvg4ik/rc/pc/super_tool/eb89c10ea59940e38c4606a8959e9c9b.html~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20261003174400266D12F7B704E1AF5475&rrcfp=935dee89&x-expires=1791625783&x-signature=5VEZBtNq6Z%2F9z3hE9DqgdC7X6O4%3D -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>3D 精准驾驶 · 油门与刹车</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231a7f4e'/%3E%3Ccircle cx='12' cy='12' r='7' fill='none' stroke='%23fff' stroke-width='2'/%3E%3Ccircle cx='12' cy='12' r='2.5' fill='%23ffd23f'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --panel: rgba(12,18,26,.78);
+    --panel2: rgba(12,18,26,.55);
+    --line: rgba(255,255,255,.12);
+    --txt: #e9f2ee;
+    --dim: #9fb4ad;
+    --acc: #35c97e;
+    --brake: #ff5b52;
+    --warn: #ffd23f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:#0b1016;color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    user-select:none;-webkit-user-select:none;touch-action:none}
+  #app{position:fixed;inset:0}
+  canvas#game{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  /* ===== HUD ===== */
+  .hud{position:absolute;inset:0;pointer-events:none;z-index:5}
+
+  .corner{position:absolute;background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;backdrop-filter:blur(8px);padding:12px 14px}
+  #info{top:14px;left:14px;max-width:300px;font-size:12.5px;line-height:1.55;color:var(--dim)}
+  #info h1{font-size:15px;color:var(--txt);margin-bottom:4px;letter-spacing:.5px}
+  #info b{color:var(--txt);font-weight:600}
+  #info .kbd{display:inline-block;min-width:22px;text-align:center;padding:1px 5px;margin-right:4px;
+    background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:5px;font-size:11px;color:var(--txt)}
+  #info .row{margin:3px 0}
+  #resetBtn{pointer-events:auto;margin-top:8px;padding:5px 12px;border-radius:8px;border:1px solid var(--line);
+    background:rgba(255,255,255,.06);color:var(--txt);font-size:12px;cursor:pointer;transition:.15s}
+  #resetBtn:hover{background:rgba(255,255,255,.14)}
+
+  /* speedometer */
+  #dash{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);width:190px;height:190px;
+    background:var(--panel);border:1px solid var(--line);border-radius:50%;backdrop-filter:blur(8px)}
+  #dash svg{position:absolute;inset:0;width:100%;height:100%}
+  #speedReadout{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding-top:58px}
+  #speedNum{font-size:40px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+  #speedUnit{font-size:12px;color:var(--dim);margin-top:2px}
+  #gearBox{margin-top:6px;font-size:13px;font-weight:600;color:var(--acc)}
+
+  /* pedal gauges: throttle & brake */
+  #leftGauge,#rightGauge{position:absolute;bottom:22px;width:70px;height:200px;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 10px;
+    backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:space-between}
+  #leftGauge{left:110px}#rightGauge{right:110px}
+  .gauge-label{font-size:11px;letter-spacing:1px;color:var(--dim);font-weight:600}
+  .gauge-track{position:relative;width:14px;flex:1;margin:4px 0;border-radius:7px;background:rgba(255,255,255,.08);overflow:hidden}
+  .gauge-fill{position:absolute;bottom:0;left:0;width:100%;height:0%;transition:height .05s linear}
+  #leftGauge .gauge-fill{background:linear-gradient(to top,#146a5f,var(--acc))}
+  #rightGauge .gauge-fill{background:linear-gradient(to top,#a86a1f,var(--warn))}
+  .gauge-pct{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+  #leftGauge .gauge-pct{color:var(--acc)}
+  #rightGauge .gauge-pct{color:var(--warn)}
+
+  /* touch pedals */
+  #pedals{position:absolute;bottom:0;left:0;right:0;height:46%;display:none;pointer-events:none}
+  .pedal{position:absolute;bottom:26px;width:44%;max-width:240px;height:72%;pointer-events:auto;
+    border-radius:22px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:6px;transition:background .1s}
+  .pedal .picon{font-size:22px;opacity:.85}
+  .pedal .plabel{font-size:13px;font-weight:700;letter-spacing:2px}
+  .pedal .pval{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+  #leftPedal{left:18px;background:linear-gradient(180deg,rgba(53,201,126,.30),rgba(53,201,126,.12));border-color:rgba(53,201,126,.5)}
+  #rightPedal{right:18px;background:linear-gradient(180deg,rgba(240,169,58,.30),rgba(240,169,58,.12));border-color:rgba(240,169,58,.5)}
+  #pedalHint{display:none;position:absolute;bottom:50%;left:50%;transform:translateX(-50%);font-size:12px;color:var(--dim);
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 12px;pointer-events:none;white-space:nowrap;
+    transition:opacity .8s}
+  .pedal.pressed{filter:brightness(1.25)}
+
+  /* toast */
+  #toast{position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:20;pointer-events:none;
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 16px;
+    font-size:13px;opacity:0;transition:opacity .3s;white-space:nowrap}
+
+  /* 一圈计时面板 */
+  #lapPanel{position:absolute;top:16px;right:64px;z-index:15;display:flex;flex-direction:column;gap:5px;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;
+    backdrop-filter:blur(8px);font-variant-numeric:tabular-nums;min-width:158px}
+  #lapPanel .lp-row{display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+  #lapPanel .lp-k{font-size:11px;letter-spacing:1px;color:var(--dim);font-weight:600}
+  #lapPanel .lp-v{font-size:16px;font-weight:700;color:var(--txt)}
+  #lapPanel .lp-best .lp-v{font-size:13px;color:var(--acc)}
+
+  /* 双人对战面板 */
+  #duoPanel{display:none;position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:15;flex-direction:column;gap:6px;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;
+    backdrop-filter:blur(8px);font-variant-numeric:tabular-nums;min-width:230px}
+  .dp-card{border:1px solid var(--line);border-radius:10px;padding:7px 10px;display:flex;flex-direction:column;gap:3px}
+  #duoPanel .dp-card:first-child{border-color:rgba(255,90,106,.45)}
+  #duoPanel .dp-card:last-of-type{border-color:rgba(75,155,255,.45)}
+  .dp-name{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .dp-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .dp-stats{font-size:12px;color:var(--dim)}
+  .dp-stats b{color:var(--txt)}
+  .dp-lead{font-size:13px;font-weight:700;color:var(--acc);text-align:center;padding-top:2px}
+  /* 分屏与每屏速度 */
+  #splitLine{display:none;position:absolute;top:0;bottom:0;left:50%;width:2px;background:rgba(255,255,255,.32);z-index:12;pointer-events:none}
+  .spd{display:none;position:absolute;bottom:18px;z-index:14;font-size:15px;font-weight:700;color:#fff;
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px 11px;
+    backdrop-filter:blur(6px);font-variant-numeric:tabular-nums;align-items:center;gap:6px}
+  #spd1{left:2%}
+  #spd2{right:2%}
+  #muteBtn{position:absolute;top:16px;right:16px;z-index:16;width:38px;height:38px;border-radius:50%;
+    background:var(--panel);border:1px solid var(--line);color:var(--txt);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+  #muteBtn[aria-checked="true"]{color:var(--dim)}
+  #iosHint{display:none;position:absolute;top:60px;right:16px;z-index:16;font-size:11px;color:rgba(255,255,255,.55)}
+  /* 双人触控按钮：左右半屏底部两侧 */
+  #mbtns{display:none;position:absolute;inset:0;z-index:14;pointer-events:none}
+  .mbtn{pointer-events:auto;position:absolute;bottom:14px;width:96px;height:96px;border-radius:50%;
+    border:1.5px solid rgba(255,255,255,.5);background:rgba(20,26,22,.42);color:#fff;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    font-size:13px;font-weight:700;backdrop-filter:blur(4px);-webkit-tap-highlight-color:transparent;
+    user-select:none;touch-action:none}
+  .mbtn:active{background:rgba(53,201,126,.45)}
+  .mbtn-dot{width:9px;height:9px;border-radius:50%}
+  #mbtn1L{left:5%}
+  #mbtn1R{right:calc(50% + 5%)}
+  #mbtn2L{left:calc(50% + 5%)}
+  #mbtn2R{right:5%}
+
+  /* 落水提示 */
+  #drown{display:none;position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);z-index:16;pointer-events:none;
+    background:rgba(18,60,110,.88);border:1px solid rgba(130,190,255,.55);color:#d6ecff;
+    padding:16px 34px;border-radius:16px;font-size:22px;font-weight:800;letter-spacing:3px;
+    box-shadow:0 8px 30px rgba(0,30,70,.5);opacity:0;transition:opacity .4s}
+  #drown.show{display:block;opacity:1}
+
+  /* start overlay */
+  #start{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(120% 120% at 50% 30%,#15232c 0%,#0b1016 60%)}
+  .start-card{text-align:center;max-width:520px;padding:20px}
+  .start-card h1{font-size:30px;font-weight:800;letter-spacing:1px;margin-bottom:10px}
+  .start-card h1 span{color:var(--acc)}
+  .start-card .sub{color:var(--dim);font-size:14px;line-height:1.7;margin-bottom:24px}
+  .start-card .sub b{color:var(--txt)}
+  .key-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;text-align:left;margin-bottom:24px}
+  .key-item{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;color:var(--dim)}
+  .key-item b{color:var(--txt);display:block;margin-bottom:2px}
+  #startBtn{pointer-events:auto;padding:14px 44px;font-size:16px;font-weight:700;color:#fff;
+    background:var(--acc);border:none;border-radius:14px;cursor:pointer;box-shadow:0 8px 24px rgba(53,201,126,.35);
+    transition:.18s;letter-spacing:1px}
+  #startBtn:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(53,201,126,.45)}
+  #startBtn:active{transform:translateY(0)}
+  .mode-row{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
+  .mode-row button{pointer-events:auto;padding:13px 26px;font-size:15px;font-weight:700;color:#fff;
+    border:none;border-radius:13px;cursor:pointer;transition:.18s;letter-spacing:1px}
+  #startBtn{background:var(--acc);box-shadow:0 8px 24px rgba(53,201,126,.35)}
+  #startBtn:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(53,201,126,.45)}
+  #startDuoBtn{background:#2f6fb8;box-shadow:0 8px 24px rgba(75,155,255,.3)}
+  #startDuoBtn:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(75,155,255,.45)}
+  #startDuoBtn:active{transform:translateY(0)}
+  .tip{margin-top:16px;font-size:12px;color:var(--dim)}
+
+  .fadeOut{opacity:0 !important;transition:opacity .6s !important}
+  .hidden{display:none !important}
+
+  @media (pointer:coarse){
+    #pedals{display:block}
+    #info{display:none}
+    #dash{width:150px;height:150px;bottom:14px}
+    #speedNum{font-size:32px;padding-top:40px}
+    #leftGauge,#rightGauge{width:56px;height:130px;bottom:18px}
+    #leftGauge{left:74px}#rightGauge{right:74px}
+    #pedalHint{display:block;bottom:48%}
+    .gauge-pct{font-size:13px}
+    #lapPanel{top:12px;right:56px;min-width:120px;padding:8px 10px}
+    #lapPanel .lp-v{font-size:14px}
+    #duoPanel{top:12px;min-width:200px;padding:8px 10px}
+    .spd{bottom:10px;font-size:13px;padding:4px 9px}
+    .mbtn{width:84px;height:84px;bottom:12px;font-size:12px}
+    #startDuoBtn{display:inline-block}   /* 移动端也支持双人对战 */
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="game" data-engine="three.js r160" width="1874" height="956" style="width: 1874px; height: 956px;"></canvas>
+
+  <div class="hud" id="hud">
+    <div class="corner" id="info">
+      <h1>3D 精准驾驶</h1>
+      <div class="row"><span class="kbd">W</span><span class="kbd">↑</span>油门（双轮加速）</div>
+      <div class="row"><span class="kbd">S</span><span class="kbd">↓</span>刹车 / 倒车</div>
+      <div class="row"><span class="kbd">A</span><span class="kbd">D</span>差速转向</div>
+      <div class="row">鼠标<b>左键</b>左轮 · <b>右键</b>右轮</div>
+      <div class="row"><span class="kbd">R</span>回正车辆</div>
+      <div class="row" style="color:var(--acc);font-weight:600">一圈计时 · 过起跑线计圈</div>
+      <div id="resetBtn">回正车辆 (R)</div>
+    </div>
+
+    <div id="dash">
+      <svg viewBox="0 0 200 200">
+        <defs>
+          <lineargradient id="arcg" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0%" stop-color="#1a7f4e"></stop><stop offset="55%" stop-color="#35c97e"></stop><stop offset="100%" stop-color="#ffd23f"></stop>
+          </lineargradient>
+        </defs>
+        <circle cx="100" cy="108" r="74" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="9" stroke-linecap="round" stroke-dasharray="232 600" transform="rotate(135 100 100)"></circle>
+        <circle id="speedArc" cx="100" cy="108" r="74" fill="none" stroke="url(#arcg)" stroke-width="9" stroke-linecap="round" stroke-dasharray="0 600" transform="rotate(135 100 100)"></circle>
+        <g id="ticks"><line x1="58.987806691180246" y1="149.01219330881975" x2="50.50252531694168" y2="157.49747468305833" stroke="rgba(255,255,255,.9)" stroke-width="2.4"></line><line x1="44.497460527531885" y1="124.83651128075881" x2="38.755818513138635" y2="126.5782193442856" stroke="rgba(255,255,255,.4)" stroke-width="1.4"></line><line x1="43.11445373661263" y1="96.68476132306458" x2="37.229742054193245" y2="95.51421939096781" stroke="rgba(255,255,255,.4)" stroke-width="1.4"></line><line x1="55.16539370496125" y1="71.20518951850858" x2="50.527330984784825" y2="67.3988298135267" stroke="rgba(255,255,255,.4)" stroke-width="1.4"></line><line x1="77.80436092282481" y1="54.414987114345365" x2="73.21215973444373" y2="43.32843272420992" stroke="rgba(255,255,255,.9)" stroke-width="2.4"></line><line x1="105.68499413911448" y1="50.27928585301258" x2="106.27309698109184" y2="44.3081774929794" stroke="rgba(255,255,255,.4)" stroke-width="1.4"></line><line x1="132.22307351513692" y1="59.77476248645236" x2="135.5564949132545" y2="54.78594481263709" stroke="rgba(255,255,255,.4)" stroke-width="1.4"></line><line x1="151.1514333322046" y1="80.65898926409213" x2="156.44296091829472" y2="77.83060884313613" stroke="rgba(255,255,255,.4)" stroke-width="1.4"></line><line x1="158" y1="107.99999999999999" x2="170" y2="107.99999999999999" stroke="rgba(255,255,255,.9)" stroke-width="2.4"></line></g>
+        <g id="needleG" transform="rotate(-112.5 100 108)"><line id="needle" x1="100" y1="108" x2="100" y2="52" stroke="#fff" stroke-width="3.5" stroke-linecap="round"></line></g>
+        <circle cx="100" cy="108" r="6" fill="#fff"></circle>
+      </svg>
+      <div id="speedReadout">
+        <div id="speedNum">0</div>
+        <div id="speedUnit">km/h</div>
+        <div id="gearBox">N</div>
+      </div>
+    </div>
+
+    <div class="gauge" id="leftGauge">
+      <div class="gauge-label">左轮</div>
+      <div class="gauge-track"><div class="gauge-fill" id="leftFill" style="height: 0%;"></div></div>
+      <div class="gauge-pct" id="leftPct">0%</div>
+    </div>
+    <div class="gauge" id="rightGauge">
+      <div class="gauge-label">右轮</div>
+      <div class="gauge-track"><div class="gauge-fill" id="rightFill" style="height: 0%;"></div></div>
+      <div class="gauge-pct" id="rightPct">0%</div>
+    </div>
+
+    <div id="pedals">
+      <div class="pedal" id="leftPedal"><div class="picon">◀</div><div class="plabel">左轮</div><div class="pval">0%</div></div>
+      <div class="pedal" id="rightPedal"><div class="picon">▶</div><div class="plabel">右轮</div><div class="pval">0%</div></div>
+    </div>
+    <div id="pedalHint">双按直行 · 单按转弯</div>
+  </div>
+
+  <div id="toast"></div>
+  <div id="drown">掉进河里了！</div>
+
+  <button id="muteBtn" role="switch" aria-checked="false" aria-label="引擎声音开关">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+      <path id="muteSpk" d="M3 9v6h4l5 5V4L7 9H3zm13 1.5a4.5 4.5 0 0 1 0 3l1.8 1a6 6 0 0 0 0-5z"></path>
+      <path id="muteOff" d="M3 9v6h4l5 5V4L7 9H3zm16.6 1.4-1.4-1.4-2.2 2.2-2.2-2.2-1.4 1.4L14.6 12l-2.2 2.2 1.4 1.4 2.2-2.2 2.2 2.2 1.4-1.4L17.4 12z" style="display:none"></path>
+    </svg>
+  </button>
+  <div id="iosHint">iPhone 请关闭侧边静音键</div>
+
+  <div id="lapPanel">
+    <div class="lp-row"><span class="lp-k">圈</span><span class="lp-v" id="lpLap">0</span></div>
+    <div class="lp-row"><span class="lp-k">本圈</span><span class="lp-v" id="lpCur">--</span></div>
+    <div class="lp-row lp-best"><span class="lp-k">最佳</span><span class="lp-v" id="lpBest">--</span></div>
+  </div>
+
+  <div id="duoPanel">
+    <div class="dp-card">
+      <div class="dp-name"><i class="dp-dot" style="background:#ff5a6a"></i>红 P1</div>
+      <div class="dp-stats">圈 <b id="dp1Lap">0</b> · 本圈 <b id="dp1Cur">--</b></div>
+      <div class="dp-stats">最佳 <b id="dp1Best">--</b> · <b id="dp1Spd">0</b> km/h</div>
+    </div>
+    <div class="dp-card">
+      <div class="dp-name"><i class="dp-dot" style="background:#4b9bff"></i>蓝 P2</div>
+      <div class="dp-stats">圈 <b id="dp2Lap">0</b> · 本圈 <b id="dp2Cur">--</b></div>
+      <div class="dp-stats">最佳 <b id="dp2Best">--</b> · <b id="dp2Spd">0</b> km/h</div>
+    </div>
+    <div class="dp-lead" id="dpLead">领先：--</div>
+  </div>
+
+  <div id="splitLine"></div>
+  <div class="spd" id="spd1"><i class="dp-dot" style="background:#ff5a6a"></i><span id="spd1v">0</span> km/h</div>
+  <div class="spd" id="spd2"><i class="dp-dot" style="background:#4b9bff"></i><span id="spd2v">0</span> km/h</div>
+
+  <!-- 双人触控：每辆车在各自半屏左右各一个驱动按钮 -->
+  <div id="mbtns">
+    <button class="mbtn" id="mbtn1L" data-p="0" data-s="L"><span class="mbtn-dot" style="background:#ff5a6a"></span>左轮</button>
+    <button class="mbtn" id="mbtn1R" data-p="0" data-s="R"><span class="mbtn-dot" style="background:#ff5a6a"></span>右轮</button>
+    <button class="mbtn" id="mbtn2L" data-p="1" data-s="L"><span class="mbtn-dot" style="background:#4b9bff"></span>左轮</button>
+    <button class="mbtn" id="mbtn2R" data-p="1" data-s="R"><span class="mbtn-dot" style="background:#4b9bff"></span>右轮</button>
+  </div>
+
+  <div id="start">
+    <div class="start-card">
+      <h1>3D 精准驾驶<span>·</span>油门与刹车</h1>
+      <div class="sub">
+        这是<b>双轮差速驱动</b>：左右轮速度差决定转弯。双轮同速直行，单轮驱动则绕另一轮转弯。
+        <br>键盘 <b>W/S</b> 控制油门刹车、<b>A/D</b> 差速转向；鼠标/触控<b>左键</b>驱动左轮、<b>右键</b>驱动右轮。
+      </div>
+      <div class="key-grid">
+        <div class="key-item"><b>W / ↑ 油门</b>双轮加速 · 渐进式</div>
+        <div class="key-item"><b>S / ↓ 刹车</b>减速 · 停住后倒车</div>
+        <div class="key-item"><b>A / D 转向</b>左右轮差速转弯</div>
+        <div class="key-item"><b>左键 / 右键</b>鼠标或触控驱动左右轮</div>
+      </div>
+      <div class="mode-row">
+        <button id="startBtn">单人驾驶</button>
+        <button id="startDuoBtn">双人对战</button>
+      </div>
+      <div class="tip">触屏按住屏幕左右踏板：左轮 / 右轮 · 双按直行，单按转弯，越往下按力量越大</div>
+    </div>
+  </div>
+</div>
+
+<script src="./CAR3D_files/three.min.js.下载"></script>
+<script>
+(function(){
+"use strict";
+const W=1000,H=700; // world half-extents (meters)
+const isTouch = matchMedia('(pointer:coarse)').matches;
+
+/* ================= 场景初始化 ================= */
+const renderer = new THREE.WebGLRenderer({canvas:document.getElementById('game'),antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, isTouch?1.5:2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xbfe0ee);
+scene.fog = new THREE.Fog(0xbfe0ee, 350, 1000);
+
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 2200);
+camera.position.set(0,40,80);
+// 双人分屏：P2 蓝车独立跟随相机（半屏纵横比）
+const cam2 = new THREE.PerspectiveCamera(55, window.innerWidth/(window.innerHeight*2), 0.1, 2200);
+cam2.position.copy(camera.position);
+
+/* ---------- 光照 ---------- */
+const hemi = new THREE.HemisphereLight(0xcfe6ff, 0x5d7a54, 0.85);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff2df, 2.0);
+sun.position.set(-260,320,-140);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024,1024);
+sun.shadow.camera.left=-80;sun.shadow.camera.right=80;
+sun.shadow.camera.top=80;sun.shadow.camera.bottom=-80;
+sun.shadow.camera.near=1;sun.shadow.camera.far=800;
+scene.add(sun);
+scene.add(new THREE.AmbientLight(0xffffff,0.18));
+
+/* ---------- 地面与道路纹理 ---------- */
+const TEX=1024;
+const groundCanvas=document.createElement('canvas');groundCanvas.width=groundCanvas.height=TEX;
+const g2=groundCanvas.getContext('2d');
+// base grass with noise
+g2.fillStyle='#5f8f4e';g2.fillRect(0,0,TEX,TEX);
+for(let i=0;i<9000;i++){const x=Math.random()*TEX,y=Math.random()*TEX;
+  g2.fillStyle='rgba('+(Math.random()<0.5?'40,110,45':'90,150,70')+','+(Math.random()*0.12)+')';
+  g2.fillRect(x,y,2,2);}
+// world->tex mapping
+const S=2000; // world size
+function w2t(x,z){return [((x+S/2)/S)*TEX,((z+S/2)/S)*TEX];}
+function toPx(m){return m/S*TEX;}
+// draw a rounded-rectangle road loop
+const halfW=330,halfH=210,R=85,rw=46; // road half width, corner radius, road width(m)
+const cxs=[-halfW+R,-halfW+R, halfW-R, halfW-R]; // not needed, manual arcs
+function roadPath(g,w){
+  const corners=[[ halfW-R,-halfH+R],[ halfW-R, halfH-R],[-halfW+R, halfH-R],[-halfW+R,-halfH+R]];
+  const starts=[[ halfW-R,-halfH],[-halfW,-halfH],[-halfW, halfH],[ halfW, halfH]];
+  g.beginPath();
+  // start top-right straight heading west
+  g.moveTo(...w2t(halfW-R,-halfH));
+  // top straight: from (halfW-R,-halfH) to (-halfW+R,-halfH)
+  g.lineTo(...w2t(-halfW+R,-halfH));
+  // top-left arc center(-halfW+R,-halfH+R)
+  g.arc(...w2t(-halfW+R,-halfH+R), toPx(R), Math.PI*1.5, Math.PI, true);
+  // left straight
+  g.lineTo(...w2t(-halfW,-halfH+R));
+  g.arc(...w2t(-halfW+R,-halfH+R), toPx(R), Math.PI, Math.PI*0.5, true);
+  g.lineTo(...w2t(-halfW+R, halfH));
+  g.arc(...w2t(-halfW+R, halfH-R), toPx(R), Math.PI*0.5, 0, true);
+  g.lineTo(...w2t(halfW-R, halfH));
+  g.arc(...w2t(halfW-R, halfH-R), toPx(R), 0, Math.PI*1.5, true);
+  g.lineTo(...w2t(halfW-R,-halfH));
+}
+// asphalt
+g2.strokeStyle='#3a3f44';g2.lineCap='round';g2.lineJoin='round';
+g2.lineWidth=toPx(rw+4);roadPath(g2);g2.stroke();
+g2.strokeStyle='#4a5055';g2.lineWidth=toPx(rw-6);roadPath(g2);g2.stroke();
+// center dashed line
+g2.strokeStyle='rgba(255,244,180,0.9)';g2.lineWidth=toPx(1.8);g2.setLineDash([toPx(10),toPx(14)]);
+roadPath(g2);g2.stroke();g2.setLineDash([]);
+
+/* ---------- 地面（挖出河道缺口） ---------- */
+const RIV={x0:-750,x1:750,z0:-95,z1:95};   // 河道区域（无地面）
+const WATER_Y=-14;
+const gShape=new THREE.Shape();
+gShape.moveTo(-S/2,-S/2);gShape.lineTo(S/2,-S/2);gShape.lineTo(S/2,S/2);gShape.lineTo(-S/2,S/2);
+const gHole=new THREE.Path();
+gHole.moveTo(RIV.x1,RIV.z0);gHole.lineTo(RIV.x1,RIV.z1);gHole.lineTo(RIV.x0,RIV.z1);gHole.lineTo(RIV.x0,RIV.z0);gHole.closePath();
+gShape.holes.push(gHole);
+const groundGeo=new THREE.ShapeGeometry(gShape);
+const gPos=groundGeo.attributes.position,gUV=groundGeo.attributes.uv;
+for(let i=0;i<gPos.count;i++){gUV.setXY(i,(gPos.getX(i)+S/2)/S,(gPos.getY(i)+S/2)/S);}
+const groundTex=new THREE.CanvasTexture(groundCanvas);
+groundTex.colorSpace=THREE.SRGBColorSpace;
+groundTex.anisotropy=4;
+const ground=new THREE.Mesh(groundGeo,
+  new THREE.MeshStandardMaterial({map:groundTex,roughness:0.95,metalness:0}));
+ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+
+/* ---------- 河道两岸土墙（悬崖边） ---------- */
+const soilMat=new THREE.MeshStandardMaterial({color:0x6b5633,roughness:1});
+const bankTop=-0.05, bankBot=-15.5;      // 顶低于地面、底低于水面，避免 z-fighting 闪烁
+const bankHgt=bankBot-bankTop, bankCy=(bankTop+bankBot)/2;
+const bankGeo=new THREE.BoxGeometry((RIV.x1-RIV.x0),bankHgt,3);
+const bankV=new THREE.Mesh(bankGeo,soilMat);bankV.position.set((RIV.x0+RIV.x1)/2,bankCy,RIV.z0);scene.add(bankV);
+const bankV2=bankV.clone();bankV2.position.z=RIV.z1;scene.add(bankV2);
+const bankGeo2=new THREE.BoxGeometry(3,bankHgt,(RIV.z1-RIV.z0));
+const bankH=new THREE.Mesh(bankGeo2,soilMat);bankH.position.set(RIV.x0,bankCy,(RIV.z0+RIV.z1)/2);scene.add(bankH);
+const bankH2=bankH.clone();bankH2.position.x=RIV.x1;scene.add(bankH2);
+
+/* ---------- 河水 ---------- */
+const bedMat=new THREE.MeshStandardMaterial({color:0x2a3a46,roughness:1});
+const bed=new THREE.Mesh(new THREE.PlaneGeometry(RIV.x1-RIV.x0,RIV.z1-RIV.z0),bedMat);
+bed.rotation.x=-Math.PI/2;bed.position.set(0,-24,0);scene.add(bed);
+const waterMat=new THREE.MeshStandardMaterial({color:0x2f7fc4,transparent:true,opacity:0.78,roughness:0.15,metalness:0.3});
+const water=new THREE.Mesh(new THREE.PlaneGeometry(RIV.x1-RIV.x0+6,RIV.z1-RIV.z0+6),waterMat);
+water.rotation.x=-Math.PI/2;water.position.set(0,WATER_Y,0);scene.add(water);
+
+/* ---------- 跨河桥（x=±330 道路过河） ---------- */
+const obstacles=[];              // 静态碰撞体 {x,z,r}
+const bridgeDeckMat=new THREE.MeshStandardMaterial({color:0x3f454b,roughness:0.9});
+const railMat=new THREE.MeshStandardMaterial({color:0x9aa3ab,roughness:0.6,metalness:0.3});
+const pillarMat=new THREE.MeshStandardMaterial({color:0x8d948f,roughness:0.8});
+const span=(RIV.z1-RIV.z0)+8;
+const spanRail=RIV.z1-RIV.z0;           // 护栏只覆盖水面段
+const deckTop=-0.06;                    // 桥面略低于地面，避免与路面/地面闪烁
+function makeBridge(bx){
+  const g=new THREE.Group();
+  const deck=new THREE.Mesh(new THREE.BoxGeometry(52,1.2,span),bridgeDeckMat);
+  deck.position.set(bx,deckTop-0.6,0);deck.receiveShadow=true;g.add(deck);
+  const railGeo=new THREE.BoxGeometry(0.6,1.5,spanRail);
+  for(const sx of [bx-25,bx+25]){const rl=new THREE.Mesh(railGeo,railMat);rl.position.set(sx,0.9,0);rl.castShadow=true;g.add(rl);}
+  const pillarGeo=new THREE.CylinderGeometry(1.3,1.6,15,8);
+  for(const pz of [-60,0,60]){for(const sx of [bx-21,bx+21]){const p=new THREE.Mesh(pillarGeo,pillarMat);p.position.set(sx,-8.5,pz);p.castShadow=true;g.add(p);obstacles.push({x:sx,z:pz,r:2.3});}}
+  scene.add(g);
+}
+makeBridge(330);makeBridge(-330);
+
+/* ---------- 下穿桥梁（z=-210 道路头顶高架） ---------- */
+const underMat=new THREE.MeshStandardMaterial({color:0xa8aead,roughness:0.7,metalness:0.2});
+const under=new THREE.Group();
+const upPillarGeo=new THREE.BoxGeometry(3.2,7,3.2);
+for(const pz of [-256,-164]){
+  const p=new THREE.Mesh(upPillarGeo,underMat);p.position.set(0,3.5,pz);p.castShadow=true;under.add(p);
+  obstacles.push({x:0,z:pz,r:2.7});
+}
+const upDeck=new THREE.Mesh(new THREE.BoxGeometry(34,2.2,98),underMat);
+upDeck.position.set(0,7.1,-210);under.add(upDeck);
+const upRailGeo=new THREE.BoxGeometry(0.8,1.4,98);
+for(const sx of [-17,17]){const rl=new THREE.Mesh(upRailGeo,underMat);rl.position.set(sx,8.5,-210);under.add(rl);}
+scene.add(under);
+
+/* ---------- 道路中心线采样（用于避开摆放） ---------- */
+const roadPts=[];
+(function(){
+  const R2=R,cx=halfW-R2,cy=halfH-R2;
+  const corners=[[halfW-R2,-halfH+R2],[halfW-R2,halfH-R2],[-halfW+R2,halfH-R2],[-halfW+R2,-halfH+R2]];
+  const C=[[-cx,cy],[cx,cy],[cx,-cy],[-cx,-cy]]; // arc centers TR,BR,BL,TL order adjust
+  const centers=[[halfW-R2,-halfH+R2],[halfW-R2,halfH-R2],[-halfW+R2,halfH-R2],[-halfW+R2,-halfH+R2]];
+  // arcs: TR ccw from angle0 top? use simple: sample straights + arcs
+  const straight=[
+    [[halfW-R2,-halfH],[ -halfW+R2,-halfH]],
+    [[-halfW,-halfH+R2],[-halfW,halfH-R2]],
+    [[-halfW+R2,halfH],[halfW-R2,halfH]],
+    [[halfW,halfH-R2],[halfW,-halfH+R2]]];
+  for(const [a,b] of straight){
+    const n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/14));
+    for(let i=0;i<=n;i++){const t=i/n;roadPts.push([a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t]);}
+  }
+  const arcDef=[[[halfW-R2,-halfH+R2],-Math.PI*1.5,Math.PI],[[halfW-R2,halfH-R2],Math.PI,Math.PI*0.5],
+                [[-halfW+R2,halfH-R2],Math.PI*0.5,0],[[-halfW+R2,-halfH+R2],0,-Math.PI*1.5]];
+  for(const [c,a0,a1] of arcDef){
+    const dir=Math.sign(a1-a0);
+    for(let a=a0;dir>0?a<=a1:a>=a1;a+=dir*0.12){
+      roadPts.push([c[0]+R2*Math.cos(a), c[1]+R2*Math.sin(a)]);
+    }
+  }
+})();
+function distToRoad(x,z){let m=1e9;for(const p of roadPts){const d=(p[0]-x)**2+(p[1]-z)**2;if(d<m)m=d;}return Math.sqrt(m);}
+
+/* ---------- 赛道一圈计时 ---------- */
+// 用与视觉路面完全一致的圆角矩形中心线（roadPts 的弧采样较乱，另建干净路径）
+const lapPts=[];
+(function(){
+  const step=6,Rc=R;
+  function push(x,z){lapPts.push([x,z]);}
+  // 顶边直道（向西）
+  for(let x=halfW-Rc;x>=-halfW+Rc;x-=step)push(x,-halfH);push(-halfW+Rc,-halfH);
+  // TL 弧
+  for(let a=-Math.PI/2;a>=-Math.PI;a-=0.06)push(-halfW+Rc+Rc*Math.cos(a),-halfH+Rc+Rc*Math.sin(a));
+  push(-halfW,-halfH+Rc);
+  // 左边直道（向南）
+  for(let z=-halfH+Rc;z<=halfH-Rc;z+=step)push(-halfW,z);push(-halfW,halfH-Rc);
+  // BL 弧
+  for(let a=Math.PI;a>=Math.PI/2;a-=0.06)push(-halfW+Rc+Rc*Math.cos(a),halfH-Rc+Rc*Math.sin(a));
+  push(-halfW+Rc,halfH);
+  // 底边直道（向东）
+  for(let x=-halfW+Rc;x<=halfW-Rc;x+=step)push(x,halfH);push(halfW-Rc,halfH);
+  // BR 弧
+  for(let a=Math.PI/2;a>=0;a-=0.06)push(halfW-Rc+Rc*Math.cos(a),halfH-Rc+Rc*Math.sin(a));
+  push(halfW,halfH-Rc);
+  // 右边直道（向北）
+  for(let z=halfH-Rc;z>=-halfH+Rc;z-=step)push(halfW,z);push(halfW,-halfH+Rc);
+  // TR 弧
+  for(let a=0;a>=-Math.PI/2;a-=0.06)push(halfW-Rc+Rc*Math.cos(a),-halfH+Rc+Rc*Math.sin(a));
+  push(halfW-Rc,-halfH);
+  // 去重：去掉相邻重复点与闭合重复点，保证进度严格单调
+  const clean=[];for(const p of lapPts){if(clean.length===0||Math.hypot(p[0]-clean[clean.length-1][0],p[1]-clean[clean.length-1][1])>0.5)clean.push(p);}
+  while(clean.length>1&&Math.hypot(clean[0][0]-clean[clean.length-1][0],clean[0][1]-clean[clean.length-1][1])<0.5)clean.pop();
+  lapPts.length=0;lapPts.push(...clean);
+})();
+const cum=[];let trackLen=0;
+(function(){let acc=0;cum[0]=0;
+  for(let i=1;i<lapPts.length;i++){acc+=Math.hypot(lapPts[i][0]-lapPts[i-1][0],lapPts[i][1]-lapPts[i-1][1]);cum[i]=acc;}
+  const last=lapPts.length-1;
+  trackLen=acc+Math.hypot(lapPts[0][0]-lapPts[last][0],lapPts[0][1]-lapPts[last][1]);
+})();
+const lpLapEl=document.getElementById('lpLap'),lpCurEl=document.getElementById('lpCur'),lpBestEl=document.getElementById('lpBest');
+let gameMode='solo';                 // 'solo' | 'duo'
+let gameStarted=false;
+
+function fullIndex(x,z){let bi=0,bd=1e18;for(let i=0;i<lapPts.length;i++){const d=(lapPts[i][0]-x)**2+(lapPts[i][1]-z)**2;if(d<bd){bd=d;bi=i;}}return bi;}
+function progressIndex(x,z,trackIdx){
+  const W=50;let bi=trackIdx,bd=1e18;
+  for(let d=-W;d<=W;d++){
+    const i=(trackIdx+d+lapPts.length)%lapPts.length;
+    const dx=lapPts[i][0]-x,dz=lapPts[i][1]-z,dist=dx*dx+dz*dz;
+    if(dist<bd){bd=dist;bi=i;}
+  }
+  return bi;
+}
+function resetLapTimer(p,now){p.lap.trackIdx=fullIndex(p.px,p.pz);p.lap.prevProg=cum[p.lap.trackIdx];p.lap.net=0;p.lap.curLapStart=now;}
+function updateLap(p,x,z,now){
+  p.lap.trackIdx=progressIndex(x,z,p.lap.trackIdx);
+  let s=cum[p.lap.trackIdx];
+  let delta=s-p.lap.prevProg;
+  if(delta> trackLen/2)delta-=trackLen;
+  if(delta<-trackLen/2)delta+=trackLen;
+  p.lap.prevProg=s;p.lap.net+=delta;
+  if(p.lap.net<=-trackLen){                 // 正向（顺时针）跑完一圈
+    p.lap.net+=trackLen;p.lap.lapCount++;
+    const t=(now-p.lap.curLapStart)/1000;
+    if(p.lap.bestLap===null||t<p.lap.bestLap)p.lap.bestLap=t;
+    if(gameMode==='solo'){lpLapEl.textContent=p.lap.lapCount;lpBestEl.textContent=p.lap.bestLap.toFixed(2)+'s';}
+    toast(p.name+' 完成第 '+p.lap.lapCount+' 圈  '+t.toFixed(2)+'s'+(t===p.lap.bestLap?'  ★ 最佳':''));
+    p.lap.curLapStart=now;
+    if(gameMode==='duo')updateLead();
+  }else if(p.lap.net>=trackLen){            // 反向一整圈不计
+    p.lap.net-=trackLen;p.lap.curLapStart=now;
+  }
+}
+function updateLead(){
+  const a=players[0],b=players[1];
+  let lead='';
+  if(a.lap.lapCount>b.lap.lapCount)lead=a.name+' 领先';
+  else if(b.lap.lapCount>a.lap.lapCount)lead=b.name+' 领先';
+  else if(a.lap.bestLap!==null&&b.lap.bestLap!==null){
+    if(a.lap.bestLap<b.lap.bestLap)lead=a.name+' 领先';
+    else if(b.lap.bestLap<a.lap.bestLap)lead=b.name+' 领先';
+    else lead='齐头并进';
+  }else lead='--';
+  dpLead.textContent='领先：'+lead;
+}
+
+/* 起/终点线（顶边直道上 x=-135，跨路宽） */
+const flMat=new THREE.MeshStandardMaterial({color:0xf2f2f2,roughness:0.5});
+const flGeo=new THREE.BoxGeometry(0.7,0.04,rw);
+for(const fx of [-135.8,-134.5]){
+  const fl=new THREE.Mesh(flGeo,flMat);fl.position.set(fx,0.03,-halfH);fl.receiveShadow=true;scene.add(fl);
+}
+
+/* ---------- 树木（实例化） ---------- */
+const treeCount=260;
+const treeTrunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(1,1.4,3,6),
+  new THREE.MeshStandardMaterial({color:0x6b4f2a,roughness:1}),treeCount);
+const treeTop=new THREE.InstancedMesh(new THREE.ConeGeometry(3.4,9,7),
+  new THREE.MeshStandardMaterial({color:0x2f6b3a,roughness:0.9}),treeCount);
+const tDummy=new THREE.Object3D();
+let treeIdx=0,placed=0,guard=0;
+while(placed<treeCount && guard<treeCount*30){
+  guard++;
+  const x=(Math.random()*2-1)*880, z=(Math.random()*2-1)*560;
+  if(Math.abs(x)<halfW+30 && Math.abs(z)<halfH+30)continue; // outside road rectangle
+  if(distToRoad(x,z)<rw*1.1)continue;
+  if(z>RIV.z0 && z<RIV.z1 && x>RIV.x0 && x<RIV.x1)continue; // 不进河道
+  const s=0.8+Math.random()*1.3;
+  tDummy.position.set(x,0,z);tDummy.scale.set(s,s,s);
+  tDummy.rotation.y=Math.random()*Math.PI*2;
+  tDummy.updateMatrix();
+  treeTrunk.setMatrixAt(treeIdx,tDummy.matrix);
+  treeTop.setMatrixAt(treeIdx,tDummy.matrix);
+  treeIdx++;placed++;
+  obstacles.push({x:x,z:z,r:1.6*s});
+}
+treeTrunk.count=treeIdx;treeTop.count=treeIdx;
+treeTrunk.castShadow=true;treeTop.castShadow=true;
+scene.add(treeTrunk,treeTop);
+
+/* ---------- 远山 ---------- */
+const mountainMat=new THREE.MeshStandardMaterial({color:0x7a8aa0,roughness:1,flatShading:true});
+const mountains=[];
+for(let i=0;i<26;i++){
+  const a=Math.random()*Math.PI*2, dist=820+Math.random()*520;
+  const h=120+Math.random()*220, r=90+Math.random()*160;
+  const m=new THREE.Mesh(new THREE.ConeGeometry(r,h,6),mountainMat);
+  m.position.set(Math.cos(a)*dist, h/2-14, Math.sin(a)*dist);
+  m.rotation.y=Math.random()*Math.PI;
+  scene.add(m);mountains.push(m);
+}
+
+/* ---------- 村庄建筑 ---------- */
+const buildMats=[new THREE.MeshStandardMaterial({color:0xd9c6a8,roughness:0.9}),
+  new THREE.MeshStandardMaterial({color:0xc9b18d,roughness:0.9}),
+  new THREE.MeshStandardMaterial({color:0xb8c4cf,roughness:0.8})];
+const roofMat=new THREE.MeshStandardMaterial({color:0x9c4a3a,roughness:0.8,flatShading:true});
+const villageC=[[-250,-140],[-180,-150],[-120,-138],[240,-140],[300,-130],[210,-120],
+  [-260,140],[-190,150],[-130,138],[230,140],[290,130],[200,120]];
+for(const [vx,vz] of villageC){
+  const bx=3+Math.random()*4, by=3+Math.random()*3, bz=3+Math.random()*4;
+  const b=new THREE.Mesh(new THREE.BoxGeometry(bx,by,bz),buildMats[(Math.random()*buildMats.length)|0]);
+  b.position.set(vx,by/2,vz);b.castShadow=true;b.receiveShadow=true;scene.add(b);
+  const roof=new THREE.Mesh(new THREE.ConeGeometry(Math.max(bx,bz)*0.75,2.2,4),roofMat);
+  roof.position.set(vx,by+1.1,vz);roof.rotation.y=Math.PI/4;roof.castShadow=true;scene.add(roof);
+  obstacles.push({x:vx,z:vz,r:Math.max(bx,bz)*0.85});
+}
+
+/* ---------- 路面雪糕筒（可撞飞） ---------- */
+const coneGeo=new THREE.ConeGeometry(1.2,3.2,12);
+const coneMat=new THREE.MeshStandardMaterial({color:0xff7a1a,roughness:0.7,emissive:0x883300,emissiveIntensity:0.15});
+const cones=[];
+const slalom=[];
+(function(){
+  // 沿道路撒两列锥筒
+  for(let i=0;i<roadPts.length;i+=5){
+    const p=roadPts[i];
+    const p2=roadPts[Math.min(i+1,roadPts.length-1)];
+    let dx=p2[0]-p[0],dz=p2[1]-p[1];
+    const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;
+    if(Math.random()<0.45)continue;
+    const off=(Math.random()<0.5?-1:1)*(6+Math.random()*10);
+    const c=new THREE.Mesh(coneGeo,coneMat);
+    c.position.set(p[0]+dz*off,1.6,p[1]-dx*off);
+    c.castShadow=true;scene.add(c);cones.push(c);
+    slalom.push({mesh:c,vx:0,vz:0});
+  }
+})();
+
+/* ================= 车辆（可多辆，低多边形但贴近真实比例） ================= */
+function makeCar(bodyColor){
+  const g=new THREE.Group();
+  const bodyMat=new THREE.MeshStandardMaterial({color:bodyColor,roughness:0.3,metalness:0.5});
+  const glassMat=new THREE.MeshStandardMaterial({color:0x142b3a,roughness:0.12,metalness:0.7});
+  const trimMat=new THREE.MeshStandardMaterial({color:0x1c2023,roughness:0.7,metalness:0.35});
+  const lightMat=new THREE.MeshStandardMaterial({color:0xfff6d8,roughness:0.4,emissive:0xfff2c4,emissiveIntensity:1.0});
+  const redMat=new THREE.MeshStandardMaterial({color:0xff3b30,roughness:0.4,emissive:0xff1500,emissiveIntensity:0.9});
+
+  // 下车身（宽而低）
+  const lower=new THREE.Mesh(new THREE.BoxGeometry(1.95,0.5,4.5),bodyMat);
+  lower.position.y=0.55;lower.castShadow=true;g.add(lower);
+  // 上车身/车舱（收窄、略偏后）
+  const cabin=new THREE.Mesh(new THREE.BoxGeometry(1.72,0.52,2.7),bodyMat);
+  cabin.position.set(0,0.98,-0.25);cabin.castShadow=true;g.add(cabin);
+  // 前挡风玻璃（斜置）
+  const ws=new THREE.Mesh(new THREE.BoxGeometry(1.62,0.5,0.05),glassMat);
+  ws.position.set(0,1.12,0.42);ws.rotation.x=-0.7;g.add(ws);
+  // 后窗（斜置反向）
+  const rb=new THREE.Mesh(new THREE.BoxGeometry(1.62,0.45,0.05),glassMat);
+  rb.position.set(0,1.08,-0.9);rb.rotation.x=0.7;g.add(rb);
+  // 两侧车窗
+  for(const sx of [-0.87,0.87]){
+    const sw=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.4,1.7),glassMat);
+    sw.position.set(sx,0.98,-0.25);g.add(sw);
+    const mir=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.14,0.2),bodyMat);
+    mir.position.set(sx*1.14,1.16,0.5);g.add(mir);
+  }
+  // 引擎盖
+  const hood=new THREE.Mesh(new THREE.BoxGeometry(1.75,0.08,1.35),bodyMat);
+  hood.position.set(0,0.84,1.55);g.add(hood);
+  // 前保险杠 + 格栅
+  const grille=new THREE.Mesh(new THREE.BoxGeometry(1.75,0.34,0.14),trimMat);
+  grille.position.set(0,0.55,2.24);g.add(grille);
+  // 前大灯
+  for(const sx of [-0.68,0.68]){
+    const hl=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.16,0.12),lightMat);
+    hl.position.set(sx,0.8,2.18);g.add(hl);
+  }
+  // 尾灯
+  for(const sx of [-0.72,0.72]){
+    const tl=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.16,0.1),redMat);
+    tl.position.set(sx,0.78,-2.24);g.add(tl);
+  }
+  // 后保险杠 + 尾翼
+  const rear=new THREE.Mesh(new THREE.BoxGeometry(1.82,0.34,0.14),trimMat);
+  rear.position.set(0,0.52,-2.24);g.add(rear);
+  const wing=new THREE.Mesh(new THREE.BoxGeometry(1.7,0.06,0.32),trimMat);
+  wing.position.set(0,1.28,-1.35);g.add(wing);
+  // 侧裙
+  for(const sx of [-1.0,1.0]){
+    const skirt=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.2,3.7),trimMat);
+    skirt.position.set(sx,0.42,0);g.add(skirt);
+  }
+
+  // 车轮（含轮拱眉）
+  const wheelGeo=new THREE.CylinderGeometry(0.5,0.5,0.48,18);
+  const wheelMat=new THREE.MeshStandardMaterial({color:0x15171a,roughness:0.85});
+  const hubMat=new THREE.MeshStandardMaterial({color:0xb8bec6,roughness:0.35,metalness:0.75});
+  const archMat=new THREE.MeshStandardMaterial({color:0x101317,roughness:0.8});
+  const wheels=[];
+  const wheelPos=[[-0.98,0.5,1.35],[0.98,0.5,1.35],[-0.98,0.5,-1.35],[0.98,0.5,-1.35]];
+  for(const [wx,wy,wz] of wheelPos){
+    const w=new THREE.Group();
+    const tyre=new THREE.Mesh(wheelGeo,wheelMat);
+    tyre.rotation.z=Math.PI/2;tyre.castShadow=true;w.add(tyre);
+    const hub=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,0.5,10),hubMat);
+    hub.rotation.z=Math.PI/2;w.add(hub);
+    w.position.set(wx,wy,wz);g.add(w);wheels.push({g:w,steer:wx<0?0:1,spin:tyre});
+    // 轮拱眉
+    const arch=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.22,0.75),archMat);
+    arch.position.set(wx*0.94,0.62,wz);g.add(arch);
+  }
+  return {mesh:g,wheels};
+}
+
+// 车底阴影（假接触阴影）
+function makeBlob(){
+  const b=new THREE.Mesh(new THREE.CircleGeometry(2.6,24),
+    new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.32,depthWrite:false}));
+  b.rotation.x=-Math.PI/2;b.position.y=0.05;
+  const holder=new THREE.Group();holder.add(b);return holder;
+}
+
+// 玩家工厂
+function makePlayer(conf){
+  const c=makeCar(conf.color);
+  const blob=makeBlob();
+  scene.add(c.mesh);scene.add(blob);
+  return {
+    color:conf.color,name:conf.name,
+    ctl:conf.ctl,                // {throttle(),brake(),steer()}
+    sx:conf.x,sz:conf.z,sh:conf.h,
+    mesh:c.mesh,wheels:c.wheels,blob:blob,
+    px:conf.x,pz:conf.z,heading:conf.h,speed:0,carY:0,vy:0,drowned:false,
+    kbThrottle:0,kbBrake:0,steerKey:0,L:0,R:0,touchL:0,touchR:0,gear:1,rpm:0.12,
+    lap:{lapCount:0,bestLap:null,trackIdx:0,prevProg:0,net:0,curLapStart:0}
+  };
+}
+
+// 是否在河道上空（且不在桥上）
+function overRiver(x,z){
+  if(z<=RIV.z0 || z>=RIV.z1)return false;
+  if(x<=RIV.x0 || x>=RIV.x1)return false;
+  if(Math.abs(x-330)<28||Math.abs(x+330)<28)return false; // 桥上安全
+  return true;
+}
+
+/* ================= 输入状态 ================= */
+const keys={};
+let touchL=0,touchR=0;        // 触屏踏板 0-1（仅单人）
+let mouseL=false,mouseR=false;// 鼠标左右键（仅单人）
+
+// P1：W/S/空格 油门刹车，A/D 转向（单人时方向键也可用）
+const P1_CTL={throttle:()=>keys['KeyW']||(gameMode==='solo'&&keys['ArrowUp']),
+  brake:()=>keys['KeyS']||keys['Space']||(gameMode==='solo'&&keys['ArrowDown']),
+  steer:()=>(keys['KeyD']?1:0)-(keys['KeyA']?1:0)};
+// P2（双人）：方向键
+const P2_CTL={throttle:()=>keys['ArrowUp'],brake:()=>keys['ArrowDown'],
+  steer:()=>(keys['ArrowRight']?1:0)-(keys['ArrowLeft']?1:0)};
+
+window.addEventListener('keydown',e=>{
+  keys[e.code]=true;
+  if(e.code==='KeyR'){resetPlayer(players[0]);toast(players[0].name+' 已回正车辆');}
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
+});
+window.addEventListener('keyup',e=>{keys[e.code]=false;});
+
+function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+
+/* 触屏踏板：左轮 / 右轮（仅单人） */
+const leftPedal=document.getElementById('leftPedal');
+const rightPedal=document.getElementById('rightPedal');
+function bindPedal(el,setFn,onoff){
+  function valFor(ev){
+    const r=el.getBoundingClientRect();
+    const t=ev.touches?ev.touches[0]:ev;
+    return 1-Math.min(1,Math.max(0,(t.clientY-r.top)/r.height));
+  }
+  function press(ev){onoff(true);setFn(valFor(ev));ev.preventDefault();}
+  function move(ev){setFn(valFor(ev));ev.preventDefault();}
+  function release(){onoff(false);setFn(0);}
+  el.addEventListener('pointerdown',press);
+  el.addEventListener('pointermove',move);
+  el.addEventListener('pointerup',release);
+  el.addEventListener('pointerleave',release);
+  el.addEventListener('pointercancel',release);
+}
+bindPedal(leftPedal,v=>{touchL=v;leftPedal.classList.toggle('pressed',v>0.05);
+  leftPedal.querySelector('.pval').textContent=Math.round(v*100)+'%';},()=>{});
+bindPedal(rightPedal,v=>{touchR=v;rightPedal.classList.toggle('pressed',v>0.05);
+  rightPedal.querySelector('.pval').textContent=Math.round(v*100)+'%';},()=>{});
+
+/* 鼠标：左键=左轮，右键=右轮（禁用右键菜单防止误触） */
+window.addEventListener('contextmenu',e=>e.preventDefault());
+window.addEventListener('mousedown',e=>{
+  if(isTouch)return;
+  if(e.target && e.target.closest && e.target.closest('button'))return;
+  if(e.button===0)mouseL=true;
+  if(e.button===2)mouseR=true;
+});
+window.addEventListener('mouseup',e=>{if(e.button===0)mouseL=false;if(e.button===2)mouseR=false;});
+window.addEventListener('mouseleave',()=>{mouseL=false;mouseR=false;});
+window.addEventListener('blur',()=>{mouseL=false;mouseR=false;});
+
+/* 双人触控按钮绑定（每车半屏左右各一轮） */
+document.querySelectorAll('.mbtn').forEach(b=>{
+  const pi=+b.dataset.p, side=b.dataset.s;
+  function setV(v){players[pi][side==='L'?'touchL':'touchR']=v;}
+  b.addEventListener('touchstart',e=>{e.preventDefault();setV(1);},{passive:false});
+  b.addEventListener('touchend',e=>{e.preventDefault();setV(0);},{passive:false});
+  b.addEventListener('touchcancel',()=>setV(0));
+  b.addEventListener('mousedown',e=>{e.preventDefault();setV(1);});
+  b.addEventListener('mouseup',()=>setV(0));
+  b.addEventListener('mouseleave',()=>setV(0));
+});
+
+/* ================= 物理参数 ================= */
+const MAX_SPEED=62;        // 极速 m/s ≈ 223 km/h（提高极速）
+const ENGINE=13;           // 加速
+const BRAKE_POW=32;        // 刹车减速度
+const REVERSE=6;           // 倒车
+const MAX_TURN=1.7;        // 差速转向率 rad/s
+const TURN_SOFT=0.05;      // 高速降转向
+// 6 挡自动变速箱：各挡上限速度(m/s)、各挡加速倍率（低挡扭矩大）
+const GEAR_TOP=[0,12,22,34,46,57,62];
+const GEAR_ACC=[0,1.15,1.0,0.88,0.76,0.64,0.54];
+
+let lastT=performance.now();
+const raf=window.requestAnimationFrame.bind(window);
+let running=true;
+
+function resetPlayer(p){
+  p.px=p.sx;p.pz=p.sz;p.heading=p.sh;p.speed=0;
+  p.kbThrottle=0;p.kbBrake=0;p.steerKey=0;
+  p.carY=0;p.vy=0;p.drowned=false;
+  if(gameMode==='solo'){touchL=0;touchR=0;mouseL=false;mouseR=false;drownEl.classList.remove('show');}
+  resetLapTimer(p,performance.now());
+  if(gameMode==='duo')updateLead();
+}
+
+function startDrown(p){
+  if(p.drowned)return;
+  p.drowned=true;p.speed=0;
+  drownEl.textContent=p.name+' 掉进河里了！';
+  drownEl.classList.add('show');
+  setTimeout(()=>{drownEl.classList.remove('show');resetPlayer(p);},2200);
+}
+
+// 碰撞雪糕筒（撞飞）
+function collideCones(p,dt){
+  const fx=p.px+Math.sin(p.heading)*2.3,fz=p.pz+Math.cos(p.heading)*2.3;
+  for(const c of slalom){
+    const m=c.mesh;
+    const dx=m.position.x-fx,dz=m.position.z-fz;
+    const d2=dx*dx+dz*dz;
+    if(d2<4.5){
+      const d=Math.sqrt(d2)||1;
+      const push=p.speed*1.4+2;
+      c.vx=(dx/d)*push;c.vz=(dz/d)*push;
+      m.position.y=1.6;
+    }
+    c.vx*=0.92;c.vz*=0.92;
+    m.position.x+=c.vx*dt;m.position.z+=c.vz*dt;
+    m.position.y=Math.max(1.4,1.6-Math.hypot(c.vx,c.vz)*dt*2);
+    m.rotation.x+=c.vz*dt*0.4;m.rotation.z-=c.vx*dt*0.4;
+  }
+}
+
+// 静态障碍碰撞（树/房子/桥墩/高架柱）：推出并沿法线吸收速度
+function collideObstacles(p){
+  const cr=1.0;   // 车体实际半宽：贴近障碍才触发碰撞，不会提前停车
+  for(const o of obstacles){
+    const dx=p.px-o.x,dz=p.pz-o.z;
+    const rr=o.r+cr,d2=dx*dx+dz*dz;
+    if(d2<rr*rr){
+      let nx,nz,d;
+      if(d2<1e-6){nx=1;nz=0;d=0;}          // 恰好压在中心：固定推离
+      else{d=Math.sqrt(d2);nx=dx/d;nz=dz/d;}
+      p.px+=nx*(rr-d);p.pz+=nz*(rr-d);
+      // 撞上只削减一半朝向速度（不刹停，仍可挤过/滑行）
+      const vn=p.speed*(nx*Math.sin(p.heading)+nz*Math.cos(p.heading));
+      if(vn<0)p.speed+=vn*0.5;
+    }
+  }
+}
+
+// 自动变速箱：按速度升/降挡（带滞回防抖），转速 rpm 随挡内速度爬升→换挡时骤降，形成阶段性声浪
+function updateGear(p){
+  const g=p.gear;
+  if(p.speed>0.6){
+    if(g<6&&p.speed>GEAR_TOP[g]*0.96){p.gear=g+1;shiftClick(true);}
+    else if(g>1&&p.speed<GEAR_TOP[g-1]*0.78){p.gear=g-1;shiftClick(false);}
+  }
+  const top=GEAR_TOP[p.gear];
+  p.rpm=clamp(Math.abs(p.speed)/top,0.12,1);
+}
+
+// 换挡短促"咔哒"声，强化阶段感
+function shiftClick(up){
+  if(!actx||!actx.destination)return;
+  try{
+    const t=actx.currentTime;
+    const o=actx.createOscillator();o.type='sawtooth';o.frequency.value=up?880:460;
+    const f=actx.createBiquadFilter();f.type='lowpass';f.frequency.value=2400;
+    const g=actx.createGain();g.gain.setValueAtTime(0.05,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.13);
+    o.connect(f);f.connect(g);g.connect(actx.destination);
+    o.start(t);o.stop(t+0.15);
+  }catch(e){}
+}
+
+// 单车物理
+function updateCar(p,dt,now){
+  const rampUp=2.4,rampDown=5.0;
+  if(p.ctl.throttle())p.kbThrottle=Math.min(1,p.kbThrottle+rampUp*dt);else p.kbThrottle=Math.max(0,p.kbThrottle-rampDown*dt);
+  if(p.ctl.brake())p.kbBrake=Math.min(1,p.kbBrake+rampUp*dt);else p.kbBrake=Math.max(0,p.kbBrake-rampDown*dt);
+  p.steerKey=p.ctl.steer();
+  // 差速驱动：键盘 base+steer；单人时叠加鼠标/触屏左右轮
+  let fwd=p.kbThrottle,rev=0;
+  if(p.kbBrake>0.03){ if(!(p.speed>0.4||p.speed<-0.4))rev=-p.kbBrake; }
+  const base=fwd+rev;
+  const sb=p.steerKey*0.5;
+  let keyL=base+sb,keyR=base-sb;
+  let L=clamp(keyL,-1,1),R=clamp(keyR,-1,1);
+  if(gameMode==='solo'&&p===players[0]){
+    const tL=isTouch?touchL:Math.max(touchL,mouseL?1:0);
+    const tR=isTouch?touchR:Math.max(touchR,mouseR?1:0);
+    L=clamp(keyL+tL,-1,1);R=clamp(keyR+tR,-1,1);
+  }else if(gameMode==='duo'){
+    // 双人触控：各自半屏按钮驱动各自左右轮（PC 双人走键盘，触控为 0）
+    L=clamp(keyL+p.touchL,-1,1);R=clamp(keyR+p.touchR,-1,1);
+  }
+  p.L=L;p.R=R;
+  const vTarget=(L+R)/2*MAX_SPEED;
+  const dv=vTarget-p.speed;
+  // 加速度按挡位：低挡扭矩大，高挡提速慢（极速高）
+  let alim=ENGINE*GEAR_ACC[p.gear];
+  if(p.speed>0&&vTarget<=0)alim=BRAKE_POW;
+  if(p.speed<0&&vTarget>=0)alim=BRAKE_POW;
+  p.speed+=clamp(dv,-alim*dt,alim*dt);
+  if(p.speed>MAX_SPEED)p.speed=MAX_SPEED;
+  if(p.speed<-9)p.speed=-9;
+  updateGear(p);
+  const turn=(R-L)*(MAX_TURN/(1+Math.abs(p.speed)*TURN_SOFT));
+  p.heading+=turn*dt;
+  p.px+=Math.sin(p.heading)*p.speed*dt;
+  p.pz+=Math.cos(p.heading)*p.speed*dt;
+  const bound=960,boundZ=600;
+  if(Math.abs(p.px)>bound){p.px=Math.sign(p.px)*bound;p.speed*=0.2;}
+  if(Math.abs(p.pz)>boundZ){p.pz=Math.sign(p.pz)*boundZ;p.speed*=0.2;}
+  // 落河：重力下沉 → 淹死
+  if(!p.drowned){
+    if(overRiver(p.px,p.pz)){
+      p.vy-=9.8*dt;p.carY+=p.vy*dt;
+      if(p.carY<-6){p.carY=-6;startDrown(p);}
+    }else{
+      p.carY+=p.vy*dt;p.vy-=9.8*dt;
+      if(p.carY<=0){p.carY=0;p.vy=0;}
+    }
+  }else{
+    p.carY-=1.6*dt;p.speed=0;
+  }
+  p.mesh.position.set(p.px,p.carY,p.pz);
+  p.mesh.rotation.y=p.heading;
+  const spin=p.speed*dt/0.55;
+  for(const w of p.wheels)w.spin.rotation.x+=spin;
+  p.blob.position.set(p.px,p.carY,p.pz);
+  p.blob.rotation.y=p.heading;
+  p.blob.visible=p.carY>-0.5;
+  collideObstacles(p);
+  collideCones(p,dt);
+  updateLap(p,p.px,p.pz,now);
+}
+
+// 双人：车-车分离，避免互相穿过
+function carsCollide(){
+  const a=players[0],b=players[1];
+  if(a.drowned&&b.drowned)return;
+  let dx=b.px-a.px,dz=b.pz-a.pz;
+  const d=Math.hypot(dx,dz)||1;
+  if(d<3.1&&d>0.001){
+    dx/=d;dz/=d;
+    const push=(3.1-d)*0.5;
+    a.px-=dx*push;a.pz-=dz*push;
+    b.px+=dx*push;b.pz+=dz*push;
+  }
+}
+
+function frame(now){
+  if(!running)return;
+  const dt=Math.min(0.033,(now-lastT)/1000);lastT=now;
+  for(let i=0;i<(gameMode==='duo'?2:1);i++)updateCar(players[i],dt,now);
+  if(gameMode==='duo')carsCollide();
+  // 河水轻微起伏
+  water.position.y=WATER_Y+Math.sin(now*0.0012)*0.15;
+  updateEngine(players[0]);
+  updateCamera(dt);
+  updateHUD(now);
+  renderFrame();
+  raf(frame);
+}
+
+/* ================= HUD ================= */
+const arcEl=document.getElementById('speedArc');
+const needleG=document.getElementById('needleG');
+const speedNum=document.getElementById('speedNum');
+const gearBox=document.getElementById('gearBox');
+const leftFill=document.getElementById('leftFill');
+const rightFill=document.getElementById('rightFill');
+const leftPct=document.getElementById('leftPct');
+const rightPct=document.getElementById('rightPct');
+// 刻度
+const ticks=document.getElementById('ticks');
+for(let i=0;i<=8;i++){
+  const ang=135+(225*i/8);
+  const r1=58,r2=i%4===0?70:64;
+  const a1=ang*Math.PI/180,a2=ang*Math.PI/180;
+  const c1x=100+Math.cos(a1)*r1,c1y=108+Math.sin(a1)*r1;
+  const c2x=100+Math.cos(a2)*r2,c2y=108+Math.sin(a2)*r2;
+  const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+  l.setAttribute('x1',c1x);l.setAttribute('y1',c1y);l.setAttribute('x2',c2x);l.setAttribute('y2',c2y);
+  l.setAttribute('stroke',i%4===0?'rgba(255,255,255,.9)':'rgba(255,255,255,.4)');l.setAttribute('stroke-width',i%4===0?2.4:1.4);
+  ticks.appendChild(l);
+}
+/* 双人对战 HUD 元素 */
+const duoPanel=document.getElementById('duoPanel');
+const dp1Lap=document.getElementById('dp1Lap'),dp1Cur=document.getElementById('dp1Cur'),
+  dp1Best=document.getElementById('dp1Best'),dp1Spd=document.getElementById('dp1Spd');
+const dp2Lap=document.getElementById('dp2Lap'),dp2Cur=document.getElementById('dp2Cur'),
+  dp2Best=document.getElementById('dp2Best'),dp2Spd=document.getElementById('dp2Spd');
+const dpLead=document.getElementById('dpLead');
+const dashEl=document.getElementById('dash');
+const splitLine=document.getElementById('splitLine');
+const spd1=document.getElementById('spd1'),spd2=document.getElementById('spd2');
+const spd1v=document.getElementById('spd1v'),spd2v=document.getElementById('spd2v');
+const mbtns=document.getElementById('mbtns');
+
+// 跟随相机：让 cam 平滑追随某辆车
+function followCam(cam,p,dt){
+  const f=1-Math.exp(-dt*4.2);
+  const camDist=9.5,camH=p.carY+3.6,lookH=p.carY+1.4;
+  const behind=p.heading+Math.PI;
+  const tx=p.px+Math.sin(behind)*camDist;
+  const tz=p.pz+Math.cos(behind)*camDist;
+  cam.position.x+=(tx-cam.position.x)*f;
+  cam.position.z+=(tz-cam.position.z)*f;
+  cam.position.y+=(camH-cam.position.y)*f;
+  cam.lookAt(p.px+Math.sin(p.heading)*4,lookH,p.pz+Math.cos(p.heading)*4);
+}
+
+function updateCamera(dt){
+  if(gameMode==='solo'){
+    followCam(camera,players[0],dt);
+  }else{
+    // 双人分屏：左右各一跟随相机，分别追红/蓝车
+    followCam(camera,players[0],dt);
+    followCam(cam2,players[1],dt);
+  }
+}
+
+// 分屏渲染：单人全屏；双人左右各半，P1 在左、P2 在右
+function renderFrame(){
+  const w=window.innerWidth,h=window.innerHeight;
+  if(gameMode==='solo'){
+    renderer.setScissorTest(false);
+    renderer.setViewport(0,0,w,h);
+    renderer.render(scene,camera);
+  }else{
+    renderer.setScissorTest(true);
+    const hw=w/2;
+    camera.aspect=hw/h;camera.updateProjectionMatrix();
+    renderer.setViewport(0,0,hw,h);
+    renderer.setScissor(0,0,hw,h);
+    renderer.render(scene,camera);
+    cam2.aspect=hw/h;cam2.updateProjectionMatrix();
+    renderer.setViewport(hw,0,hw,h);
+    renderer.setScissor(hw,0,hw,h);
+    renderer.render(scene,cam2);
+  }
+}
+
+function updateHUD(now){
+  const p0=players[0];
+  if(gameMode==='solo'){
+    // 中央速度表
+    speedNum.textContent=Math.round(Math.abs(p0.speed)*3.6);
+    const frac=Math.min(1,Math.abs(p0.speed)/MAX_SPEED);
+    arcEl.setAttribute('stroke-dasharray',(frac*232)+' 600');
+    needleG.setAttribute('transform','rotate('+(-112.5+frac*225)+' 100 108)');
+    if(p0.speed<-0.4)gearBox.textContent='R';
+    else if(p0.speed<0.5)gearBox.textContent='N';
+    else gearBox.textContent='D'+p0.gear;
+    leftFill.style.height=(Math.abs(p0.L)*100)+'%';leftPct.textContent=Math.round(Math.abs(p0.L)*100)+'%';
+    rightFill.style.height=(Math.abs(p0.R)*100)+'%';rightPct.textContent=Math.round(Math.abs(p0.R)*100)+'%';
+    if(gameStarted&&p0.lap.curLapStart>0)lpCurEl.textContent=((now-p0.lap.curLapStart)/1000).toFixed(2)+'s';else lpCurEl.textContent='--';
+  }else{
+    // 双人：两屏各自速度 + 顶部对战面板
+    const p1=players[1];
+    spd1v.textContent=Math.round(Math.abs(p0.speed)*3.6)+' · D'+p0.gear;
+    spd2v.textContent=Math.round(Math.abs(p1.speed)*3.6)+' · D'+p1.gear;
+    dp1Spd.textContent=Math.round(Math.abs(p0.speed)*3.6);
+    dp2Spd.textContent=Math.round(Math.abs(p1.speed)*3.6);
+    dp1Lap.textContent=p0.lap.lapCount;dp2Lap.textContent=p1.lap.lapCount;
+    dp1Best.textContent=p0.lap.bestLap?p0.lap.bestLap.toFixed(2)+'s':'--';
+    dp2Best.textContent=p1.lap.bestLap?p1.lap.bestLap.toFixed(2)+'s':'--';
+    dp1Cur.textContent=gameStarted&&p0.lap.curLapStart>0?((now-p0.lap.curLapStart)/1000).toFixed(2)+'s':'--';
+    dp2Cur.textContent=gameStarted&&p1.lap.curLapStart>0?((now-p1.lap.curLapStart)/1000).toFixed(2)+'s':'--';
+  }
+}
+
+/* ================= 启动与提示 ================= */
+const toastEl=document.getElementById('toast');
+const drownEl=document.getElementById('drown');
+let toastT=null;
+function toast(msg){toastEl.textContent=msg;toastEl.style.opacity=1;
+  clearTimeout(toastT);toastT=setTimeout(()=>toastEl.style.opacity=0,1600);}
+
+/* ================= 引擎音效 ================= */
+let actx=null,engOsc=null,engOsc2=null,engLP=null,engGain=null,audioMuted=false;
+try{audioMuted=localStorage.getItem('driv3d_mute')==='1';}catch(e){}
+const muteBtn=document.getElementById('muteBtn');
+const iosHint=document.getElementById('iosHint');
+function syncMute(){if(muteBtn)muteBtn.setAttribute('aria-checked',audioMuted?'true':'false');}
+function initAudio(){
+  if(actx)return;
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    actx=new AC();
+    engOsc=actx.createOscillator();engOsc.type='triangle';engOsc.frequency.value=55;
+    engOsc2=actx.createOscillator();engOsc2.type='sawtooth';engOsc2.frequency.value=27;
+    engLP=actx.createBiquadFilter();engLP.type='lowpass';engLP.frequency.value=360;engLP.Q.value=2.2;
+    engGain=actx.createGain();engGain.gain.value=0;
+    engOsc.connect(engLP);engOsc2.connect(engLP);engLP.connect(engGain);engGain.connect(actx.destination);
+    const analyser=actx.createAnalyser();analyser.fftSize=128;engGain.connect(analyser);
+    engOsc.start();engOsc2.start();
+    // iOS 侧边静音键会静音 Web Audio 合成音：检测全零则提示
+    if(/iPad|iPhone|iPod/.test(navigator.userAgent||'')){
+      setTimeout(()=>{
+        const buf=new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(buf);
+        let sum=0;for(const v of buf)sum+=v;
+        if(sum===0&&iosHint)iosHint.style.display='block';
+      },700);
+    }
+  }catch(e){actx=null;}
+}
+function updateEngine(p){
+  if(!actx||!engOsc)return;
+  const sp=clamp(p.rpm||0,0,1);   // 转速 0..1，换挡时骤降 → 阶段声浪
+  // 三角波主音 + 半频锯齿低频：柔和圆润的引擎轰鸣，随转速升转
+  engOsc.frequency.setTargetAtTime(55+sp*150,actx.currentTime,0.08);
+  engOsc2.frequency.setTargetAtTime(27+sp*75,actx.currentTime,0.08);
+  engLP.frequency.setTargetAtTime(320+sp*820,actx.currentTime,0.12);
+  engGain.gain.setTargetAtTime(audioMuted?0:(0.035+sp*0.06),actx.currentTime,0.12);
+}
+if(muteBtn)muteBtn.addEventListener('click',()=>{
+  audioMuted=!audioMuted;
+  try{localStorage.setItem('driv3d_mute',audioMuted?'1':'0');}catch(e){}
+  syncMute();
+});
+syncMute();
+
+const startEl=document.getElementById('start');
+const lapPanelEl=document.getElementById('lapPanel');
+const leftGaugeEl=document.getElementById('leftGauge');
+const rightGaugeEl=document.getElementById('rightGauge');
+const pedalsEl=document.getElementById('pedals');
+const infoEl=document.getElementById('info');
+const infoSoloHTML=infoEl.innerHTML;
+const infoDuoHTML='<h1>3D 精准驾驶<span>·</span>双人</h1>'
+  +'<div class="row"><b style="color:#ff5a6a">红车</b>&nbsp;W 油门 · S 刹车 · A/D 转向</div>'
+  +'<div class="row"><b style="color:#4b9bff">蓝车</b>&nbsp;↑↓ 油门刹车 · ←→ 转向</div>'
+  +'<div class="row"><span class="kbd">R</span>回正红车</div>'
+  +'<div class="row" style="color:var(--acc);font-weight:600">一圈计时 · 过起跑线计圈</div>'
+  +'<div id="resetBtn">回正红车 (R)</div>';
+
+// 创建两辆车（P1 红常驻；P2 蓝仅双人显示）
+const players=[
+  makePlayer({color:0xd62f3f,name:'红车',ctl:P1_CTL,x:-150,z:-200,h:Math.PI/2}),
+  makePlayer({color:0x3f8bff,name:'蓝车',ctl:P2_CTL,x:-150,z:-220,h:Math.PI/2})
+];
+players[0].mesh.visible=true;players[0].blob.visible=true;
+players[1].mesh.visible=false;players[1].blob.visible=false;
+
+
+function setupPlayers(mode){
+  players[0].mesh.visible=true;players[0].blob.visible=true;
+  const show2=(mode==='duo');
+  players[1].mesh.visible=show2;players[1].blob.visible=show2;
+}
+function applyModeUI(){
+  const duo=(gameMode==='duo');
+  duoPanel.style.display=duo?'flex':'none';
+  lapPanelEl.style.display=duo?'none':'flex';
+  leftGaugeEl.style.display=duo?'none':'flex';
+  rightGaugeEl.style.display=duo?'none':'flex';
+  pedalsEl.style.display=duo?'none':'';
+  mbtns.style.display=(duo&&isTouch)?'block':'none';
+  dashEl.style.display=duo?'none':'flex';   // 分屏时隐藏中央仪表，改用各屏速度块
+  splitLine.style.display=duo?'block':'none';
+  spd1.style.display=duo?'flex':'none';
+  spd2.style.display=duo?'flex':'none';
+  infoEl.innerHTML=duo?infoDuoHTML:infoSoloHTML;
+  if(duo)updateLead();
+}
+
+function begin(mode){
+  gameMode=mode;
+  initAudio();                       // 点击开始按钮（用户手势）时启动引擎音效
+  setupPlayers(mode);
+  applyModeUI();
+  gameStarted=true;
+  for(const p of players)resetLapTimer(p,performance.now());
+  startEl.classList.add('fadeOut');
+  setTimeout(()=>startEl.classList.add('hidden'),650);
+  if(mode==='solo'){lpCurEl.textContent='0.00s';toast('W 油门 · S 刹车 · A/D 转向 · 过起跑线开始计圈');}
+  else toast('红车(WASD) vs 蓝车(方向键) · 开始计圈');
+  // 触屏提示条短暂显示后自动淡出
+  const hint=document.getElementById('pedalHint');
+  if(hint && getComputedStyle(hint).display!=='none'){
+    setTimeout(()=>{
+      hint.style.transition='opacity .8s';
+      hint.style.opacity='0';
+      setTimeout(()=>hint.style.display='none',900);
+    },3500);
+  }
+}
+document.getElementById('startBtn').addEventListener('click',()=>begin('solo'));
+document.getElementById('startDuoBtn').addEventListener('click',()=>begin('duo'));
+// 回正红车（重置会重建 #info 内的按钮，故用事件委托）
+infoEl.addEventListener('click',e=>{
+  if(e.target.closest && e.target.closest('#resetBtn')){resetPlayer(players[0]);toast('红车 已回正车辆');}
+});
+
+/* 尺寸自适应 */
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();
+  cam2.aspect=window.innerWidth/(window.innerHeight*2);cam2.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
+/* 首帧立即渲染一帧，避免黑屏 */
+renderer.render(scene,camera);
+lastT=performance.now();
+for(const p of players)resetLapTimer(p,lastT);
+raf(frame);
+})();
+</script>
+
+
+</body></html>
