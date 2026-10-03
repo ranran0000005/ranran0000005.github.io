@@ -1,402 +1,1129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>纯文本·缓存记事本</title>
-    <style>
-        /* 极简风格，纯粹文本记事本 */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            background: #fafaf8;
-            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-        .notepad {
-            width: 100%;
-            max-width: 750px;
-            background-color: #fffefc;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.05), 0 0 0 1px #f0ede9 inset;
-            padding: 28px 28px 32px;
-        }
-        h1 {
-            font-size: 1.6rem;
-            font-weight: 400;
-            color: #3a3a3a;
-            margin-top: 0;
-            margin-bottom: 6px;
-            letter-spacing: -0.01em;
-            border-bottom: 1px solid #eae7e2;
-            padding-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        h1 span {
-            background: #ecebe6;
-            font-size: 0.8rem;
-            font-weight: 400;
-            padding: 4px 12px;
-            border-radius: 30px;
-            color: #4f4c46;
-            letter-spacing: 0.3px;
-        }
-        .editor-area {
-            margin: 22px 0 18px;
-        }
-        textarea {
-            width: 100%;
-            min-height: 340px;
-            padding: 20px 22px;
-            border: none;
-            background: #fffcf7;
-            border-radius: 16px;
-            font-size: 1rem;
-            line-height: 1.65;
-            font-family: 'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', monospace;
-            resize: vertical;
-            color: #2b2b2b;
-            caret-color: #4f7a7a;
-            box-shadow: inset 0 1px 4px rgba(0,0,0,0.02), inset 0 0 0 1px #e3dfd9;
-            outline: none;
-            transition: box-shadow 0.1s;
-        }
-        textarea:focus {
-            box-shadow: inset 0 1px 5px rgba(80, 80, 80, 0.03), inset 0 0 0 2px #cbd5d0;
-            background: #fffdfa;
-        }
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 18px 0 8px;
-            color: #5c5c5a;
-            font-size: 0.85rem;
-            padding: 0 4px;
-        }
-        .cache-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #f3f1ee;
-            padding: 6px 16px;
-            border-radius: 40px;
-            color: #3d3d38;
-        }
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .btn {
-            background: #fff;
-            border: 1px solid #dbd7d0;
-            padding: 8px 20px;
-            border-radius: 40px;
-            font-size: 0.9rem;
-            font-weight: 450;
-            color: #3a3a3a;
-            cursor: pointer;
-            transition: 0.12s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: #ffffff;
-        }
-        .btn:hover {
-            background: #f3f1ee;
-            border-color: #b3aea7;
-            color: #1f1f1f;
-        }
-        .btn:active {
-            background: #e3dfd9;
-            transform: scale(0.98);
-        }
-        .btn-save {
-            background: #eae9e3;
-            border-color: #b9b6ad;
-            font-weight: 500;
-        }
-        .btn-save:hover {
-            background: #dad8cf;
-            border-color: #9e9a92;
-        }
-        .word-count {
-            background: transparent;
-            padding: 6px 12px;
-            border-radius: 30px;
-            border: 1px solid #e2dfd9;
-            color: #5e5e59;
-        }
-        hr {
-            border: none;
-            border-top: 1px solid #e7e4df;
-            margin: 22px 0 10px;
-        }
-        .footer-note {
-            font-size: 0.75rem;
-            color: #94908b;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 16px;
-        }
-        .clear-btn {
-            background: none;
-            border: none;
-            color: #8b8882;
-            text-decoration: underline dotted;
-            font-size: 0.75rem;
-            cursor: pointer;
-            padding: 4px 8px;
-        }
-        .clear-btn:hover {
-            color: #4c4a46;
-            text-decoration: underline;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文档工坊 · 富文本编辑器</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%234F46E5'/%3E%3Cpath d='M9 8h14v3H9zm0 6h10v3H9zm0 6h14v3H9z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;600&display=swap">
+<style>
+/* ============================================================
+   设计令牌 Design Tokens
+   ============================================================ */
+:root{
+  --bg:#F1F2F5;
+  --paper:#FFFFFF;
+  --paper-edge:#E4E6EC;
+  --ink:#20242E;
+  --ink-soft:#5C6370;
+  --ink-faint:#9AA0AB;
+  --line:#E7E9EE;
+  --line-strong:#D5D9E1;
+  --accent:#4F46E5;
+  --accent-hover:#4338CA;
+  --accent-soft:#EEF0FF;
+  --ok:#0E9A6E;
+  --danger:#D64545;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(20,24,40,.06),0 4px 14px rgba(20,24,40,.05);
+  --ui-font:"Noto Sans SC",-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --serif:"Noto Serif SC",Georgia,"Times New Roman",serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--ui-font);
+  display:flex;flex-direction:column;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer}
+::selection{background:#CBD5FF}
+
+/* ============================================================
+   顶栏 App Bar
+   ============================================================ */
+.appbar{
+  display:flex;align-items:center;gap:14px;
+  padding:10px 18px;
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+  flex-wrap:wrap;
+  position:sticky;top:0;z-index:40;
+}
+.brand{display:flex;align-items:center;gap:10px;flex:none}
+.brand-mark{
+  width:34px;height:34px;border-radius:8px;flex:none;
+  background:var(--accent);display:grid;place-items:center;
+  box-shadow:0 2px 6px rgba(79,70,229,.35);
+}
+.brand-mark svg{width:18px;height:18px;fill:#fff}
+.brand-name{font-size:.95rem;font-weight:600;letter-spacing:.2px}
+.brand-name small{display:block;font-weight:400;color:var(--ink-faint);font-size:.68rem;letter-spacing:.4px;margin-top:1px}
+
+.doc-title{
+  flex:1;min-width:200px;max-width:420px;
+}
+#docTitle{
+  width:100%;border:1px solid transparent;background:transparent;
+  font-family:var(--serif);font-size:1.05rem;font-weight:600;color:var(--ink);
+  padding:6px 10px;border-radius:8px;outline:none;transition:.15s;
+}
+#docTitle:hover{background:#F5F6F8}
+#docTitle:focus{background:#F5F6F8;border-color:var(--accent)}
+#docTitle::placeholder{color:var(--ink-faint);font-weight:400}
+
+.app-actions{display:flex;align-items:center;gap:8px;flex:none;flex-wrap:wrap;justify-content:flex-end}
+.appbtn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 14px;border-radius:9px;border:1px solid var(--line-strong);
+  background:#fff;color:var(--ink);font-size:.83rem;font-weight:500;
+  transition:background .12s,border-color .12s,transform .05s;
+  white-space:nowrap;
+}
+.appbtn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8}
+.appbtn:hover{background:#F3F4F7;border-color:#B9BEC9}
+.appbtn:active{transform:translateY(1px)}
+.appbtn.primary{
+  background:var(--accent);border-color:var(--accent);color:#fff;
+}
+.appbtn.primary:hover{background:var(--accent-hover)}
+.appbtn.danger-ghost{color:var(--danger);border-color:transparent;background:transparent}
+.appbtn.danger-ghost:hover{background:#FDEDED;border-color:#F5C2C2}
+
+/* 窄屏：appbar 分三行堆叠，操作按钮可换行 */
+@media (max-width:720px){
+  .appbar{gap:8px}
+  .brand{width:100%}
+  .doc-title{flex:1 1 100%;max-width:none;min-width:0}
+  .app-actions{flex:1 1 100%;width:100%;justify-content:flex-start}
+  .appbtn{font-size:.79rem;padding:7px 10px}
+}
+
+/* ============================================================
+   工具栏 Toolbar
+   ============================================================ */
+.toolbar{
+  position:sticky;top:0;z-index:30;
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+  padding:7px 14px;
+  display:flex;align-items:center;gap:2px;
+  overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:thin;
+}
+.tb-group{display:flex;align-items:center;gap:2px;flex:none}
+.tb-sep{width:1px;height:22px;background:var(--line-strong);margin:0 7px;flex:none}
+.tb-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;border:none;background:transparent;border-radius:7px;
+  color:var(--ink-soft);transition:background .12s,color .12s;flex:none;
+}
+.tb-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tb-btn:hover{background:#F0F1F5;color:var(--ink)}
+.tb-btn.active{background:var(--accent-soft);color:var(--accent)}
+.tb-btn[disabled]{opacity:.35;cursor:not-allowed}
+.tb-btn[disabled]:hover{background:transparent;color:var(--ink-soft)}
+
+/* 段落下拉 */
+.select-wrap{position:relative;flex:none}
+.tb-select{
+  display:inline-flex;align-items:center;gap:6px;
+  height:32px;padding:0 8px 0 10px;border:none;background:transparent;
+  border-radius:7px;color:var(--ink);font-size:.83rem;font-weight:500;transition:background .12s;
+  white-space:nowrap;
+}
+.tb-select:hover{background:#F0F1F5}
+.tb-select svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;margin-left:2px}
+.menu{
+  position:fixed;min-width:172px;
+  background:#fff;border:1px solid var(--line);border-radius:10px;
+  box-shadow:0 8px 24px rgba(20,24,40,.12);padding:6px;z-index:60;
+  display:none;
+}
+.menu.open{display:block}
+.menu-item{
+  display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;
+  font-size:.83rem;color:var(--ink);cursor:pointer;transition:background .1s;white-space:nowrap;
+}
+.menu-item:hover{background:#F3F4F7}
+.menu-item svg{width:15px;height:15px;stroke:var(--ink-faint);fill:none;stroke-width:1.7}
+.menu-item .h1-t{font-size:1.05rem;font-weight:700}
+.menu-item .h2-t{font-size:.95rem;font-weight:600}
+.menu-item .h3-t{font-size:.88rem;font-weight:600}
+.menu-item .bq-t{font-family:var(--serif);font-style:italic;padding-left:6px;border-left:3px solid var(--line-strong)}
+.menu-item .code-t{font-family:ui-monospace,Consolas,monospace;font-size:.8rem;background:#F0F1F5;padding:1px 5px;border-radius:4px}
+
+/* 颜色面板 */
+.color-panel{min-width:210px;padding:10px}
+.color-panel h6{font-size:.72rem;font-weight:500;color:var(--ink-faint);letter-spacing:.5px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center}
+.color-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:10px}
+.swatch{
+  width:100%;aspect-ratio:1;border-radius:6px;border:1px solid rgba(0,0,0,.08);
+  cursor:pointer;transition:transform .08s;position:relative;
+}
+.swatch:hover{transform:scale(1.12)}
+.swatch.on::after{content:"";position:absolute;inset:-3px;border:2px solid var(--accent);border-radius:8px}
+.color-toolbar{display:flex;gap:8px}
+.color-toolbar label{
+  flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-size:.78rem;color:var(--ink-soft);cursor:pointer;
+}
+.color-toolbar label:hover{background:#F5F6F8}
+.color-toolbar input[type=color]{width:0;height:0;opacity:0;border:none;padding:0}
+
+/* 提示框 toast */
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+  background:#232733;color:#fff;padding:10px 18px;border-radius:10px;
+  font-size:.84rem;box-shadow:0 8px 24px rgba(0,0,0,.25);
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:100;
+  display:flex;align-items:center;gap:9px;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast svg{width:16px;height:16px;stroke:#8EE6C0;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.toast.error svg{stroke:#FF9A9A}
+</style>
 </head>
 <body>
-    <div class="notepad">
-        <h1>
-            📓 纯文本记事本
-            <span>localStorage</span>
-        </h1>
-        
-        <!-- 核心：文本输入区 · 没有任何格式化，纯文本 -->
-        <div class="editor-area">
-            <textarea id="notepadTextarea" placeholder="✍️ 在这里写点东西…… (自动保存在浏览器缓存中)"></textarea>
-        </div>
-        
-        <!-- 状态栏：缓存状态 + 字数统计 -->
-        <div class="status-bar">
-            <div class="cache-indicator" id="cacheStatus">
-                <span>💾</span> <span id="cacheMessage">缓存已就绪</span>
-            </div>
-            <div class="word-count" id="wordCountDisplay">
-                0 字符
-            </div>
-        </div>
-        
-        <!-- 操作按钮组：手动保存 / 加载 / 清空编辑器 (缓存独立操作) -->
-        <div class="btn-group">
-            <button class="btn btn-save" id="saveBtn">💿 保存到缓存</button>
-            <button class="btn" id="loadBtn">📂 从缓存加载</button>
-            <button class="btn" id="clearEditorBtn">🗑️ 清空编辑器</button>
-            <button class="btn" id="downloadBtn">📥 下载为TXT</button>
-        </div>
-        
-        <hr>
-        
-        <!-- 底部：缓存独立清理，不丢失编辑器内容（但可单独清除缓存） -->
-        <div class="footer-note">
-            <span>📌 修改后自动保存 · 关闭页面再打开，内容还在</span>
-            <button class="clear-btn" id="clearCacheBtn">清除缓存数据</button>
-        </div>
+<!-- ===== 顶栏 ===== -->
+<header class="appbar">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24"><path d="M4 6h12v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>
     </div>
+    <div class="brand-name">文档工坊<small>DOCUMENT WORKSHOP</small></div>
+  </div>
 
-    <script>
-        (function() {
-            "use strict";
+  <div class="doc-title">
+    <input id="docTitle" placeholder="未命名文档" value="我的新文档">
+  </div>
 
-            // --- 缓存键名 ---
-            const STORAGE_KEY = "plain_text_notepad_v1";
+  <div class="app-actions">
+    <button class="appbtn" id="newDocBtn" title="新建空白文档">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>新建
+    </button>
+    <button class="appbtn" id="openFileBtn" title="打开一个 HTML / 文本文档继续编辑">
+      <svg viewBox="0 0 24 24"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 3v6h6"/></svg>打开
+    </button>
+    <button class="appbtn" id="exportHtmlBtn" title="导出为独立的 HTML 文档">
+      <svg viewBox="0 0 24 24"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5"/><path d="M9 13l-2 2 2 2M15 13l2 2-2 2"/></svg>导出 HTML
+    </button>
+    <button class="appbtn primary" id="printBtn" title="打印 / 另存为 PDF">
+      <svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg>打印 / PDF
+    </button>
+    <button class="appbtn danger-ghost" id="clearDocBtn" title="清空编辑器内容">
+      <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+    </button>
+  </div>
+</header>
 
-            // --- DOM 元素 ---
-            const textarea = document.getElementById("notepadTextarea");
-            const saveBtn = document.getElementById("saveBtn");
-            const loadBtn = document.getElementById("loadBtn");
-            const clearEditorBtn = document.getElementById("clearEditorBtn");
-            const clearCacheBtn = document.getElementById("clearCacheBtn");
-            const downloadBtn = document.getElementById("downloadBtn");
-            const cacheMessage = document.getElementById("cacheMessage");
-            const wordCountDisplay = document.getElementById("wordCountDisplay");
+<!-- ===== 工具栏 ===== -->
+<nav class="toolbar" id="toolbar">
+  <!-- 段落样式 -->
+  <div class="select-wrap" id="blockWrap">
+    <button class="tb-select" id="blockBtn" aria-haspopup="true">
+      <span id="blockLabel">正文</span>
+      <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="menu" id="blockMenu">
+      <div class="menu-item" data-block="p"><span class="h1-t">正文</span></div>
+      <div class="menu-item" data-block="h1"><span class="h1-t">标题 1</span></div>
+      <div class="menu-item" data-block="h2"><span class="h2-t">标题 2</span></div>
+      <div class="menu-item" data-block="h3"><span class="h3-t">标题 3</span></div>
+      <div class="menu-item" data-block="blockquote"><span class="bq-t">引用</span></div>
+      <div class="menu-item" data-block="pre"><span class="code-t">代码块</span></div>
+    </div>
+  </div>
 
-            // --- 辅助函数: 更新字数统计 ---
-            function updateWordCount() {
-                const text = textarea.value;
-                const charCount = text.length;
-                wordCountDisplay.textContent = charCount + ' 字符';
-            }
+  <div class="tb-sep"></div>
 
-            // --- 辅助函数: 显示缓存状态消息（短暂提示 + 图标变化）---
-            function showCacheMessage(msg, isPermanent = false) {
-                cacheMessage.textContent = msg;
-                if (!isPermanent) {
-                    // 短暂提示后恢复常规状态（3.5秒后恢复默认）
-                    clearTimeout(window._cacheMsgTimer);
-                    window._cacheMsgTimer = setTimeout(() => {
-                        // 恢复为“缓存就绪”或者显示最后保存时间? 简单起见恢复就绪
-                        cacheMessage.textContent = '缓存已就绪';
-                    }, 3500);
-                }
-            }
+  <!-- 文本格式 -->
+  <button class="tb-btn" id="boldBtn" title="加粗 (Ctrl+B)">
+    <svg viewBox="0 0 24 24"><path d="M6 4h8a3 3 0 0 1 3 3 3 3 0 0 1-3 3H6zM6 14h9a3 3 0 0 1 3 3 3 3 0 0 1-3 3H6z"/></svg>
+  </button>
+  <button class="tb-btn" id="italicBtn" title="斜体 (Ctrl+I)">
+    <svg viewBox="0 0 24 24"><path d="M19 4h-9M14 4L10 20H5"/></svg>
+  </button>
+  <button class="tb-btn" id="underlineBtn" title="下划线 (Ctrl+U)">
+    <svg viewBox="0 0 24 24"><path d="M6 4v6a6 6 0 0 0 12 0V4M4 20h16"/></svg>
+  </button>
+  <button class="tb-btn" id="strikeBtn" title="删除线">
+    <svg viewBox="0 0 24 24"><path d="M16 4H9a3 3 0 0 0-2.8 4M18 20H7a3 3 0 0 1-2.8-4M5 12h14"/></svg>
+  </button>
+  <button class="tb-btn" id="codeBtn" title="行内代码">
+    <svg viewBox="0 0 24 24"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+  </button>
 
-            // --- 保存到 localStorage ---
-            function saveToCache() {
-                const content = textarea.value;
-                try {
-                    localStorage.setItem(STORAGE_KEY, content);
-                    // 更新状态栏提示
-                    showCacheMessage('✓ 已保存到缓存', false);
-                    return true;
-                } catch (e) {
-                    console.error('缓存写入失败:', e);
-                    showCacheMessage('⚠️ 保存失败 (存储空间可能已满)', false);
-                    return false;
-                }
-            }
+  <div class="tb-sep"></div>
 
-            // --- 从 localStorage 加载 ---
-            function loadFromCache() {
-                try {
-                    const savedContent = localStorage.getItem(STORAGE_KEY);
-                    if (savedContent !== null) {
-                        textarea.value = savedContent;
-                        updateWordCount();
-                        showCacheMessage('↻ 已加载缓存内容', false);
-                        return true;
-                    } else {
-                        // 无缓存内容: 清空或保持，并提示
-                        showCacheMessage('📭 暂无缓存记录', false);
-                        return false;
-                    }
-                } catch (e) {
-                    console.error('缓存读取失败:', e);
-                    showCacheMessage('⚠️ 读取缓存失败', false);
-                    return false;
-                }
-            }
+  <!-- 颜色 -->
+  <div class="select-wrap" id="colorWrap">
+    <button class="tb-btn" id="colorBtn" title="文字与高亮颜色">
+      <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3z"/><path d="M12 3v6M12 9c2 0 3 1.5 3 3"/></svg>
+    </button>
+    <div class="menu color-panel" id="colorMenu">
+      <h6>文字颜色</h6>
+      <div class="color-grid" id="textColorGrid"></div>
+      <h6>高亮背景</h6>
+      <div class="color-grid" id="bgColorGrid"></div>
+      <div class="color-toolbar">
+        <label>自定义<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M5 12h14M12 5v14"/></svg><input type="color" id="customTextColor" value="#20242E"></label>
+        <label>自定义高亮<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M5 12h14M12 5v14"/></svg><input type="color" id="customBgColor" value="#FDE68A"></label>
+      </div>
+    </div>
+  </div>
 
-            // --- 清空编辑器内容（仅文本区，不影响缓存）---
-            function clearEditor() {
-                textarea.value = '';
-                updateWordCount();
-                showCacheMessage('✗ 编辑器已清空', false);
-                // 不改变缓存内容
-            }
+  <div class="tb-sep"></div>
 
-            // --- 完全清除缓存（仅删除存储的数据，不影响当前编辑器）---
-            function clearCache() {
-                try {
-                    localStorage.removeItem(STORAGE_KEY);
-                    showCacheMessage('🧹 缓存数据已清除', false);
-                } catch (e) {
-                    console.error('清除缓存失败:', e);
-                    showCacheMessage('⚠️ 清除缓存失败', false);
-                }
-            }
+  <!-- 对齐 -->
+  <button class="tb-btn" id="alignLeft" title="左对齐">
+    <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h12M3 18h18"/></svg>
+  </button>
+  <button class="tb-btn" id="alignCenter" title="居中">
+    <svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M3 18h18"/></svg>
+  </button>
+  <button class="tb-btn" id="alignRight" title="右对齐">
+    <svg viewBox="0 0 24 24"><path d="M3 6h18M9 12h12M3 18h18"/></svg>
+  </button>
 
-            // --- 下载为TXT文件 ---
-            function downloadAsTxt() {
-                const text = textarea.value;
-                const blob = new Blob([text], {type: 'text/plain'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = '网页笔记.txt';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
+  <div class="tb-sep"></div>
 
-            // --- 初始化: 页面加载时自动从缓存读取，并显示在文本框---
-            function initializeNotepad() {
-                // 尝试加载缓存内容，如果存在就填充；否则文本框为空，提示新建
-                const existed = loadFromCache();  // loadFromCache 内部更新字数、提示
-                if (!existed) {
-                    // 初次使用，没有任何缓存 —— 显示友好的空白提示
-                    textarea.value = '';
-                    updateWordCount();
-                    cacheMessage.textContent = '✨ 写你的第一段笔记';
-                } else {
-                    // 已加载缓存，更新字数已经在 loadFromCache 里调用 updateWordCount()
-                    // 但 loadFromCache 内部调用了 updateWordCount 没问题。
-                }
+  <!-- 列表 -->
+  <button class="tb-btn" id="ulBtn" title="无序列表">
+    <svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="5" cy="6" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="5" cy="18" r="1"/></svg>
+  </button>
+  <button class="tb-btn" id="olBtn" title="有序列表">
+    <svg viewBox="0 0 24 24"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 6h1v3M3.5 12h1L4 13.5 5 12M4 18l.5 1h1"/></svg>
+  </button>
 
-                // 自动保存功能：监听 input 事件，每次修改都写入缓存（防抖处理，提升性能）
-                let autoSaveTimer = null;
-                textarea.addEventListener('input', function() {
-                    // 实时更新字数统计
-                    updateWordCount();
-                    
-                    // 自动保存：防抖，停止输入500ms后保存到缓存
-                    if (autoSaveTimer) {
-                        clearTimeout(autoSaveTimer);
-                    }
-                    autoSaveTimer = setTimeout(() => {
-                        const saveResult = saveToCache();   // 自动保存并提示
-                        if (saveResult) {
-                            // 轻提示，但为了避免频繁刷新，可以临时修改状态条
-                            // saveToCache 里已调用 showCacheMessage('✓ 已保存到缓存')
-                            // 那已经会展示提示，我们不需要额外动作。
-                        }
-                    }, 600); // 600ms 延迟保存
-                });
+  <div class="tb-sep"></div>
 
-                // 额外防抖：在页面关闭之前也可以尝试保存，但input防抖已足够。
-                // 边缘情况: 万一关闭时最后一次变更未保存？由于使用localStorage同步写入，防抖可能会丢失最后几百毫秒变化。
-                // 增强: 在beforeunhook 做一次直接保存。
-                window.addEventListener('beforeunload', function() {
-                    // 同步保存，保证最末内容不丢
-                    const current = textarea.value;
-                    if (current !== localStorage.getItem(STORAGE_KEY)) {
-                        localStorage.setItem(STORAGE_KEY, current);
-                    }
-                });
-            }
+  <!-- 插入 -->
+  <button class="tb-btn" id="linkBtn" title="插入链接">
+    <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>
+  </button>
+  <button class="tb-btn" id="imageBtn" title="插入图片">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg>
+  </button>
+  <button class="tb-btn" id="tableBtn" title="插入表格">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+  </button>
+  <button class="tb-btn" id="hrBtn" title="插入分隔线">
+    <svg viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h18"/><path d="M9 12h6"/></svg>
+  </button>
 
-            // --- 绑定手动按钮事件 ---
-            // 保存按钮: 立刻将当前文本存入缓存
-            saveBtn.addEventListener('click', function() {
-                saveToCache();
-            });
+  <div class="tb-sep"></div>
 
-            // 加载按钮: 从缓存读取并覆盖编辑器内容
-            loadBtn.addEventListener('click', function() {
-                loadFromCache();
-            });
+  <button class="tb-btn" id="undoBtn" title="撤销 (Ctrl+Z)">
+    <svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v1"/></svg>
+  </button>
+  <button class="tb-btn" id="redoBtn" title="重做 (Ctrl+Y)">
+    <svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0-6 6v1"/></svg>
+  </button>
+</nav>
+<!-- ===== 编辑纸张区 ===== -->
+<main class="stage">
+  <div class="paper">
+    <div id="editor" contenteditable="true" class="doc-body" spellcheck="true">
+      <h1>文档工坊</h1>
+      <p>一个支持复杂格式、可导出 HTML 与 PDF 的本地富文本编辑器。所有内容自动保存在浏览器缓存中，无需联网，关闭页面后再次打开内容仍在。</p>
+      <h2>编辑区支持的能力</h2>
+      <ul>
+        <li>段落样式：标题 1–3、正文、引用、代码块</li>
+        <li>文字格式：加粗、斜体、下划线、删除线、行内代码</li>
+        <li>颜色：文字颜色与高亮背景，支持自定义取色</li>
+        <li>对齐、无序 / 有序列表、链接、图片、表格、分隔线</li>
+      </ul>
+      <blockquote>试试把这段文字选中，从顶部工具栏套用各种格式。</blockquote>
+      <p>完成后点击右上角「导出 HTML」可得到一份独立的网页文档，点击「打印 / PDF」可选择打印机或另存为 PDF 文件。</p>
+    </div>
+  </div>
+</main>
 
-            // 清空编辑器按钮 (仅仅清空文本框，缓存不受影响)
-            clearEditorBtn.addEventListener('click', function() {
-                clearEditor();
-            });
+<!-- ===== 状态栏 ===== -->
+<footer class="statusbar">
+  <span id="saveState"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg><span id="saveText">已保存到本地</span></span>
+  <span id="wordCount">0 字</span>
+</footer>
 
-            // 清除缓存按钮 (删除localStorage中的数据，编辑器内容保留不变)
-            clearCacheBtn.addEventListener('click', function() {
-                clearCache();
-            });
+<!-- ===== 隐藏的文件选择器 ===== -->
+<input type="file" id="imageInput" accept="image/*" style="display:none">
+<input type="file" id="htmlInput" accept=".html,.htm,text/html,.txt" style="display:none">
 
-            // 下载按钮: 下载当前文本为TXT文件
-            downloadBtn.addEventListener('click', function() {
-                downloadAsTxt();
-            });
+<!-- ===== 图片压缩确认弹窗 ===== -->
+<div class="modal-mask" id="imgModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h5>插入图片</h5>
+      <button class="modal-x" id="imgModalClose" title="不插入">×</button>
+    </div>
+    <div class="modal-body">
+      <p>检测到图片，建议压缩后插入——可显著减小文档体积，节省浏览器存储空间，打印与导出基本无损。</p>
+      <div class="modal-preview">
+        <img id="imgPreview" alt="图片预览">
+        <div class="pinfo">
+          <b id="imgName">图片</b>
+          <span id="imgInfo">…</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="mbtn" id="imgRawBtn">原图插入</button>
+      <button class="mbtn primary" id="imgCompressBtn">压缩并插入</button>
+    </div>
+  </div>
+</div>
 
-            // 额外: 如果用户粘贴/拖拽文本, 字数统计已经通过input更新, 自动保存也工作。
-            // 确保字数统计在任何变动时都更新 (初始化)
-            // 同时，在编辑器手动通过按钮加载时，updateWordCount 已在 loadFromCache 调用。
-            // 但以防万一，loadBtn 执行 loadFromCache 已经包含更新字数。
+<!-- ===== 编辑器排版 + 打印样式 ===== -->
+<style>
+.stage{
+  flex:1;overflow:auto;padding:34px 20px 60px;
+}
+.paper{
+  width:100%;max-width:840px;background:var(--paper);
+  border:1px solid var(--paper-edge);border-radius:4px;
+  box-shadow:var(--shadow);padding:64px 72px 72px;
+  margin:0 auto;
+  /* 让纸张至少占满一页可视高度，文字少时也像一张完整的纸；文字多时随内容自动延长 */
+  min-height:max(520px, calc(100vh - 240px));
+}
+.doc-body{outline:none;min-height:max(380px, calc(100vh - 320px));font-family:var(--serif)}
+.doc-body:empty::before{content:attr(data-placeholder);color:var(--ink-faint);pointer-events:none;font-family:var(--ui-font);font-size:.9rem}
 
-            // 开始初始化
-            initializeNotepad();
-        })();
-    </script>
+/* 文档排版 */
+.doc-body h1{font-size:2.05rem;font-weight:700;line-height:1.35;margin:.4em 0 .5em;color:var(--ink)}
+.doc-body h2{font-size:1.55rem;font-weight:600;line-height:1.4;margin:.9em 0 .45em;color:var(--ink)}
+.doc-body h3{font-size:1.22rem;font-weight:600;line-height:1.45;margin:.8em 0 .4em;color:var(--ink)}
+.doc-body p{font-size:1.04rem;line-height:1.9;margin:.55em 0;color:#2A2F3A}
+.doc-body ul,.doc-body ol{margin:.6em 0 .6em 1.5em;padding:0;line-height:1.85;font-size:1.02rem}
+.doc-body li{margin:.25em 0}
+.doc-body blockquote{
+  border-left:4px solid var(--accent);background:var(--accent-soft);
+  margin:.8em 0;padding:.6em 1.1em;color:#3A3F4D;font-size:1.02rem;border-radius:0 8px 8px 0;
+  font-style:normal;
+}
+.doc-body pre{
+  background:#F5F6F8;border:1px solid var(--line);border-radius:8px;
+  padding:14px 16px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-size:.9rem;line-height:1.7;overflow-x:auto;color:#2A2F3A;margin:.8em 0;
+}
+.doc-body code{
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#EEF0F4;
+  padding:1px 6px;border-radius:5px;font-size:.88em;color:#C0266D;
+}
+.doc-body pre code{background:none;padding:0;color:inherit;font-size:inherit}
+.doc-body a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.doc-body img{max-width:100%;height:auto;border-radius:8px;margin:.6em 0;display:block}
+.doc-body table{border-collapse:collapse;width:100%;margin:.9em 0;font-size:.98rem;font-family:var(--ui-font)}
+.doc-body th,.doc-body td{border:1px solid var(--line-strong);padding:9px 12px;text-align:left;line-height:1.6}
+.doc-body th{background:#F6F7F9;font-weight:600}
+.doc-body td{color:#2A2F3A}
+.doc-body hr{border:none;border-top:1.5px solid var(--line-strong);margin:1.6em 0}
 
-    <!-- 
-        极简记事本 · 纯文本 · 完全依赖浏览器缓存 (localStorage)
-        特点: 自动保存、手动控制、缓存与编辑器操作解耦
-        没有任何后端或第三方依赖，离线可用。
-    -->
+.statusbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 18px;background:var(--paper);border-top:1px solid var(--line);
+  color:var(--ink-faint);font-size:.76rem;position:sticky;bottom:0;
+}
+.statusbar svg{width:14px;height:14px;stroke:var(--ok);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:5px}
+.statusbar span:first-child{display:inline-flex;align-items:center}
+.statusbar.dirty svg{stroke:var(--danger)}
+
+/* ============================================================
+   自定义悬停提示 Tooltip
+   ============================================================ */
+.tooltip{
+  position:fixed;z-index:130;background:#232733;color:#fff;
+  padding:6px 11px;border-radius:7px;font-size:.77rem;font-weight:400;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
+  pointer-events:none;opacity:0;transform:translateY(5px);
+  transition:opacity .14s,transform .14s;white-space:nowrap;
+  font-family:var(--ui-font);
+}
+.tooltip.show{opacity:1;transform:translateY(0)}
+.tooltip .tip-kbd{
+  margin-left:8px;font-size:.7rem;color:#C7CEDC;
+  background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px;
+}
+.tooltip::after{
+  content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:#232733;
+}
+.tooltip.below::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:#232733}
+
+/* ============================================================
+   自定义右键菜单 Context Menu
+   ============================================================ */
+.ctx-menu{
+  position:fixed;z-index:120;min-width:200px;background:#fff;
+  border:1px solid var(--line);border-radius:11px;
+  box-shadow:0 12px 32px rgba(20,24,40,.18);
+  padding:5px;opacity:0;pointer-events:none;transform:scale(.97);
+  transform-origin:top left;transition:opacity .09s,transform .09s;
+  font-family:var(--ui-font);
+}
+.ctx-menu.show{opacity:1;pointer-events:auto;transform:scale(1)}
+.ctx-head{
+  padding:7px 10px 5px;font-size:.68rem;color:var(--ink-faint);
+  letter-spacing:.6px;font-weight:500;
+}
+.ctx-item{
+  display:flex;align-items:center;gap:9px;width:100%;
+  padding:7px 9px;border:none;background:none;border-radius:7px;
+  font-size:.82rem;color:var(--ink);cursor:pointer;text-align:left;
+  font-family:inherit;transition:background .08s;line-height:1.2;
+}
+.ctx-item svg{width:15px;height:15px;stroke:var(--ink-faint);fill:none;stroke-width:1.7;flex:none}
+.ctx-item:hover{background:#F3F4F7}
+.ctx-item:hover svg{stroke:var(--ink)}
+.ctx-item.danger{color:var(--danger)}
+.ctx-item.danger svg{stroke:var(--danger)}
+.ctx-item .scut{margin-left:auto;font-size:.7rem;color:var(--ink-faint)}
+.ctx-sep{height:1px;background:var(--line);margin:4px 6px}
+
+/* ============================================================
+   图片压缩确认弹窗 Modal
+   ============================================================ */
+.modal-mask{
+  position:fixed;inset:0;background:rgba(18,22,36,.46);z-index:150;
+  display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .16s;
+}
+.modal-mask.show{opacity:1;pointer-events:auto}
+.modal{
+  background:#fff;border-radius:14px;box-shadow:0 22px 55px rgba(0,0,0,.28);
+  width:min(430px,92vw);padding:20px 22px;transform:scale(.96) translateY(6px);transition:transform .16s;
+}
+.modal-mask.show .modal{transform:scale(1) translateY(0)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.modal-head h5{font-size:1.02rem;font-weight:600}
+.modal-x{
+  border:none;background:#F0F1F5;color:var(--ink-faint);width:26px;height:26px;
+  border-radius:7px;font-size:1.1rem;line-height:1;display:grid;place-items:center;transition:background .12s,color .12s;
+}
+.modal-x:hover{background:#E4E6EC;color:var(--ink)}
+.modal-body p{font-size:.85rem;color:var(--ink-soft);line-height:1.75;margin-bottom:12px}
+.modal-preview{
+  display:flex;align-items:center;gap:14px;background:#F7F8FA;border:1px solid var(--line);
+  border-radius:10px;padding:10px 12px;margin-bottom:16px;
+}
+.modal-preview img{width:74px;height:74px;object-fit:cover;border-radius:8px;background:#fff;flex:none}
+.modal-preview .pinfo{display:flex;flex-direction:column;gap:3px}
+.modal-preview .pinfo b{font-size:.88rem;font-weight:600}
+.modal-preview .pinfo span{font-size:.76rem;color:var(--ink-faint)}
+.modal-preview .pinfo .est{color:var(--ok);font-weight:500}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px}
+.mbtn{
+  padding:9px 16px;border-radius:9px;border:1px solid var(--line-strong);background:#fff;
+  font-size:.84rem;font-weight:500;color:var(--ink);transition:background .12s,border-color .12s;
+}
+.mbtn:hover{background:#F3F4F7}
+.mbtn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.mbtn.primary:hover{background:var(--accent-hover)}
+
+
+/* ============ 打印 / PDF 导出样式 ============ */
+@media print{
+  @page{size:A4;margin:18mm 16mm}
+  body{background:#fff}
+  .appbar,.toolbar,.statusbar,image-input,textarea,button,input{display:none !important}
+  .stage{display:block;overflow:visible;padding:0}
+  .paper{max-width:none;border:none;box-shadow:none;padding:0}
+  .doc-body{min-height:0;color:#111}
+  .doc-body p,.doc-body li{color:#111}
+}
+</style>
+
+<!-- ===== 核心逻辑 ===== -->
+<script id="appScript">
+(function(){
+"use strict";
+const $=s=>document.getElementById(s);
+const editor=$("editor");
+/* 导出文档（重新打开编辑）时使用独立的存储键，且保留内联内容 */
+const EXPORT_KEY=(typeof window!=="undefined"&&window.EXPORT_KEY)||"";
+const STORE=EXPORT_KEY
+  ?{doc:EXPORT_KEY,title:EXPORT_KEY+"_title"}
+  :{doc:"rich_editor_doc_v1",title:"rich_editor_title_v1"};
+
+/* ---------- 工具函数 ---------- */
+function toast(msg,err){
+  let t=document.querySelector(".toast");
+  if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t);}
+  t.innerHTML=(err?'<svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>':'<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>')+'<span>'+msg+'</span>';
+  t.classList.toggle("error",!!err);
+  t.classList.add("show");
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2600);
+}
+function setSaveState(text,dirty){
+  const st=$("saveState"),tx=$("saveText");
+  tx.textContent=text;document.querySelector(".statusbar").classList.toggle("dirty",!!dirty);
+}
+function exec(cmd,val){editor.focus();
+  /* Chrome 下颜色/高亮需要先开启 styleWithCSS 才生效 */
+  if(cmd==="foreColor"||cmd==="hiliteColor"){document.execCommand("styleWithCSS",false,true);}
+  document.execCommand(cmd,false,val);refresh();}
+function updateCount(){
+  const t=editor.textContent||"";
+  $("wordCount").textContent=t.replace(/\s/g,"").length+" 字";
+}
+
+/* ---------- 文档保存 ---------- */
+let saveTimer=null;
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  setSaveState("正在保存…",true);
+  saveTimer=setTimeout(()=>{
+    try{
+      localStorage.setItem(STORE.doc,editor.innerHTML);
+      localStorage.setItem(STORE.title,$("docTitle").value);
+      setSaveState("已保存到本地",false);
+    }catch(e){toast("保存失败，浏览器存储空间可能已满",true);}
+  },500);
+}
+function loadDoc(){
+  try{
+    const saved=localStorage.getItem(STORE.doc);
+    /* 导出的文档：若本地缓存了更新版本则加载缓存，否则保留内联内容 */
+    if(saved){editor.innerHTML=saved;}
+    const t=localStorage.getItem(STORE.title);
+    if(t){$("docTitle").value=t;}
+  }catch(e){}
+  updateCount();
+}
+
+/* ---------- 段落样式 ---------- */
+function setBlock(tag){
+  editor.focus();
+  const ok=document.execCommand("formatBlock",false,tag);
+  if(!ok){ // 兜底
+    const sel=window.getSelection();
+    if(sel&&!sel.isCollapsed){document.execCommand("formatBlock",false,"<"+tag+">");}
+  }
+  refresh();scheduleSave();
+}
+function currentBlockLabel(){
+  let n=window.getSelection()&&window.getSelection().anchorNode;
+  while(n&&n.nodeType===1&&!editor.contains(n))n=null;
+  while(n&&n!==editor){
+    const t=n.tagName;
+    if(t==="H1")return"标题 1";if(t==="H2")return"标题 2";if(t==="H3")return"标题 3";
+    if(t==="BLOCKQUOTE")return"引用";if(t==="PRE")return"代码块";
+    n=n.parentElement;
+  }
+  return"正文";
+}
+
+/* ---------- 颜色 ---------- */
+const TEXT_COLORS=["#20242E","#D64545","#E07B2A","#D6A81A","#0E9A6E","#2B6FB3","#6B21A8","#9AA0AB"];
+const BG_COLORS=["#FDE68A","#BFDBFE","#BBF7D0","#FBCFE8","#FED7AA","#E5E7EB","#D1F5E3","transparent"];
+function buildColorGrid(gridId,colors,type){
+  const g=$(gridId);g.innerHTML="";
+  colors.forEach(c=>{
+    const s=document.createElement("div");
+    s.className="swatch";s.style.background=c==="transparent"?"#fff":c;
+    if(c==="transparent")s.title="清除颜色";
+    s.addEventListener("click",()=>{
+      editor.focus();
+      if(c==="transparent"){exec(type==="text"?"foreColor":"hiliteColor","inherit");}
+      else{exec(type==="text"?"foreColor":"hiliteColor",c);}
+      document.querySelectorAll(".swatch").forEach(x=>x.classList.remove("on"));
+      s.classList.add("on");scheduleSave();
+    });
+    g.appendChild(s);
+  });
+}
+
+/* ---------- 插入：链接 / 图片 / 表格 / 分隔线 ---------- */
+function insertLink(){
+  const sel=window.getSelection();const hasSel=sel&&!sel.isCollapsed&&editor.contains(sel.anchorNode);
+  const text=hasSel?sel.toString():prompt("要显示的链接文字：","链接");
+  if(text===null)return;
+  const url=prompt("链接地址（http/https 开头）：","https://");
+  if(url===null||!url)return;
+  editor.focus();
+  if(hasSel){exec("createLink",url);}
+  else{exec("insertHTML",'<a href="'+url+'" target="_blank" rel="noopener">'+text+'</a>');}
+  scheduleSave();
+}
+
+/* --- 图片压缩 --- */
+const IMG_MAX_SIZE=1600; // 最长边像素上限
+function compressImage(dataUrl,maxSize=IMG_MAX_SIZE,quality=.86){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.width,h=img.height;
+      if(!w||!h){res(null);return;}
+      if(Math.max(w,h)<=maxSize){res(null);return;} // 原图已足够小，无需压缩
+      const scale=Math.min(1,maxSize/Math.max(w,h));
+      w=Math.round(w*scale);h=Math.round(h*scale);
+      try{
+        const c=document.createElement("canvas");c.width=w;c.height=h;
+        c.getContext("2d").drawImage(img,0,0,w,h);
+        res(c.toDataURL("image/jpeg",quality));
+      }catch(e){res(null);}
+    };
+    img.onerror=()=>res(null);
+    img.src=dataUrl;
+  });
+}
+/* --- 图片插入弹窗 --- */
+let pendingImage=null;
+function insertImage(file){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    pendingImage={dataUrl:e.target.result,size:file.size,name:file.name||"图片"};
+    $("imgPreview").src=pendingImage.dataUrl;
+    $("imgName").textContent=pendingImage.name;
+    $("imgInfo").textContent=(pendingImage.size/1024).toFixed(1)+" KB";
+    $("imgModal").classList.add("show");
+  };
+  r.readAsDataURL(file);
+}
+function closeImgModal(){pendingImage=null;$("imgModal").classList.remove("show");}
+function finishInsert(dataUrl){
+  editor.focus();
+  exec("insertImage",dataUrl);
+  closeImgModal();scheduleSave();
+}
+function insertTable(){
+  const rows=parseInt(prompt("行数：","3"),10);
+  if(!rows||rows<1||rows>30)return;
+  const cols=parseInt(prompt("列数：","3"),10);
+  if(!cols||cols<1||cols>10)return;
+  let h="<table><tbody>";
+  for(let i=0;i<rows;i++){h+="<tr>";for(let j=0;j<cols;j++){h+=i===0?"<th>表头</th>":"<td>单元格</td>";}h+="</tr>";}
+  h+="</tbody></table>";
+  exec("insertHTML",h);
+  scheduleSave();
+}
+
+/* ---------- 导出（纯展示文档） ---------- */
+function exportHtml(){
+  const title=$("docTitle").value.trim()||"未命名文档";
+  const inner=editor.innerHTML;
+  const doc='<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>'+title+'</title>\n'+
+'<style>\n'+
+'body{font-family:"Noto Serif SC",Georgia,"Songti SC",serif;max-width:820px;margin:40px auto;padding:0 20px;color:#20242E;line-height:1.85;background:#fff}\n'+
+'h1{font-size:2rem;line-height:1.4}h2{font-size:1.5rem}h3{font-size:1.2rem}\n'+
+'blockquote{border-left:4px solid #4F46E5;background:#EEF0FF;margin:1em 0;padding:.5em 1em;border-radius:0 8px 8px 0}\n'+
+'pre{background:#F5F6F8;border:1px solid #E7E9EE;padding:12px;border-radius:8px;overflow-x:auto;font-family:ui-monospace,Consolas,monospace;font-size:.9rem}\n'+
+'code{background:#EEF0F4;padding:1px 6px;border-radius:4px;font-size:.88em;color:#C0266D}\n'+
+'table{border-collapse:collapse;width:100%}th,td{border:1px solid #D5D9E1;padding:8px 12px}th{background:#F6F7F9}\n'+
+'img{max-width:100%;height:auto}\n'+
+'hr{border:none;border-top:1.5px solid #D5D9E1;margin:1.6em 0}\n'+
+'</style>\n</head>\n<body>\n'+inner+'\n</body>\n</html>';
+  const blob=new Blob([doc],{type:"text/html;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=title+".html";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),200);
+  toast("HTML 文档已导出");
+}
+
+/* ---------- 打开文件（导入到编辑器继续编辑） ---------- */
+function importFile(file){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const text=String(e.target.result||"");
+    const parser=new DOMParser();
+    let doc;
+    try{doc=parser.parseFromString(text,"text/html");}catch(err){toast("无法解析该文件",true);return;}
+    /* 提取内容：优先取 #editor 容器（兼容此前带编辑器的导出），否则取 body */
+    const container=doc.querySelector("#editor")||doc.body;
+    if(!container||!container.innerHTML.trim()){toast("文件中没有可导入的内容",true);return;}
+    const wrap=document.createElement("div");
+    wrap.innerHTML=container.innerHTML;
+    /* 剥离脚本/样式等，清除无关属性，保留语义结构 */
+    wrap.querySelectorAll("script,style,link,meta,noscript,iframe").forEach(n=>n.remove());
+    wrap.querySelectorAll("*").forEach(el=>{
+      ["class","id","style","contenteditable","spellcheck"].forEach(a=>el.removeAttribute(a));
+      [...el.attributes].forEach(a=>{if(a.name.toLowerCase().startsWith("on"))el.removeAttribute(a.name);});
+    });
+    editor.innerHTML=wrap.innerHTML;
+    /* 若文件里有标题则沿用 */
+    const ftitle=doc.title&&doc.title.trim();
+    if(ftitle){$("docTitle").value=ftitle;}
+    updateCount();scheduleSave();
+    toast("已打开文件，内容已导入编辑器");
+  };
+  r.onerror=()=>toast("读取文件失败",true);
+  r.readAsText(file);
+}
+function exportMarkdown(){
+  let h=document.createElement("div");h.innerHTML=editor.innerHTML;
+  const md=htmlToMd(h);
+  const title=$("docTitle").value.trim()||"未命名文档";
+  const blob=new Blob([md],{type:"text/markdown;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download=title+".md";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),200);
+  toast("Markdown 已导出");
+}
+function htmlToMd(node){
+  let out="";
+  Array.from(node.childNodes).forEach(n=>{
+    if(n.nodeType===3){out+=n.textContent;return;}
+    const t=n.tagName;
+    if(t==="H1")out+="\n# "+text(n)+"\n";
+    else if(t==="H2")out+="\n## "+text(n)+"\n";
+    else if(t==="H3")out+="\n### "+text(n)+"\n";
+    else if(t==="P")out+="\n"+text(n)+"\n";
+    else if(t==="BLOCKQUOTE")out+="\n> "+htmlToMd(n).trim()+"\n";
+    else if(t==="PRE")out+="\n```\n"+text(n)+"\n```\n";
+    else if(t==="UL")out+="\n"+listToMd(n,"- ")+"\n";
+    else if(t==="OL")out+=listToMd(n,"1. ");
+    else if(t==="LI"){/* handled by parent */}
+    else if(t==="TABLE")out+="\n"+tableToMd(n)+"\n";
+    else if(t==="HR")out+="\n---\n";
+    else if(t==="IMG")out+=" ![图片]("+(n.getAttribute("src")||"")+") ";
+    else if(t==="A")out+="["+text(n)+"]("+(n.getAttribute("href")||"")+")";
+    else if(t==="STRONG"||t==="B")out+="**"+text(n)+"**";
+    else if(t==="EM"||t==="I")out+="*"+text(n)+"*";
+    else if(t==="U")out+="<u>"+text(n)+"</u>";
+    else if(t==="S"||t==="STRIKE"||t==="DEL")out+="~~"+text(n)+"~~";
+    else if(t==="CODE")out+="`"+text(n)+"`";
+    else if(t==="BR")out+="\n";
+    else out+=htmlToMd(n);
+  });
+  return out;
+  function text(el){return (el.textContent||"").trim();}
+  function listToMd(list,prefix){
+    let s="";Array.from(list.children).forEach((li,i)=>{
+      const mark=prefix==="1. "?(i+1)+". ":prefix;
+      s+=mark+htmlToMd(li).trim().replace(/\n+/g," ")+"\n";
+    });return s;
+  }
+  function tableToMd(tb){
+    let rows=[];
+    tb.querySelectorAll("tr").forEach(tr=>{
+      const cells=Array.from(tr.children).map(c=>(c.textContent||"").trim());
+      rows.push(cells);
+    });
+    if(!rows.length)return"";
+    let md="| "+rows[0].join(" | ")+" |\n| "+rows[0].map(()=>"---").join(" | ")+" |\n";
+    rows.slice(1).forEach(r=>md+="| "+r.join(" | ")+" |\n");
+    return md;
+  }
+}
+
+/* ---------- 工具栏状态刷新 ---------- */
+function refresh(){
+  try{
+    $("boldBtn").classList.toggle("active",document.queryCommandState("bold"));
+    $("italicBtn").classList.toggle("active",document.queryCommandState("italic"));
+    $("underlineBtn").classList.toggle("active",document.queryCommandState("underline"));
+    $("strikeBtn").classList.toggle("active",document.queryCommandState("strikeThrough"));
+    $("codeBtn").classList.toggle("active",currentBlockLabel()==="代码块");
+    $("ulBtn").classList.toggle("active",document.queryCommandState("insertUnorderedList"));
+    $("olBtn").classList.toggle("active",document.queryCommandState("insertOrderedList"));
+    $("blockLabel").textContent=currentBlockLabel();
+    $("undoBtn").disabled=!document.queryCommandEnabled("undo");
+    $("redoBtn").disabled=!document.queryCommandEnabled("redo");
+  }catch(e){}
+}
+
+/* ---------- 菜单开关（点击外部关闭；菜单 fixed 定位，绕开工具栏 overflow 裁剪） ---------- */
+const menus=[["blockBtn","blockMenu"],["colorBtn","colorMenu"]];
+function toggleMenu(btnId,menuId){
+  const b=$(btnId).getBoundingClientRect(),m=$(menuId);
+  m.classList.add("open");
+  const mw=m.offsetWidth,mh=m.offsetHeight;
+  let left=b.left,top=b.bottom+4;
+  if(left+mw>window.innerWidth-8)left=Math.max(8,window.innerWidth-mw-8);
+  if(top+mh>window.innerHeight-8)top=Math.max(8,window.innerHeight-mh-8);
+  m.style.left=left+"px";m.style.top=top+"px";
+}
+function closeMenus(except){
+  menus.forEach(([btn,m])=>{if(m!==except)$(m).classList.remove("open");});
+}
+document.addEventListener("click",e=>{
+  menus.forEach(([btn,m])=>{
+    if(!$(m).contains(e.target))$(m).classList.remove("open");
+  });
+  if(!editor.contains(e.target))refresh();
+});
+
+/* ---------- 事件绑定 ---------- */
+// 顶栏
+$("newDocBtn").addEventListener("click",()=>{
+  if(editor.textContent.trim()){
+    if(!confirm("新建前会先下载当前文档到本地，再清空编辑器。继续？"))return;
+    exportHtml(); // 先把当前文档下载保存到本地，避免内容丢失
+  }
+  editor.innerHTML="";updateCount();scheduleSave();toast("已新建空白文档");
+});
+$("openFileBtn").addEventListener("click",()=>$("htmlInput").click());
+$("htmlInput").addEventListener("change",e=>{
+  const f=e.target.files[0];
+  if(f){
+    if(f.size>15*1024*1024){toast("文件过大，请选择 15MB 以内的 HTML",true);e.target.value="";return;}
+    importFile(f);
+  }
+  e.target.value="";
+});
+$("exportHtmlBtn").addEventListener("click",exportHtml);
+$("printBtn").addEventListener("click",()=>{scheduleSave();window.print();});
+$("clearDocBtn").addEventListener("click",()=>{
+  if(!confirm("确定清空编辑器全部内容？此操作不可撤销。"))return;
+  editor.innerHTML="";updateCount();scheduleSave();toast("内容已清空");
+});
+$("docTitle").addEventListener("input",scheduleSave);
+
+// 段落菜单
+$("blockBtn").addEventListener("click",e=>{
+  e.stopPropagation();
+  const m=$("blockMenu"),willOpen=!m.classList.contains("open");
+  closeMenus();
+  if(willOpen)toggleMenu("blockBtn","blockMenu");
+});
+document.querySelectorAll("#blockMenu .menu-item").forEach(item=>{
+  item.addEventListener("click",()=>{setBlock(item.dataset.block);$("blockMenu").classList.remove("open");});
+});
+
+// 格式
+$("boldBtn").addEventListener("click",()=>{exec("bold");scheduleSave();});
+$("italicBtn").addEventListener("click",()=>{exec("italic");scheduleSave();});
+$("underlineBtn").addEventListener("click",()=>{exec("underline");scheduleSave();});
+$("strikeBtn").addEventListener("click",()=>{exec("strikeThrough");scheduleSave();});
+$("codeBtn").addEventListener("click",()=>{
+  editor.focus();
+  // 当前在代码块中则退回正文；否则把选中的文字包成行内代码
+  const inPre=currentBlockLabel()==="代码块";
+  if(inPre){exec("formatBlock","p");scheduleSave();return;}
+  const sel=window.getSelection();
+  if(sel&&!sel.isCollapsed){exec("insertHTML","<code>"+sel.toString()+"</code>");scheduleSave();}
+});
+$("alignLeft").addEventListener("click",()=>{exec("justifyLeft");scheduleSave();});
+$("alignCenter").addEventListener("click",()=>{exec("justifyCenter");scheduleSave();});
+$("alignRight").addEventListener("click",()=>{exec("justifyRight");scheduleSave();});
+$("ulBtn").addEventListener("click",()=>{exec("insertUnorderedList");scheduleSave();});
+$("olBtn").addEventListener("click",()=>{exec("insertOrderedList");scheduleSave();});
+
+// 颜色
+$("colorBtn").addEventListener("click",e=>{
+  e.stopPropagation();
+  const m=$("colorMenu"),willOpen=!m.classList.contains("open");
+  closeMenus();
+  if(willOpen)toggleMenu("colorBtn","colorMenu");
+});
+$("customTextColor").addEventListener("input",e=>{editor.focus();exec("foreColor",e.target.value);scheduleSave();});
+$("customBgColor").addEventListener("input",e=>{editor.focus();exec("hiliteColor",e.target.value);scheduleSave();});
+
+// 插入
+$("linkBtn").addEventListener("click",insertLink);
+$("imageBtn").addEventListener("click",()=>$("imageInput").click());
+$("imageInput").addEventListener("change",e=>{insertImage(e.target.files[0]);e.target.value="";});
+$("tableBtn").addEventListener("click",insertTable);
+$("hrBtn").addEventListener("click",()=>{exec("insertHorizontalRule");scheduleSave();});
+
+// 图片压缩弹窗
+$("imgCompressBtn").addEventListener("click",()=>{
+  if(!pendingImage)return;
+  compressImage(pendingImage.dataUrl).then(c=>{
+    if(c){toast("已压缩图片，体积减小");finishInsert(c);}
+    else{toast("图片较小，无需压缩");finishInsert(pendingImage.dataUrl);}
+  });
+});
+$("imgRawBtn").addEventListener("click",()=>{if(pendingImage)finishInsert(pendingImage.dataUrl);});
+$("imgModalClose").addEventListener("click",closeImgModal);
+$("imgModal").addEventListener("click",e=>{if(e.target.id==="imgModal")closeImgModal();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if($("imgModal").classList.contains("show"))closeImgModal();}});
+
+// 撤销重做
+$("undoBtn").addEventListener("click",()=>{exec("undo");});
+$("redoBtn").addEventListener("click",()=>{exec("redo");});
+
+// 编辑区事件
+editor.addEventListener("input",()=>{updateCount();scheduleSave();refresh();});
+editor.addEventListener("keyup",refresh);
+editor.addEventListener("mouseup",refresh);
+document.addEventListener("selectionchange",()=>{refresh();});
+editor.addEventListener("keydown",e=>{
+  if(e.key==="Tab"){ // Tab 缩进/反缩进
+    e.preventDefault();
+    exec(e.shiftKey?"outdent":"indent");scheduleSave();
+  }
+  if(e.key==="Enter"){ /* 默认换行即可 */ }
+});
+// 粘贴图片直接插入
+editor.addEventListener("paste",e=>{
+  const items=(e.clipboardData&&e.clipboardData.items)||[];
+  for(const it of items){
+    if(it.type.indexOf("image")===0){
+      e.preventDefault();
+      const f=it.getAsFile();if(f)insertImage(f);
+      return;
+    }
+  }
+});
+
+/* ---------- 自定义悬停提示 Tooltip ---------- */
+const tooltip=document.createElement("div");
+tooltip.className="tooltip";document.body.appendChild(tooltip);
+const TIPS={
+  newDocBtn:{label:"新建空白文档"},
+  openFileBtn:{label:"打开 HTML / 文本文档",kbd:"Ctrl O"},
+  exportHtmlBtn:{label:"导出为独立 HTML 文档"},
+  printBtn:{label:"打印 / 另存为 PDF"},
+  clearDocBtn:{label:"清空全部内容"},
+  blockBtn:{label:"段落样式"},
+  boldBtn:{label:"加粗",kbd:"Ctrl B"},
+  italicBtn:{label:"斜体",kbd:"Ctrl I"},
+  underlineBtn:{label:"下划线",kbd:"Ctrl U"},
+  strikeBtn:{label:"删除线"},
+  codeBtn:{label:"行内代码"},
+  colorBtn:{label:"文字颜色 / 高亮"},
+  alignLeft:{label:"左对齐"},
+  alignCenter:{label:"居中"},
+  alignRight:{label:"右对齐"},
+  ulBtn:{label:"无序列表"},
+  olBtn:{label:"有序列表"},
+  linkBtn:{label:"插入链接"},
+  imageBtn:{label:"插入图片"},
+  tableBtn:{label:"插入表格"},
+  hrBtn:{label:"插入分隔线"},
+  undoBtn:{label:"撤销",kbd:"Ctrl Z"},
+  redoBtn:{label:"重做",kbd:"Ctrl Y"}
+};
+let tipEl=null,tipTimer=null;
+function positionTip(el){
+  const r=el.getBoundingClientRect();
+  const t=tipEl.getBoundingClientRect();
+  let left=r.left+r.width/2-t.width/2;
+  left=Math.max(8,Math.min(left,window.innerWidth-t.width-8));
+  let top=r.top-t.height-9;
+  tipEl.classList.toggle("below",top<8);
+  if(top<8){top=r.bottom+9;}
+  tipEl.style.left=left+"px";tipEl.style.top=top+"px";
+}
+function initTooltips(){
+  Object.entries(TIPS).forEach(([id,t])=>{
+    const el=$(id);if(!el)return;
+    el.removeAttribute("title");
+    el.addEventListener("mouseenter",()=>{
+      clearTimeout(tipTimer);
+      tipEl=el;
+      tipEl._tip=t;
+      tooltip.innerHTML=(t.label||"")+(t.kbd?'<span class="tip-kbd">'+t.kbd+'</span>':"");
+      positionTip(el);
+      tooltip.classList.add("show");
+    });
+    el.addEventListener("mousemove",()=>{if(tooltip.classList.contains("show"))positionTip(el);});
+    el.addEventListener("mouseleave",()=>{hideTip()});
+  });
+}
+function hideTip(){
+  clearTimeout(tipTimer);
+  tipTimer=setTimeout(()=>tooltip.classList.remove("show"),40);
+}
+
+/* ---------- 自定义右键菜单 Context Menu ---------- */
+const ctxMenu=document.createElement("div");
+ctxMenu.className="ctx-menu";document.body.appendChild(ctxMenu);
+const ICONS={
+  cut:'<path d="M6 6l12 12M6 18l4-4M14 8h4M9 5l10 10"/>',
+  copy:'<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+  paste:'<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M8 3h8v3H8zM12 11v6M9 14h6"/>',
+  select:'<rect x="3" y="3" width="14" height="14" rx="1"/><path d="M7 7h14v14"/>',
+  bold:'<path d="M6 4h8a3 3 0 0 1 3 3 3 3 0 0 1-3 3H6zM6 14h9a3 3 0 0 1 3 3 3 3 0 0 1-3 3H6z"/>',
+  italic:'<path d="M19 4h-9M14 4L10 20H5"/>',
+  underline:'<path d="M6 4v6a6 6 0 0 0 12 0V4M4 20h16"/>',
+  strike:'<path d="M16 4H9a3 3 0 0 0-2.8 4M18 20H7a3 3 0 0 1-2.8-4M5 12h14"/>',
+  code:'<path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"/>',
+  clear:'<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m3 0v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7"/><path d="M10 11v6M14 11v6"/>',
+  h1:'<path d="M4 5v14M4 12h8M12 5v14"/><path d="M17 20V9l-2 1"/>',
+  h2:'<path d="M4 5v14M4 12h8M12 5v14"/><path d="M17 20h5v-3l-5 1v-2.5l5-1V11l-5 1"/>',
+  p:'<path d="M10 4v16M10 4a6 6 0 0 0 0 12"/>',
+  quote:'<path d="M4 5h9v8H8c0 2 1.5 4 4 4v2c-4 0-8-3-8-8zM16 5h5v8h-5c0 2 1.5 4 4 4v2c-4 0-8-3-8-8z"/>',
+  pre:'<path d="M9 6l-6 6 6 6M15 6l6 6-6 6"/>',
+  image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5-9 9"/>',
+  table:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>',
+  hr:'<path d="M3 5h18M3 12h18M3 19h18"/><path d="M9 12h6"/>'
+};
+function ctxIcon(name){return '<svg viewBox="0 0 24 24">'+ICONS[name]+'</svg>';}
+function ctxHead(txt){const d=document.createElement("div");d.className="ctx-head";d.textContent=txt;return d;}
+function ctxSep(){const d=document.createElement("div");d.className="ctx-sep";return d;}
+function ctxItem(label,icon,shortcut,action,danger){
+  const b=document.createElement("button");b.className="ctx-item"+(danger?" danger":"");
+  b.innerHTML=ctxIcon(icon)+'<span>'+label+'</span>'+(shortcut?'<span class="scut">'+shortcut+'</span>':"");
+  b.addEventListener("click",()=>{closeCtx();action();scheduleSave();});
+  return b;
+}
+function closeCtx(){ctxMenu.classList.remove("show");}
+function openCtx(x,y){
+  const sel=window.getSelection();
+  const hasSel=sel&&!sel.isCollapsed&&editor.contains(sel.anchorNode);
+  const frag=document.createDocumentFragment();
+  frag.appendChild(ctxHead("编辑操作"));
+  frag.appendChild(ctxItem("剪切","cut","Ctrl+X",()=>exec("cut")));
+  frag.appendChild(ctxItem("复制","copy","Ctrl+C",()=>exec("copy")));
+  frag.appendChild(ctxItem("粘贴","paste","Ctrl+V",()=>exec("paste")));
+  frag.appendChild(ctxItem("全选","select","Ctrl+A",()=>{editor.focus();document.execCommand("selectAll");refresh();}));
+  if(hasSel){
+    frag.appendChild(ctxSep());frag.appendChild(ctxHead("文本格式"));
+    frag.appendChild(ctxItem("加粗","bold","Ctrl+B",()=>exec("bold")));
+    frag.appendChild(ctxItem("斜体","italic","Ctrl+I",()=>exec("italic")));
+    frag.appendChild(ctxItem("下划线","underline","Ctrl+U",()=>exec("underline")));
+    frag.appendChild(ctxItem("插入链接","link","",()=>insertLink()));
+    frag.appendChild(ctxSep());
+    frag.appendChild(ctxItem("清除格式","clear","",()=>exec("removeFormat")));
+  }
+  frag.appendChild(ctxSep());frag.appendChild(ctxHead("段落样式"));
+  frag.appendChild(ctxItem("标题 1","h1","",()=>setBlock("h1")));
+  frag.appendChild(ctxItem("标题 2","h2","",()=>setBlock("h2")));
+  frag.appendChild(ctxItem("正文","p","",()=>setBlock("p")));
+  frag.appendChild(ctxItem("引用","quote","",()=>setBlock("blockquote")));
+  frag.appendChild(ctxSep());frag.appendChild(ctxHead("插入"));
+  frag.appendChild(ctxItem("图片","image","",()=>$("imageInput").click()));
+  frag.appendChild(ctxItem("分隔线","hr","",()=>exec("insertHorizontalRule")));
+  ctxMenu.innerHTML="";ctxMenu.appendChild(frag);
+  // 位置：跟随鼠标并钳制在视口内
+  ctxMenu.style.visibility="hidden";ctxMenu.classList.add("show");
+  const w=ctxMenu.offsetWidth,h=ctxMenu.offsetHeight;
+  const left=Math.max(8,Math.min(x,window.innerWidth-w-8));
+  const top=Math.max(8,Math.min(y,window.innerHeight-h-8));
+  ctxMenu.style.left=left+"px";ctxMenu.style.top=top+"px";
+  ctxMenu.style.visibility="";requestAnimationFrame(()=>ctxMenu.classList.add("show"));
+}
+// 编辑区右键
+editor.addEventListener("contextmenu",e=>{
+  e.preventDefault();
+  if(e.button===2)openCtx(e.clientX,e.clientY);
+});
+// 点击任意处关闭菜单
+document.addEventListener("mousedown",e=>{if(!ctxMenu.contains(e.target))closeCtx();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeCtx();});
+window.addEventListener("scroll",closeCtx,true);
+
+/* ---------- 初始化 ---------- */
+/* 工具栏 sticky 跟随 appbar 高度 */
+(function setTbTop(){
+  const tb=document.querySelector(".toolbar"),ab=document.querySelector(".appbar");
+  const fn=()=>{tb.style.top=ab.offsetHeight+"px";};
+  fn();window.addEventListener("resize",fn);window.addEventListener("load",fn);
+})();
+/* Ctrl+O 打开文件 */
+document.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&(e.key.toLowerCase()==="o")){e.preventDefault();$("openFileBtn").click();}
+});
+initTooltips();
+buildColorGrid("textColorGrid",TEXT_COLORS,"text");
+buildColorGrid("bgColorGrid",BG_COLORS,"bg");
+loadDoc();
+updateCount();
+editor.dataset.placeholder="开始输入，或粘贴文字 / 图片…";
+editor.setAttribute("data-placeholder","开始输入，或粘贴文字 / 图片…");
+document.addEventListener("click",refresh);
+})();
+</script>
 </body>
 </html>
