@@ -850,6 +850,11 @@ document.addEventListener("click",e=>{
   });
   if(!editor.contains(e.target))refresh();
 });
+/* 关键：拦截工具栏按钮/色板/菜单项的 mousedown 默认行为，
+   防止点击时浏览器清空编辑器选区，否则格式/高亮命令只能作用于新输入文字 */
+document.addEventListener("mousedown",e=>{
+  if(e.target.closest(".tb-btn,.tb-select,.swatch,.menu-item,.ctx-item,.appbtn"))e.preventDefault();
+});
 
 /* ---------- 事件绑定 ---------- */
 // 顶栏
