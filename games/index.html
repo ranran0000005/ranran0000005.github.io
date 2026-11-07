@@ -144,6 +144,26 @@
                         url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23111"/><g><rect x="40" y="80" width="60" height="40" fill="%234CAF50"/><rect x="60" y="90" width="20" height="20" fill="%23333"/><rect x="100" y="95" width="40" height="10" fill="%23ccc"/></g><g><rect x="110" y="40" width="60" height="40" fill="%232196F3"/><rect x="130" y="50" width="20" height="20" fill="%23333"/><rect x="120" y="80" width="10" height="40" fill="%23ccc"/></g></svg>');
         }
         
+        .billiards-image {
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
+                        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23111"/><rect x="20" y="20" width="160" height="160" rx="12" fill="%232d7d46"/><rect x="32" y="32" width="136" height="136" rx="8" fill="none" stroke="%23ffffff" stroke-width="3"/><circle cx="100" cy="100" r="13" fill="%23ffffff"/><circle cx="56" cy="58" r="11" fill="%23e74c3c"/><circle cx="144" cy="58" r="11" fill="%23f1c40f"/><circle cx="56" cy="142" r="11" fill="%23f1c40f"/><circle cx="144" cy="142" r="11" fill="%23e74c3c"/></svg>');
+        }
+        
+        .race-image {
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
+                        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23111"/><path d="M35,120 L50,88 L72,76 L128,76 L150,88 L165,120 Z" fill="%23e74c3c"/><rect x="22" y="120" width="156" height="32" rx="10" fill="%23c0392b"/><rect x="40" y="104" width="40" height="20" rx="4" fill="%23ffffff" opacity="0.9"/><rect x="120" y="104" width="40" height="20" rx="4" fill="%23ffffff" opacity="0.9"/><circle cx="62" cy="152" r="17" fill="%23222222"/><circle cx="62" cy="152" r="8" fill="%23cccccc"/><circle cx="138" cy="152" r="17" fill="%23222222"/><circle cx="138" cy="152" r="8" fill="%23cccccc"/></svg>');
+        }
+        
+        .pig-image {
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
+                        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23111"/><circle cx="70" cy="55" r="22" fill="%23f8a5c2"/><circle cx="130" cy="55" r="22" fill="%23f8a5c2"/><circle cx="100" cy="110" r="60" fill="%23f8a5c2"/><circle cx="75" cy="100" r="9" fill="%23333333"/><circle cx="125" cy="100" r="9" fill="%23333333"/><ellipse cx="100" cy="126" rx="22" ry="15" fill="%23e889a9"/><circle cx="92" cy="124" r="4" fill="%23333333"/><circle cx="108" cy="124" r="4" fill="%23333333"/></svg>');
+        }
+        
+        .chess-image {
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
+                        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23111"/><rect x="45" y="45" width="110" height="110" rx="20" fill="%23ffffff"/><circle cx="78" cy="78" r="10" fill="%23e74c3c"/><circle cx="122" cy="78" r="10" fill="%23e74c3c"/><circle cx="100" cy="100" r="10" fill="%23e74c3c"/><circle cx="78" cy="122" r="10" fill="%23e74c3c"/><circle cx="122" cy="122" r="10" fill="%23e74c3c"/></svg>');
+        }
+        
         .game-content {
             padding: 25px;
             text-align: center;
@@ -195,6 +215,22 @@
         
         .tank-btn {
             background: linear-gradient(to right, #00c6ff, #0072ff);
+        }
+        
+        .billiards-btn {
+            background: linear-gradient(to right, #11998e, #38ef7d);
+        }
+        
+        .race-btn {
+            background: linear-gradient(to right, #f83600, #f9d423);
+        }
+        
+        .pig-btn {
+            background: linear-gradient(to right, #f953c6, #b91d73);
+        }
+        
+        .chess-btn {
+            background: linear-gradient(to right, #7f00ff, #e100ff);
         }
         
         .footer {
@@ -262,38 +298,38 @@
         </div>
         
         <div class="game-card">
-            <div class="game-image gomoku-image"></div>
+            <div class="game-image billiards-image"></div>
             <div class="game-content">
                 <h2>台球</h2>
                 <p>来一局台球，一决高下。</p>
-                <a href="Billiards/Billiards_AI_b.html" class="play-btn gomoku-btn" target="_blank">开始对弈</a>
+                <a href="Billiards/Billiards_AI_b.html" class="play-btn billiards-btn" target="_blank">开始对弈</a>
             </div>
         </div> 
 
         <div class="game-card">
-            <div class="game-image gomoku-image"></div>
+            <div class="game-image race-image"></div>
             <div class="game-content">
                 <h2>赛车</h2>
                 <p>双人飙车！！！</p>
-                <a href="car_game/CAR3D.html" class="play-btn gomoku-btn" target="_blank">开始对弈</a>
+                <a href="car_game/CAR3D.html" class="play-btn race-btn" target="_blank">开始对弈</a>
             </div>
         </div> 
 
          <div class="game-card">
-            <div class="game-image gomoku-image"></div>
+            <div class="game-image pig-image"></div>
             <div class="game-content">
                 <h2>送小猪回家</h2>
                 <p>双人益智游戏</p>
-                <a href="home_pig_home/index.html" class="play-btn gomoku-btn" target="_blank">开始游玩</a>
+                <a href="home_pig_home/index.html" class="play-btn pig-btn" target="_blank">开始游玩</a>
             </div>
         </div> 
         
         <div class="game-card">
-            <div class="game-image tank-image"></div>
+            <div class="game-image chess-image"></div>
             <div class="game-content">
                 <h2>飞行棋</h2>
                 <p>经典飞行棋，重温童年。</p>
-                <a href="Aeroplane_Chess.html" class="play-btn tank-btn" target="_blank">体验经典</a>
+                <a href="Aeroplane_Chess.html" class="play-btn chess-btn" target="_blank">体验经典</a>
             </div>
         </div>
     </div>
