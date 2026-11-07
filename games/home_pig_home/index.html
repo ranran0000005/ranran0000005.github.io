@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>送小猪回家</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='22' r='13' fill='rgb(247,179,196)' stroke='rgb(94,66,52)' stroke-width='2'/%3E%3Cpath d='M10 12 L13 4 L19 11 Z' fill='rgb(247,179,196)' stroke='rgb(94,66,52)' stroke-width='2'/%3E%3Cpath d='M30 12 L27 4 L21 11 Z' fill='rgb(247,179,196)' stroke='rgb(94,66,52)' stroke-width='2'/%3E%3Cellipse cx='20' cy='25' rx='6' ry='5' fill='rgb(250,201,213)'/%3E%3Ccircle cx='16' cy='18' r='2' fill='rgb(40,30,26)'/%3E%3Ccircle cx='24' cy='18' r='2' fill='rgb(40,30,26)'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <div>
+      <h1>送小猪回家</h1>
+      <div class="sub">三只小猪 · 六关垂直攀爬 · 三只都进门才算过关</div>
+    </div>
+    <div class="meta">
+      <div class="pill"><b id="levelName">第一关</b></div>
+      <div class="pill">
+        <i class="dot" id="dot0"></i><i class="dot" id="dot1"></i><i class="dot" id="dot2"></i>
+        <b id="homeText">0 / 3</b>
+      </div>
+    </div>
+  </header>
+
+  <div class="frame">
+    <canvas id="game" width="1000" height="560"></canvas>
+    <div class="overlay" id="overlay"></div>
+  </div>
+
+  <div class="pad">
+    <div class="pcard p1">
+      <div class="who"><span class="chip p1c">P1</span><b id="p1name">豆豆</b><span class="note" id="p1note">个子小</span></div>
+      <div class="keys"><kbd>A</kbd><kbd>D</kbd> 移动 · <kbd>W</kbd> 跳 · <kbd>Q</kbd> 换人</div>
+    </div>
+    <div class="tip">
+      <p>两人各管一只，按 <kbd>Q</kbd> / <kbd>P</kbd> 可接管第三只小猪</p>
+      <p><kbd>R</kbd> 重开本关 · 建议使用键盘</p>
+    </div>
+    <div class="pcard p2">
+      <div class="who"><span class="chip p2c">P2</span><b id="p2name">团团</b><span class="note" id="p2note">身子沉</span></div>
+      <div class="keys"><kbd>←</kbd><kbd>→</kbd> 移动 · <kbd>↑</kbd> 跳 · <kbd>P</kbd> 换人</div>
+    </div>
+  </div>
+</div>
+
+<!-- 角色占位图（替换美术时直接换 assets 里的图片即可） -->
+<div hidden>
+  <img id="sp-dou" src="assets/pig_dou.webp" alt="">
+  <img id="sp-tuan" src="assets/pig_tuan.webp" alt="">
+  <img id="sp-gao" src="assets/pig_gao.webp" alt="">
+</div>
+
+<!-- 模块加载顺序：配置 → 工具 → 关卡 → 渲染 → 界面 → 游戏逻辑 → 输入 → 启动 -->
+<script src="src/config.js"></script>
+<script src="src/utils.js"></script>
+<script src="src/levels.js"></script>
+<script src="src/renderer.js"></script>
+<script src="src/ui.js"></script>
+<script src="src/game.js"></script>
+<script src="src/input.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>
