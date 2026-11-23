@@ -289,39 +289,131 @@ window.PIG = window.PIG || {};
   }
 
   function drawPortal(g, p, i) {
+    var t = g_tick();
     var cx = p.x + p.w / 2;
     var cy = p.y + p.h / 2;
     var main = i === 0 ? '#6f8ce0' : '#c07ce0';
+    var soft = i === 0 ? 'rgba(111,140,224,' : 'rgba(192,124,224,';
 
     ctx.save();
 
-    var halo = ctx.createRadialGradient(cx, cy, 4, cx, cy, 50);
-    halo.addColorStop(0, 'rgba(255,255,255,0.9)');
-    halo.addColorStop(0.45, i === 0 ? 'rgba(111,140,224,0.45)' : 'rgba(192,124,224,0.45)');
-    halo.addColorStop(1, 'rgba(255,255,255,0)');
+    // 外发光
+    var halo = ctx.createRadialGradient(cx, cy, 2, cx, cy, 56);
+    halo.addColorStop(0, 'rgba(255,255,255,0.85)');
+    halo.addColorStop(0.4, soft + '0.42)');
+    halo.addColorStop(1, soft + '0)');
     ctx.fillStyle = halo;
     ctx.beginPath();
-    ctx.ellipse(cx, cy, 48, 42, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, 54, 46, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    for (var k = 0; k < 3; k++) {
-      var a = g.tick * 0.035 + k * Math.PI * 2 / 3;
-      ctx.fillStyle = i === 0 ? '#f2f6ff' : '#fbeaff';
+    // 底座光圈
+    ctx.strokeStyle = soft + '0.55)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + p.h / 2 - 2, p.w * 0.55, 8, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 漩涡
+    for (var s = 0; s < 5; s++) {
+      var ang = t * 0.05 + s * 1.05;
+      var sc = 0.95 - s * 0.13;
+      ctx.strokeStyle = s % 2 ? '#ffffff' : main;
+      ctx.globalAlpha = 0.55 - s * 0.07;
+      ctx.lineWidth = 2.4 - s * 0.3;
       ctx.beginPath();
-      ctx.arc(cx + Math.cos(a) * p.w * 0.42, cy + Math.sin(a) * p.h * 0.4, 4, 0, Math.PI * 2);
+      ctx.ellipse(cx, cy, p.w / 2 * sc, p.h / 2 * sc, ang, 0.3, Math.PI * 1.9);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // 中心亮核
+    var core = ctx.createRadialGradient(cx, cy, 1, cx, cy, 16);
+    core.addColorStop(0, '#ffffff');
+    core.addColorStop(0.6, i === 0 ? 'rgba(150,180,255,0.7)' : 'rgba(220,160,255,0.7)');
+    core.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = core;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 16, 13, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 环绕星点
+    for (var k = 0; k < 5; k++) {
+      var a2 = -t * 0.04 + k * Math.PI * 2 / 5;
+      var rx = p.w * 0.5, ry = p.h * 0.44;
+      ctx.fillStyle = k % 2 ? '#ffffff' : main;
+      ctx.globalAlpha = 0.9;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(a2) * rx, cy + Math.sin(a2) * ry, 2.6, 0, Math.PI * 2);
       ctx.fill();
     }
+    ctx.globalAlpha = 1;
 
+    // 环状描边
     ctx.strokeStyle = main;
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3.5;
     ctx.beginPath();
     ctx.ellipse(cx, cy, p.w / 2, p.h / 2, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.fillStyle = main;
+    // 标签
     ctx.font = '700 12px "PingFang SC","Microsoft YaHei",sans-serif';
     ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(40,30,52,0.85)';
     ctx.fillText('传送门', cx, p.y - 12);
+    ctx.restore();
+  }
+
+  /* ============ 水潭 ============ */
+  function drawWater(g, w) {
+    var t = g_tick();
+    ctx.save();
+
+    var grd = ctx.createLinearGradient(0, w.y, 0, w.y + w.h);
+    grd.addColorStop(0, 'rgba(122,203,232,0.92)');
+    grd.addColorStop(0.35, 'rgba(62,152,196,0.92)');
+    grd.addColorStop(1, 'rgba(24,82,124,0.95)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(w.x, w.y, w.w, w.h);
+
+    // 水面高光
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.fillRect(w.x, w.y, w.w, 3);
+
+    // 波纹
+    ctx.lineWidth = 2;
+    for (var k = 0; k < 3; k++) {
+      ctx.strokeStyle = 'rgba(255,255,255,' + (0.5 - k * 0.13) + ')';
+      ctx.beginPath();
+      for (var x = 0; x <= w.w; x += 8) {
+        var yy = w.y + 4 + k * 6 + Math.sin(x / 24 + t * 0.05 + k * 1.7) * 3;
+        if (x === 0) ctx.moveTo(w.x + x, yy);
+        else ctx.lineTo(w.x + x, yy);
+      }
+      ctx.stroke();
+    }
+
+    // 气泡
+    for (var b = 0; b < 6; b++) {
+      var bx = w.x + ((b * 47 + t * 1.4) % (w.w - 16)) + 8;
+      var by = w.y + w.h - ((t * 1.7 + b * 41) % (w.h - 10));
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.beginPath();
+      ctx.arc(bx, by, 2 + (b % 3), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 岸边描边
+    ctx.strokeStyle = 'rgba(30,60,80,0.35)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(w.x + 1, w.y + 1, w.w - 2, w.h - 2);
+
+    // 说明小字
+    ctx.font = '600 11px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.fillText('深水 · 只有高高游得过去', w.x + w.w / 2, w.y + 22);
+
     ctx.restore();
   }
 
@@ -541,9 +633,27 @@ window.PIG = window.PIG || {};
 
   function drawShadow(c) {
     if (c.home) return;
+
+    var cx = c.x + c.w / 2;
+    var fy = c.y + c.h + 2;
+
+    if (c.swim) {
+      // 游泳时给两圈水花
+      var t = g_tick();
+      for (var k = 0; k < 2; k++) {
+        var r = c.w * (0.42 + k * 0.16) + Math.sin(t * 0.1 + k) * 2;
+        ctx.strokeStyle = 'rgba(255,255,255,' + (0.55 - k * 0.2) + ')';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(cx, fy - 2, r, 4 + k * 2, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      return;
+    }
+
     ctx.fillStyle = 'rgba(56,40,26,0.22)';
     ctx.beginPath();
-    ctx.ellipse(c.x + c.w / 2, c.y + c.h + 2, c.w * 0.55, 5, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, fy, c.w * 0.55, 5, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -739,6 +849,8 @@ window.PIG = window.PIG || {};
 
     ctx.save();
     ctx.translate(0, -g.camY);
+
+    for (var wi = 0; wi < (g.cur.water || []).length; wi++) drawWater(g, g.cur.water[wi]);
 
     drawDoor(g.cur.door);
     for (var i = 0; i < g.cur.plats.length; i++) drawPlat(g, g.cur.plats[i]);

@@ -35,6 +35,7 @@ window.PIG = window.PIG || {};
     cur.gates = cur.gates || [];
     cur.portals = cur.portals || [];
     cur.bridges = cur.bridges || [];
+    cur.water = cur.water || [];
 
     G.cur = cur;
     G.chars = [];
@@ -50,7 +51,8 @@ window.PIG = window.PIG || {};
         color: def.color, deep: def.deep,
         x: sp.x, y: sp.y, sx: sp.x, sy: sp.y,
         vx: 0, vy: 0, dir: 1, face: 1,
-        onGround: false, standOn: null,
+        onGround: false, standOn: null, swim: false,
+        lastSafe: { x: sp.x, y: sp.y },
         home: false,
         portalIn: false, portalCd: 0,
         walk: 0, squash: 1
@@ -73,6 +75,8 @@ window.PIG = window.PIG || {};
   };
 
   G.startRun = function (idx) {
+    if (idx < 0) idx = 0;
+    if (idx > NS.LEVELS.length - 1) idx = NS.LEVELS.length - 1;
     G.elapsed = 0;
     G.resetLevel(idx);
     G.state = 'playing';
@@ -126,8 +130,8 @@ window.PIG = window.PIG || {};
       c.vx = dir * c.spd;
       if (dir !== 0) { c.dir = dir; c.face = dir; }
 
-      if (G.jumpEdge[pi] && c.onGround) {
-        c.vy = -c.jumpV;
+      if (G.jumpEdge[pi] && (c.onGround || c.swim)) {
+        c.vy = -c.jumpV * (c.swim ? 0.8 : 1);
         c.onGround = false;
         c.standOn = null;
         c.squash = 1.25;
@@ -207,6 +211,7 @@ window.PIG = window.PIG || {};
     if (c.home) return;
 
     var prevX = c.x;
+    c.px0 = c.x;
     var prevBottom = c.y + c.h;
     var prevTop = c.y;
     var i, p;
@@ -257,13 +262,59 @@ window.PIG = window.PIG || {};
     if (c.x < 0) c.x = 0;
     if (c.x + c.w > G.cur.w) c.x = G.cur.w - c.w;
 
+    // ---- 水潭 ----
+    var wtr = G.waterAt(c);
+    c.swim = false;
+    // 站在岸边、脚还在水面之上，不算落水
+    if (wtr && !(c.onGround && c.y + c.h <= wtr.y + 12)) {
+      if (c.key === 'gao') {
+        c.swim = true;
+        var target = wtr.y - c.h;            // 身体一半在水面上
+        c.vy = (c.vy + (target - c.y) * 0.14) * 0.9;
+        c.vy = U.clamp(c.vy, -8, 6);
+        if (c.y + c.h > wtr.y + 8) {         // 别沉太深
+          c.y = wtr.y + 8 - c.h;
+          c.vy = -1.5;
+        }
+      } else {
+        G.drown(c, wtr);
+        return;
+      }
+    } else if (c.onGround) {
+      c.lastSafe = { x: c.x, y: c.y };
+    }
+
     // 掉出关卡
     if (c.y > G.cur.h + 160) G.respawn(c);
   };
 
+  G.waterAt = function (c) {
+    var list = G.cur.water || [];
+    for (var i = 0; i < list.length; i++) {
+      var w = list[i];
+      var ox = Math.min(c.x + c.w, w.x + w.w) - Math.max(c.x, w.x);
+      if (ox <= 4) continue;                 // 只蹭到岸边不算落水
+      var need = c.key === 'gao' ? 12 : 16;  // 高高只要贴着水面就算在水里
+      if (c.y + c.h <= w.y + need) continue;  // 身子还在水面上
+      return w;
+    }
+    return null;
+  };
+
+  G.drown = function (c, wtr) {
+    G.float(c.x + c.w / 2, c.y - 18, '扑通！只有高高会游', '#2c6f96');
+    var sp = c.lastSafe || { x: c.sx, y: c.sy };
+    var back = 58;
+    if (wtr) back = (c.x + c.w / 2 < wtr.x + wtr.w / 2 ? -1 : 1) * 72;
+    c.x = U.clamp(sp.x + back, 0, G.cur.w - c.w); c.y = sp.y;
+    c.vx = 0; c.vy = 0;
+    c.portalIn = false; c.swim = false;
+  };
+
   G.respawn = function (c) {
-    c.x = c.sx;
-    c.y = c.sy;
+    var sp = c.lastSafe || { x: c.sx, y: c.sy };
+    c.x = sp.x;
+    c.y = sp.y;
     c.vx = 0;
     c.vy = 0;
     c.portalIn = false;
@@ -276,10 +327,23 @@ window.PIG = window.PIG || {};
       for (var j = i + 1; j < G.chars.length; j++) {
         var a = G.chars[i], b = G.chars[j];
         if (a.home || b.home) continue;
-        if (!U.overlap(a, b)) continue;
 
         var ox = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
         var oy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+        if (ox <= 0) continue;
+
+        // 竖直方向只差 4px 以内：算踩在脚上，别一帧一帧地抖
+        if (oy <= 0) {
+          if (oy > -4) {
+            var up = (a.y <= b.y) ? a : b;
+            var dn = (a.y <= b.y) ? b : a;
+            up.y = dn.y - up.h;
+            up.vy = 0;
+            up.onGround = true;
+            up.standOn = dn;
+          }
+          continue;
+        }
 
         var top = (a.y <= b.y) ? a : b;
         var bot = (a.y <= b.y) ? b : a;
@@ -305,6 +369,22 @@ window.PIG = window.PIG || {};
           top.standOn = bot;
         }
       }
+    }
+
+    // 叠罗汉联动：下面那只左右移动/起跳，上面那只跟着走
+    for (var q = 0; q < G.chars.length; q++) {
+      var c2 = G.chars[q];
+      if (c2.home) continue;
+      var base = c2.standOn;
+      if (!base || typeof base.idx !== 'number' || base.home) continue;
+
+      // 下面那只这一帧的位移，原样加给上面那只
+      var dx = (typeof base.px0 === 'number') ? base.x - base.px0 : 0;
+      c2.x = U.clamp(c2.x + dx, 0, G.cur.w - c2.w);
+      c2.y = base.y - c2.h;
+      c2.vy = 0;
+      c2.vx = 0;
+      c2.onGround = true;
     }
   };
 

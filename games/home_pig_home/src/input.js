@@ -24,9 +24,14 @@ window.PIG = window.PIG || {};
         G.resetLevel(G.levelIdx);
         G.state = 'playing';
       }
+      if (code === 'Escape') NS.UI.showLevelSelect(true);
       return;
     }
 
+    if (code === 'Escape') {
+      if (G.state === 'select') goBack();
+      return;
+    }
     if (code === 'Enter' || code === 'Space') G.advance();
   }
 
@@ -34,13 +39,35 @@ window.PIG = window.PIG || {};
     G.keys[e.code] = false;
   }
 
+  function goBack() {
+    if (G.selectFrom === 'play') {
+      G.state = 'playing';
+      NS.UI.hidePanel();
+    } else {
+      G.state = 'title';
+      NS.UI.showTitle();
+    }
+  }
+
   function onOverlayClick(e) {
-    var act = e.target && e.target.getAttribute ? e.target.getAttribute('data-act') : null;
+    // 点到按钮里的 <b>/<span> 也要能识别
+    var node = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
+    if (!node) return;
+    var act = node.getAttribute('data-act');
     if (!act) return;
 
     if (act === 'start') G.startRun(0);
     else if (act === 'next') G.startRun(G.levelIdx + 1);
     else if (act === 'again') { G.elapsed = 0; G.startRun(0); }
+    else if (act === 'levels') NS.UI.showLevelSelect(false);
+    else if (act === 'back') goBack();
+    else if (act === 'level') {
+      var idx = parseInt(node.getAttribute('data-idx'), 10);
+      if (!isNaN(idx) && idx >= 0 && idx < NS.LEVELS.length) {
+        G.elapsed = 0;
+        G.startRun(idx);
+      }
+    }
   }
 
   window.addEventListener('keydown', onKeyDown);

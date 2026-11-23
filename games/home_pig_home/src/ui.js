@@ -40,6 +40,7 @@ window.PIG = window.PIG || {};
         '</div>' +
         '<p class="small">三只小猪都走进门才算过关 · 按 Enter 开始</p>' +
         '<button class="btn" data-act="start">开始第一关</button>' +
+        '<button class="btn ghost" data-act="levels">选关</button>' +
       '</div>'
     );
   }
@@ -52,7 +53,7 @@ window.PIG = window.PIG || {};
       showPanel(
         '<div class="panel">' +
           '<h2>全部到家</h2>' +
-          '<p>三只小猪穿过草坡、老井台、钟楼、柴房、石廊和老宅，终于一起回了家。<br>总用时 ' + time + '。</p>' +
+          '<p>三只小猪穿过草坡、老井台、钟楼、柴房、石廊、老宅、溪口、水车房和后院，终于一起回了家。<br>总用时 ' + time + '。</p>' +
           '<button class="btn" data-act="again">再玩一次</button>' +
         '</div>'
       );
@@ -64,6 +65,43 @@ window.PIG = window.PIG || {};
         '<h2>过关 · 三只都到家了</h2>' +
         '<p>' + g.cur.name + ' 通啦，用时 ' + time + '。<br>下一关的机关会不一样。</p>' +
         '<button class="btn" data-act="next">进入下一关</button>' +
+      '</div>'
+    );
+  }
+
+  /* ---------- 选关 ---------- */
+  function levelCards(g) {
+    var idx = g ? g.levelIdx : -1;
+    var html = '<div class="lvgrid">';
+    for (var i = 0; i < NS.LEVELS.length; i++) {
+      var lv = NS.LEVELS[i]();
+      var parts = lv.name.split(' · ');
+      var tag = lv.water && lv.water.length ? ' · 水潭' : '';
+      if (lv.gates && lv.gates.length) tag += ' · 石栏';
+      if (lv.lever) tag += ' · 吊桥';
+      if (lv.plate && lv.elevator) tag += ' · 吊篮';
+      if (lv.portals && lv.portals.length) tag += ' · 传送';
+      html += '<button class="lvbtn' + (i === idx ? ' cur' : '') + '" data-act="level" data-idx="' + i + '">' +
+        '<b>' + parts[0] + '</b><span>' + (parts[1] || '') + tag + '</span></button>';
+    }
+    return html + '</div>';
+  }
+
+  function showLevelSelect(fromPlay) {
+    var G = NS.Game;
+    if (G) {
+      G.selectFrom = fromPlay ? 'play' : 'title';
+      G.state = 'select';
+      if (G.keys) G.keys = {};
+      if (G.jumpEdge) G.jumpEdge = [false, false];
+    }
+    showPanel(
+      '<div class="panel">' +
+        '<h2>选关</h2>' +
+        '<p class="small">共 ' + NS.LEVELS.length + ' 关 · 点一下直接进，进度不计时</p>' +
+        levelCards(G) +
+        '<p class="small">黄框是你正在玩的那一关</p>' +
+        '<button class="btn ghost" data-act="back">返回</button>' +
       '</div>'
     );
   }
@@ -97,10 +135,23 @@ window.PIG = window.PIG || {};
 
   NS.UI = {
     showTitle: showTitle,
+    showLevelSelect: showLevelSelect,
     showWin: showWin,
     hidePanel: hidePanel,
     hideOverlay: hidePanel,   // game.js 用的别名
     updateHud: updateHud
   };
+
+  // 顶部“选关”按钮
+  function bindLevelsButton() {
+    var b = el('btnLevels');
+    if (!b) return;
+    b.addEventListener('click', function () {
+      var G = NS.Game;
+      if (!G || G.state === 'select') return;
+      showLevelSelect(G.state === 'playing');
+    });
+  }
+  bindLevelsButton();
 
 })(window.PIG);

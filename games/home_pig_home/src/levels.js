@@ -209,6 +209,92 @@ window.PIG = window.PIG || {};
     };
   }
 
-  NS.LEVELS = [buildL1, buildL2, buildL3, buildL4, buildL5, buildL6];
+  /* ---------- 第七关：溪口（水潭只有高高游得过去） ---------- */
+  function buildL7() {
+    var plats = [
+      P(0, 1700, 300, 200, 'solid', 'ground'),
+      P(560, 1700, 440, 200, 'solid', 'ground'),
+      leftLedge(1580, 0), rightLedge(1460, 1), leftLedge(1340, 2), rightLedge(1220, 3),
+      leftLedge(1100, 4), rightLedge(980, 5), leftLedge(860, 6), rightLedge(740, 7),
+      leftLedge(620, 8), rightLedge(500, 9)
+    ];
+
+    return {
+      name: '第七关 · 溪口',
+      hint: '水潭只有高高游得过去：让他先漂到水中间，另一只跳到他背上，再一起划到对岸。',
+      w: 1000, h: 1900, sky: ['#a9d6e8', '#e9f4dd'],
+      spawn: [ { x:60, y:1660 }, { x:140, y:1640 }, { x:220, y:1660 } ],
+      plats: plats,
+      water: [ { x: 300, y: 1692, w: 260, h: 140 } ],
+      crates: [ crate(860, 1640) ],
+      buttons: [], gates: [],
+      portals: [ portal(300, 1290, 1), portal(800, 930, 0) ],
+      plate: null, elevator: null, lever: null, bridges: [],
+      door: { x: 860, y: 380, w: 96, h: 120 }
+    };
+  }
+
+  /* ---------- 第八关：水车房（水潭 + 推箱 + 摇杆吊桥） ---------- */
+  function buildL8() {
+    var bridge = [ledge(200, 620, 300, 'wood')];
+    bridge[0].active = false;
+
+    var plats = [
+      P(0, 1700, 300, 200, 'solid', 'ground'),
+      P(560, 1700, 440, 200, 'solid', 'ground'),
+      leftLedge(1580, 0), rightLedge(1460, 1), leftLedge(1340, 2), rightLedge(1220, 3),
+      leftLedge(1100, 4), rightLedge(980, 5), leftLedge(860, 6), rightLedge(740, 7),
+      bridge[0],
+      ledge(0, 500, 440),
+      rightLedge(380, 1)
+    ];
+
+    return {
+      name: '第八关 · 水车房',
+      hint: '水潭照旧得靠高高驮过去；上了岸先让高高去拉摇杆，吊桥落下，别的猪才上得去。',
+      w: 1000, h: 1900, sky: ['#cfd8e8', '#f3e8d8'],
+      spawn: [ { x:60, y:1660 }, { x:140, y:1640 }, { x:220, y:1660 } ],
+      plats: plats,
+      water: [ { x: 300, y: 1692, w: 260, h: 140 } ],
+      crates: [ crate(860, 1640), crate(900, 1400) ],
+      buttons: [], gates: [], portals: [],
+      plate: null, elevator: null,
+      lever: { x: 650, y: 714, w: 70, h: 26, on: false },
+      bridges: bridge,
+      door: { x: 860, y: 260, w: 96, h: 120 }
+    };
+  }
+
+  /* ---------- 第九关：后院（水潭 + 推箱 + 石栏 + 传送门） ---------- */
+  function buildL9() {
+    var plats = [
+      P(0, 1700, 300, 200, 'solid', 'ground'),
+      P(560, 1700, 440, 200, 'solid', 'ground'),
+      leftLedge(1580, 0), rightLedge(1460, 1),
+      ledge(0, 1300, 440),
+      rightLedge(1180, 1),
+      leftLedge(1060, 2),
+      ledge(RX, 700, RW, 'stone'),
+      leftLedge(580, 0),
+      rightLedge(460, 1)
+    ];
+
+    return {
+      name: '第九关 · 后院',
+      hint: '水潭、木箱、按钮、石栏、传送门全在这一关：先把团团运过水，再让他推箱、踩按钮。',
+      w: 1000, h: 1900, sky: ['#c9b8cf', '#f6e2cf'],
+      spawn: [ { x:60, y:1660 }, { x:140, y:1640 }, { x:220, y:1660 } ],
+      plats: plats,
+      water: [ { x: 300, y: 1692, w: 260, h: 140 } ],
+      crates: [ crate(900, 1400), crate(860, 1640) ],
+      buttons: [ button(880, 684, 0) ],
+      gates: [ gate(620, 478, 222) ],
+      portals: [ portal(300, 1010, 1), portal(800, 650, 0) ],
+      plate: null, elevator: null, lever: null, bridges: [],
+      door: { x: 860, y: 340, w: 96, h: 120 }
+    };
+  }
+
+  NS.LEVELS = [buildL1, buildL2, buildL3, buildL4, buildL5, buildL6, buildL7, buildL8, buildL9];
 
 })(window.PIG);
