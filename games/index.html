@@ -11,11 +11,10 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         body {
+            /* 静态渐变，去掉 background-position 无限动画，避免整页每帧重绘 */
             background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -24,27 +23,21 @@
             color: white;
             overflow-x: hidden;
         }
-        
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
+
         .header {
             width: 100%;
             max-width: 1200px;
-            background: rgba(0, 0, 0, 0.7);
+            /* 去掉 backdrop-filter: blur，改用半透明纯色，避免毛玻璃每帧重采样 */
+            background: rgba(0, 0, 0, 0.65);
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 40px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
             text-align: center;
-            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
         }
-        
+
         .back-btn {
             position: absolute;
             left: 20px;
@@ -59,33 +52,31 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease, background 0.3s ease;
             color: white;
             font-size: 1.5rem;
-            backdrop-filter: blur(5px);
         }
-        
+
         .back-btn:hover {
             background: rgba(255, 255, 255, 0.3);
             transform: translateY(-50%) scale(1.1);
         }
-        
+
         .header h1 {
             font-size: 3rem;
             margin-bottom: 10px;
             background: linear-gradient(to right, #ff9966, #ff5e62);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
-        
+
         .header p {
             font-size: 1.2rem;
             opacity: 0.9;
             max-width: 600px;
             margin: 0 auto;
         }
-        
+
         .games-container {
             display: flex;
             flex-wrap: wrap;
@@ -94,25 +85,25 @@
             max-width: 1200px;
             width: 100%;
         }
-        
+
         .game-card {
             flex: 1;
             min-width: 300px;
             max-width: 500px;
+            /* 去掉 backdrop-filter: blur(10px)，6 张卡片同时毛玻璃是主要开销之一 */
             background: rgba(0, 0, 0, 0.6);
             border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
+
         .game-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.45);
         }
-        
+
         .game-image {
             height: 200px;
             width: 100%;
@@ -121,66 +112,66 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .car-image {
-            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), 
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
                         url('chrome_dino/assets/default_100_percent/100-error-offline.png');
             background-size: contain;
             background-repeat: no-repeat;
         }
-        
+
         .plane-image {
-            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), 
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
                         url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23111"/><path d="M10,50 L40,45 L50,20 L60,45 L90,50 L60,55 L50,80 L40,55 Z" fill="%234299e1"/></svg>');
         }
-        
+
         .gomoku-image {
             background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
                         url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23111"/><g stroke="%23cfa96b" stroke-width="2">%0A<line x1="20" y1="20" x2="180" y2="20"/><line x1="20" y1="50" x2="180" y2="50"/><line x1="20" y1="80" x2="180" y2="80"/><line x1="20" y1="110" x2="180" y2="110"/><line x1="20" y1="140" x2="180" y2="140"/><line x1="20" y1="170" x2="180" y2="170"/><line x1="20" y1="20" x2="20" y2="170"/><line x1="50" y1="20" x2="50" y2="170"/><line x1="80" y1="20" x2="80" y2="170"/><line x1="110" y1="20" x2="110" y2="170"/><line x1="140" y1="20" x2="140" y2="170"/><line x1="170" y1="20" x2="170" y2="170"/></g>%0A<circle cx="50" cy="50" r="8" fill="%23000"/><circle cx="80" cy="80" r="8" fill="%23fff"/><circle cx="110" cy="110" r="8" fill="%23000"/><circle cx="140" cy="80" r="8" fill="%23fff"/></svg>');
         }
-        
+
         .tank-image {
             background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
                         url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23111"/><g><rect x="40" y="80" width="60" height="40" fill="%234CAF50"/><rect x="60" y="90" width="20" height="20" fill="%23333"/><rect x="100" y="95" width="40" height="10" fill="%23ccc"/></g><g><rect x="110" y="40" width="60" height="40" fill="%232196F3"/><rect x="130" y="50" width="20" height="20" fill="%23333"/><rect x="120" y="80" width="10" height="40" fill="%23ccc"/></g></svg>');
         }
-        
+
         .billiards-image {
             background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
                         url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23111"/><rect x="20" y="20" width="160" height="160" rx="12" fill="%232d7d46"/><rect x="32" y="32" width="136" height="136" rx="8" fill="none" stroke="%23ffffff" stroke-width="3"/><circle cx="100" cy="100" r="13" fill="%23ffffff"/><circle cx="56" cy="58" r="11" fill="%23e74c3c"/><circle cx="144" cy="58" r="11" fill="%23f1c40f"/><circle cx="56" cy="142" r="11" fill="%23f1c40f"/><circle cx="144" cy="142" r="11" fill="%23e74c3c"/></svg>');
         }
-        
+
         .race-image {
             background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
                         url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23111"/><path d="M35,120 L50,88 L72,76 L128,76 L150,88 L165,120 Z" fill="%23e74c3c"/><rect x="22" y="120" width="156" height="32" rx="10" fill="%23c0392b"/><rect x="40" y="104" width="40" height="20" rx="4" fill="%23ffffff" opacity="0.9"/><rect x="120" y="104" width="40" height="20" rx="4" fill="%23ffffff" opacity="0.9"/><circle cx="62" cy="152" r="17" fill="%23222222"/><circle cx="62" cy="152" r="8" fill="%23cccccc"/><circle cx="138" cy="152" r="17" fill="%23222222"/><circle cx="138" cy="152" r="8" fill="%23cccccc"/></svg>');
         }
-        
+
         .pig-image {
             background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
                         url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23111"/><circle cx="70" cy="55" r="22" fill="%23f8a5c2"/><circle cx="130" cy="55" r="22" fill="%23f8a5c2"/><circle cx="100" cy="110" r="60" fill="%23f8a5c2"/><circle cx="75" cy="100" r="9" fill="%23333333"/><circle cx="125" cy="100" r="9" fill="%23333333"/><ellipse cx="100" cy="126" rx="22" ry="15" fill="%23e889a9"/><circle cx="92" cy="124" r="4" fill="%23333333"/><circle cx="108" cy="124" r="4" fill="%23333333"/></svg>');
         }
-        
+
         .chess-image {
             background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
                         url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23111"/><rect x="45" y="45" width="110" height="110" rx="20" fill="%23ffffff"/><circle cx="78" cy="78" r="10" fill="%23e74c3c"/><circle cx="122" cy="78" r="10" fill="%23e74c3c"/><circle cx="100" cy="100" r="10" fill="%23e74c3c"/><circle cx="78" cy="122" r="10" fill="%23e74c3c"/><circle cx="122" cy="122" r="10" fill="%23e74c3c"/></svg>');
         }
-        
+
         .game-content {
             padding: 25px;
             text-align: center;
         }
-        
+
         .game-content h2 {
             font-size: 2rem;
             margin-bottom: 15px;
             color: #fff;
         }
-        
+
         .game-content p {
             margin-bottom: 20px;
             line-height: 1.6;
             color: rgba(255, 255, 255, 0.8);
         }
-        
+
         .play-btn {
             display: inline-block;
             padding: 12px 30px;
@@ -191,70 +182,44 @@
             font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             text-decoration: none;
-            box-shadow: 0 5px 15px rgba(255, 94, 98, 0.4);
+            box-shadow: 0 4px 12px rgba(255, 94, 98, 0.4);
         }
-        
+
         .play-btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(255, 94, 98, 0.6);
+            box-shadow: 0 6px 16px rgba(255, 94, 98, 0.6);
         }
-        
-        .car-btn {
-            background: linear-gradient(to right, #ff9966, #ff5e62);
-        }
-        
-        .plane-btn {
-            background: linear-gradient(to right, #36d1dc, #5b86e5);
-        }
-        
-        .gomoku-btn {
-            background: linear-gradient(to right, #4e54c8, #8f94fb);
-        }
-        
-        .tank-btn {
-            background: linear-gradient(to right, #00c6ff, #0072ff);
-        }
-        
-        .billiards-btn {
-            background: linear-gradient(to right, #11998e, #38ef7d);
-        }
-        
-        .race-btn {
-            background: linear-gradient(to right, #f83600, #f9d423);
-        }
-        
-        .pig-btn {
-            background: linear-gradient(to right, #f953c6, #b91d73);
-        }
-        
-        .chess-btn {
-            background: linear-gradient(to right, #7f00ff, #e100ff);
-        }
-        
+
+        .car-btn { background: linear-gradient(to right, #ff9966, #ff5e62); }
+        .plane-btn { background: linear-gradient(to right, #36d1dc, #5b86e5); }
+        .gomoku-btn { background: linear-gradient(to right, #4e54c8, #8f94fb); }
+        .tank-btn { background: linear-gradient(to right, #00c6ff, #0072ff); }
+        .billiards-btn { background: linear-gradient(to right, #11998e, #38ef7d); }
+        .race-btn { background: linear-gradient(to right, #f83600, #f9d423); }
+        .pig-btn { background: linear-gradient(to right, #f953c6, #b91d73); }
+        .chess-btn { background: linear-gradient(to right, #7f00ff, #e100ff); }
+
         .footer {
             margin-top: 40px;
             text-align: center;
             color: rgba(255, 255, 255, 0.7);
             font-size: 0.9rem;
         }
-        
+
         @media (max-width: 768px) {
             .games-container {
                 flex-direction: column;
                 align-items: center;
             }
-            
             .game-card {
                 width: 100%;
                 max-width: 400px;
             }
-            
             .header h1 {
                 font-size: 2.2rem;
             }
-            
             .back-btn {
                 position: relative;
                 left: 10;
@@ -262,7 +227,6 @@
                 transform: none;
                 margin-bottom: 15px;
             }
-            
             .header {
                 display: flex;
                 flex-direction: column;
@@ -277,7 +241,7 @@
         <h1>休闲一下</h1>
         <p>请选择您想玩的游戏</p>
     </div>
-    
+
     <div class="games-container">
         <div class="game-card">
             <div class="game-image car-image"></div>
@@ -287,7 +251,7 @@
                 <a href="chrome_dino/index.html" class="play-btn car-btn">开始游戏</a>
             </div>
         </div>
-        
+
         <div class="game-card">
             <div class="game-image plane-image"></div>
             <div class="game-content">
@@ -296,7 +260,7 @@
                 <a href="plane_game/index.html" class="play-btn plane-btn">开始飞行</a>
             </div>
         </div>
-        
+
         <div class="game-card">
             <div class="game-image billiards-image"></div>
             <div class="game-content">
@@ -304,7 +268,7 @@
                 <p>来一局台球，一决高下。</p>
                 <a href="Billiards/Billiards_AI_b.html" class="play-btn billiards-btn" target="_blank">开始对弈</a>
             </div>
-        </div> 
+        </div>
 
         <div class="game-card">
             <div class="game-image race-image"></div>
@@ -313,17 +277,17 @@
                 <p>双人飙车！！！</p>
                 <a href="car_game/CAR3D.html" class="play-btn race-btn" target="_blank">开始对弈</a>
             </div>
-        </div> 
+        </div>
 
-         <div class="game-card">
+        <div class="game-card">
             <div class="game-image pig-image"></div>
             <div class="game-content">
                 <h2>送小猪回家</h2>
                 <p>双人-益智游戏</p>
                 <a href="home_pig_home/index.html" class="play-btn pig-btn" target="_blank">开始游玩</a>
             </div>
-        </div> 
-        
+        </div>
+
         <div class="game-card">
             <div class="game-image chess-image"></div>
             <div class="game-content">
@@ -333,12 +297,9 @@
             </div>
         </div>
     </div>
-    
 
-    
     <div class="footer">
         <p>&copy; 2025 | 仅供娱乐</p>
     </div>
-
 </body>
 </html>
